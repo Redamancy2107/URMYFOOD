@@ -1,0 +1,32 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "\033[34m[URMYFOOD] Running pre-commit checks...\033[0m"
+
+# 1. Run Kotlin Quality Checks (Detekt)
+# We check common locations for Android projects
+if [ -f "./gradlew" ]; then
+    echo "🔍 Running Detekt on root project..."
+    ./gradlew detekt || exit 1
+else
+    # Check frontend submodules if root gradlew is missing
+    for dir in frontend/app-admin frontend/app-shop frontend/app-user; do
+        if [ -d "$dir" ] && [ -f "$dir/gradlew" ]; then
+            echo "🔍 Running Detekt in $dir..."
+            (cd "$dir" && ./gradlew detekt) || exit 1
+        fi
+    done
+fi
+
+# 2. Run Java Quality Checks (Checkstyle) for Backend
+if [ -d "backend" ]; then
+    if [ -f "backend/gradlew" ]; then
+        echo "🔍 Running Checkstyle on Backend..."
+        (cd backend && ./gradlew checkstyleMain) || exit 1
+    elif [ -f "./gradlew" ]; then
+         echo "🔍 Running backend:checkstyleMain from root..."
+         ./gradlew :backend:checkstyleMain || exit 1
+    fi
+fi
+
+echo "\033[32m✔ All pre-commit checks passed!\033[0m"
