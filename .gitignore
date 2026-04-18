@@ -1,0 +1,143 @@
+# Môi trường và Bảo mật (Supabase, Spring Boot, JWT)
+.env
+.env.*
+application-secret.properties
+application-dev.properties
+
+# Android Signing Keys (Tuyệt đối không lên Git)
+*.jks
+*.keystore
+*keystore.properties
+
+# Firebase / Google Services (Nếu có dùng)
+google-services.json
+
+# ==========================================
+# 2. BUILD & ARTIFACTS (Tạo ra khi compile)
+# ==========================================
+# Java / Spring Boot
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+bin/
+out/
+
+# Android / Gradle
+*.apk
+*.ap_
+*.aab
+*.dex
+.gradle/
+build/
+/*/build/
+/*/*/build
+gen-external-apklibs
+.externalNativeBuild
+obj/
+
+# Kotlin
+.kotlin_module
+
+# ==========================================
+# 3. IDE & EDITORS (Cấu hình cá nhân)
+# ==========================================
+# IntelliJ IDEA / Android Studio
+.idea/
+*.iml
+*.iws
+*.ipr
+.navigation/
+captures/
+
+# Cấu hình cục bộ (Đường dẫn SDK máy cá nhân)
+local.properties
+*/local.properties
+
+# ==========================================
+# 4. HỆ ĐIỀU HÀNH (Trash files)
+# ==========================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+ $RECYCLE.BIN/
+*.stackdump
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ==========================================
+# 5. CÔNG CỤ TIỆN ÍCH & LOGS (Dành cho URMYFOOD)
+# ==========================================
+# Node.js (Dùng cho Husky Git Hooks)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Báo cáo Code Quality (Detekt, Checkstyle, Lint)
+**/build/reports/detekt/
+**/build/reports/checkstyle/
+**/build/reports/lint-results.xml
+
+# Logs
+*.log
+
+# ==========================================
+# 6. CÁC FILE KHÁC (Giữ nguyên từ template)
+# ==========================================
+# Legacy Eclipse project files
+.classpath
+.project
+.cproject
+.settings/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Freeline
+freeline.py
+freeline/
+freeline_project_description.json
+
+# Virtual machine crash logs
+hs_err_pid*
+
+# Plugin-specific files
+.idea_modules/
+atlassian-ide-plugin.xml
+com_crashlytics_export_strings.xml
+crashlytics.properties
+crashlytics-build.properties
+fabric.properties
+
+# Gradle Wrapper (Bắt buộc phải keep lại file .jar này để người khác clone về chạy được)
+!.gradle/wrapper/gradle-wrapper.jar
