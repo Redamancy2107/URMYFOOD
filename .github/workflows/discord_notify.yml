@@ -9,13 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Discord Notification
-        uses: appleboy/discord-action@master
+        uses: appleboy/discord-action@v1.1.0
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
           username: "GitHub Monitor"
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          color: "483D8B" # Màu tím tối sang trọng
+          color: 4734347
           message: |
             ### 🚀 New Pull Request Update
             **Title:** ${{ github.event.pull_request.title }}
@@ -25,6 +25,7 @@ jobs:
             
             **Reviewers:** ${{ join(github.event.pull_request.requested_reviewers.*.login, ', ') || 'None assigned' }}
             
-            **Description:** > ${{ github.event.pull_request.body || 'No description provided.' }}
+            **Description:** 
+            > ${{ github.event.pull_request.body || 'No description provided.' }}
             
-            [View Pull Request](${{ github.event.pull_request.html_url }})
+            [View Pull Request](<${{ github.event.pull_request.html_url }}>)
