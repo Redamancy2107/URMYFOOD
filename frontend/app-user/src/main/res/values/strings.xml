@@ -1,5 +1,71 @@
 <resources>
     <string name="app_name">URMYFOOD</string>
-    <!-- TODO: Remove or change this placeholder text -->
+
+    <!-- Common -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="btn_back">Quay lại</string>
+    <string name="loading">Đang xử lý…</string>
+    <string name="error_connection">Lỗi kết nối. Vui lòng thử lại.</string>
+
+    <!-- Choose Role -->
+    <string name="choose_role_login">Tôi đã có tài khoản</string>
+    <string name="choose_role_register">Tạo tài khoản mới</string>
+    <string name="choose_role_google">Đăng nhập bằng Google</string>
+
+    <!-- Login -->
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_subtitle">Chào mừng bạn quay trở lại!</string>
+    <string name="login_email_hint">Email hoặc số điện thoại</string>
+    <string name="login_password_hint">Mật khẩu</string>
+    <string name="login_btn">Đăng nhập</string>
+    <string name="login_forgot_password">Quên mật khẩu?</string>
+    <string name="login_no_account">Chưa có tài khoản? </string>
+    <string name="login_register_link">Đăng ký ngay</string>
+    <string name="login_or_divider">HOẶC</string>
+    <string name="login_google">Đăng nhập với Google</string>
+
+    <!-- Register -->
+    <string name="register_title">Tạo tài khoản</string>
+    <string name="register_subtitle">Đăng ký để bắt đầu đặt món</string>
+    <string name="register_name_hint">Họ và tên</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_phone_hint">Số điện thoại</string>
+    <string name="register_password_hint">Mật khẩu</string>
+    <string name="register_confirm_password_hint">Xác nhận mật khẩu</string>
+    <string name="register_btn">Đăng ký</string>
+    <string name="register_has_account">Đã có tài khoản? </string>
+    <string name="register_login_link">Đăng nhập</string>
+    <string name="register_terms">Bằng việc đăng ký, bạn đồng ý với </string>
+    <string name="register_terms_link">Điều khoản sử dụng</string>
+
+    <!-- Forgot Password -->
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="forgot_password_subtitle">Nhập email để nhận mã xác nhận</string>
+    <string name="forgot_password_email_hint">Email đã đăng ký</string>
+    <string name="forgot_password_btn">Gửi mã xác nhận</string>
+
+    <!-- OTP -->
+    <string name="otp_title">Nhập mã OTP</string>
+    <string name="otp_subtitle">Mã xác nhận đã được gửi đến email</string>
+    <string name="otp_btn">Xác nhận</string>
+    <string name="otp_resend">Gửi lại mã</string>
+    <string name="otp_resend_countdown">Gửi lại mã sau %d giây</string>
+
+    <!-- Reset Password -->
+    <string name="reset_password_title">Đặt lại mật khẩu</string>
+    <string name="reset_password_subtitle">Nhập mật khẩu mới cho tài khoản</string>
+    <string name="reset_password_new_hint">Mật khẩu mới</string>
+    <string name="reset_password_confirm_hint">Xác nhận mật khẩu mới</string>
+    <string name="reset_password_btn">Đặt lại mật khẩu</string>
+    <string name="reset_password_success">Đặt lại mật khẩu thành công!</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">Đặt đồ ăn nhanh chóng</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_back_button">Nút quay lại</string>
+    <string name="cd_logo">Logo URMYFOOD</string>
+    <string name="cd_google_icon">Biểu tượng Google</string>
+    <string name="cd_toggle_password">Hiện/ẩn mật khẩu</string>
+    <string name="cd_background_image">Hình nền</string>
 </resources>
