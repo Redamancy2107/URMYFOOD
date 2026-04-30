@@ -63,6 +63,14 @@ class SignupCustomerFragment : Fragment() {
                 R.id.action_chooseRoleFragment_to_loginFragment
             )
         }
+
+        binding.tvTermsLink.setOnClickListener {
+            val dialog = TermsDialogFragment()
+            dialog.setOnAgreeClickListener {
+                binding.cbTerms.isChecked = true
+            }
+            dialog.show(childFragmentManager, TermsDialogFragment.TAG)
+        }
     }
 
     private fun observeViewModel() {

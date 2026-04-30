@@ -48,6 +48,10 @@ class ChooseRoleFragment : Fragment() {
         binding.btnGoogleLogin.setOnClickListener {
             // TODO: Implement Google Sign-In
         }
+
+        binding.tvGuest.setOnClickListener {
+            // TODO: Navigate to main screen as guest
+        }
     }
 
     override fun onDestroyView() {

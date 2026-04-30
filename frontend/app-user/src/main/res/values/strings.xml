@@ -11,6 +11,17 @@
     <string name="choose_role_login">Tôi đã có tài khoản</string>
     <string name="choose_role_register">Tạo tài khoản mới</string>
     <string name="choose_role_google">Đăng nhập bằng Google</string>
+    <string name="choose_role_guest">Tiếp tục với Guest</string>
+
+    <!-- Terms Dialog -->
+    <string name="terms_dialog_title">Điều khoản sử dụng</string>
+    <string name="terms_msg_1">Chào bạn!Trước khi sử dụng URMYFOOD, bạn cần đồng ý với một số điều khoản nhé.</string>
+    <string name="terms_msg_2">Bạn cần cung cấp thông tin chính xác khi đăng ký tài khoản.</string>
+    <string name="terms_msg_3">Chúng tôi cam kết bảo mật thông tin cá nhân của bạn theo chính sách bảo mật.</string>
+    <string name="terms_msg_4">Khi đặt đơn hàng, bạn đồng ý thanh toán đầy đủ cho các sản phẩm và dịch vụ đã chọn.</string>
+    <string name="terms_msg_5">Chúng tôi có quyền tạm ngưng hoặc chấm dứt tài khoản nếu phát hiện hành vi vi phạm.</string>
+    <string name="terms_msg_6">Nếu có thắc mắc, hãy liên hệ với chúng tôi qua email: support@urmyfood.com</string>
+    <string name="terms_agree_btn">Tôi đồng ý</string>
 
     <!-- Login -->
     <string name="login_title">Đăng nhập</string>
