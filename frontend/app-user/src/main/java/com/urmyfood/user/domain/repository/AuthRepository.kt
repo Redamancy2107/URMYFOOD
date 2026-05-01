@@ -1,0 +1,45 @@
+package com.urmyfood.user.domain.repository
+
+import com.urmyfood.user.domain.model.AuthToken
+import com.urmyfood.user.domain.model.Result
+import com.urmyfood.user.domain.model.User
+
+/**
+ * Repository interface for authentication operations.
+ * Defined in the domain layer; implemented in the data layer.
+ */
+interface AuthRepository {
+
+    /**
+     * Login with email/phone and password.
+     */
+    suspend fun login(emailOrPhone: String, password: String): Result<AuthToken>
+
+    /**
+     * Register a new customer account.
+     */
+    suspend fun register(
+        name: String,
+        email: String,
+        phone: String,
+        password: String
+    ): Result<User>
+
+    /**
+     * Request a password reset OTP to be sent to the given email.
+     */
+    suspend fun forgotPassword(email: String): Result<Unit>
+
+    /**
+     * Verify the OTP code for password reset.
+     */
+    suspend fun verifyOtp(email: String, otpCode: String): Result<String>
+
+    /**
+     * Reset the user's password using the reset token obtained from OTP verification.
+     */
+    suspend fun resetPassword(
+        resetToken: String,
+        newPassword: String
+    ): Result<Unit>
+}
