@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
-import com.urmyfood.user.databinding.FragmentSplashBinding
+import com.urmyfood.user.databinding.FragmentAuthSplashBinding
 import com.urmyfood.user.util.BrandingHelper
 
 /**
@@ -18,7 +18,7 @@ import com.urmyfood.user.util.BrandingHelper
  */
 class SplashFragment : Fragment() {
 
-    private var _binding: FragmentSplashBinding? = null
+    private var _binding: FragmentAuthSplashBinding? = null
     private val binding get() = _binding!!
 
     private val splashHandler = Handler(Looper.getMainLooper())
@@ -28,7 +28,7 @@ class SplashFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSplashBinding.inflate(inflater, container, false)
+        _binding = FragmentAuthSplashBinding.inflate(inflater, container, false)
         return binding.root
     }
 

@@ -4,42 +4,34 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.urmyfood.user.R
-import com.urmyfood.user.databinding.FragmentSignupCustomerBinding
-import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.databinding.FragmentAuthSignupCustomerBinding
 
 /**
  * Registration screen fragment.
  * Handles new customer account creation.
- * Uses RegisterViewModel for business logic and state management.
+ * Currently frontend-only: register button navigates directly to OTP screen.
  */
 class SignupCustomerFragment : Fragment() {
 
-    private var _binding: FragmentSignupCustomerBinding? = null
+    private var _binding: FragmentAuthSignupCustomerBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: RegisterViewModel by viewModels {
-        RegisterViewModel.Factory(ServiceLocator.registerUseCase)
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentSignupCustomerBinding.inflate(inflater, container, false)
+        _binding = FragmentAuthSignupCustomerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
-        observeViewModel()
     }
 
     private fun setupClickListeners() {
@@ -48,13 +40,11 @@ class SignupCustomerFragment : Fragment() {
         }
 
         binding.btnRegister.setOnClickListener {
-            val name = binding.etName.text.toString().trim()
-            val email = binding.etEmail.text.toString().trim()
-            val phone = binding.etPhone.text.toString().trim()
-            val password = binding.etPassword.text.toString()
-            val confirmPassword = binding.etConfirmPassword.text.toString()
-
-            viewModel.register(name, email, phone, password, confirmPassword)
+            // Frontend-only: navigate directly to OTP with source = "register"
+            findNavController().navigate(
+                R.id.action_signupCustomerFragment_to_otpFragment,
+                bundleOf("otpSource" to "register")
+            )
         }
 
         binding.tvLoginLink.setOnClickListener {
@@ -71,45 +61,6 @@ class SignupCustomerFragment : Fragment() {
             }
             dialog.show(childFragmentManager, TermsDialogFragment.TAG)
         }
-    }
-
-    private fun observeViewModel() {
-        viewModel.registerState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is RegisterUiState.Idle -> {
-                    setLoading(false)
-                }
-                is RegisterUiState.Loading -> {
-                    setLoading(true)
-                    hideError()
-                }
-                is RegisterUiState.Success -> {
-                    setLoading(false)
-                    findNavController().navigate(
-                        R.id.action_signupCustomerFragment_to_otpFragment
-                    )
-                }
-                is RegisterUiState.Error -> {
-                    setLoading(false)
-                    showError(state.message)
-                }
-            }
-        }
-    }
-
-    private fun setLoading(isLoading: Boolean) {
-        binding.progressBar.isVisible = isLoading
-        binding.btnRegister.isEnabled = !isLoading
-        binding.btnRegister.text = if (isLoading) "" else getString(R.string.register_btn)
-    }
-
-    private fun showError(message: String) {
-        binding.tvError.text = message
-        binding.tvError.isVisible = true
-    }
-
-    private fun hideError() {
-        binding.tvError.isVisible = false
     }
 
     override fun onDestroyView() {

@@ -1,4 +1,4 @@
-package com.urmyfood.user.presentation.auth.forgotpass
+package com.urmyfood.user.presentation.auth.otp
 
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -8,41 +8,40 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import androidx.core.view.isVisible
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
-import com.urmyfood.user.databinding.FragmentOtpBinding
-import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.databinding.FragmentAuthOtpBinding
 
 /**
  * OTP verification screen fragment.
  * Allows user to enter the 6-digit OTP code sent to their email.
  * Auto-moves focus between OTP input boxes.
+ *
+ * Supports two flows via the "otpSource" argument:
+ * - "register": After OTP submit → navigate to login screen
+ * - "forgot_password": After OTP submit → navigate to reset password screen
  */
 class OtpFragment : Fragment() {
 
-    private var _binding: FragmentOtpBinding? = null
+    private var _binding: FragmentAuthOtpBinding? = null
     private val binding get() = _binding!!
-
-    private val viewModel: ForgotPasswordViewModel by activityViewModels {
-        ForgotPasswordViewModel.Factory(
-            ServiceLocator.forgotPasswordUseCase,
-            ServiceLocator.verifyOtpUseCase,
-            ServiceLocator.resetPasswordUseCase
-        )
-    }
 
     private var countDownTimer: CountDownTimer? = null
     private lateinit var otpFields: List<EditText>
+
+    /** Source of the OTP flow: "register" or "forgot_password" */
+    private val otpSource: String by lazy {
+        arguments?.getString("otpSource") ?: "forgot_password"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentOtpBinding.inflate(inflater, container, false)
+        _binding = FragmentAuthOtpBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -56,13 +55,7 @@ class OtpFragment : Fragment() {
 
         setupOtpAutoFocus()
         setupClickListeners()
-        observeViewModel()
-        displayEmail()
         startResendCountdown()
-    }
-
-    private fun displayEmail() {
-        binding.tvEmail.text = viewModel.email
     }
 
     private fun setupOtpAutoFocus() {
@@ -99,38 +92,35 @@ class OtpFragment : Fragment() {
         }
 
         binding.btnVerifyOtp.setOnClickListener {
-            val otpCode = otpFields.joinToString("") { it.text.toString() }
-            viewModel.verifyOtp(otpCode)
-        }
-
-        binding.tvResend.setOnClickListener {
-            viewModel.sendOtp(viewModel.email)
-            startResendCountdown()
-        }
-    }
-
-    private fun observeViewModel() {
-        viewModel.otpState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is OtpUiState.Idle -> {
-                    setLoading(false)
+            // Frontend-only: navigate based on source
+            when (otpSource) {
+                "register" -> {
+                    // After register OTP → go back to login screen
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.otp_verify_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    findNavController().navigate(
+                        R.id.action_otpFragment_to_loginFragment
+                    )
                 }
-                is OtpUiState.Loading -> {
-                    setLoading(true)
-                    hideError()
-                }
-                is OtpUiState.Success -> {
-                    setLoading(false)
+                "forgot_password" -> {
+                    // After forgot password OTP → go to reset password screen
                     findNavController().navigate(
                         R.id.action_otpFragment_to_resetPasswordFragment
                     )
                 }
-                is OtpUiState.Error -> {
-                    setLoading(false)
-                    showError(state.message)
-                    clearOtpFields()
-                }
             }
+        }
+
+        binding.tvResend.setOnClickListener {
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.toast_feature_in_development),
+                Toast.LENGTH_SHORT
+            ).show()
+            startResendCountdown()
         }
     }
 
@@ -151,26 +141,6 @@ class OtpFragment : Fragment() {
                 binding.tvResend.setTextColor(resources.getColor(R.color.primary, null))
             }
         }.start()
-    }
-
-    private fun clearOtpFields() {
-        otpFields.forEach { it.text.clear() }
-        otpFields.firstOrNull()?.requestFocus()
-    }
-
-    private fun setLoading(isLoading: Boolean) {
-        binding.progressBar.isVisible = isLoading
-        binding.btnVerifyOtp.isEnabled = !isLoading
-        binding.btnVerifyOtp.text = if (isLoading) "" else getString(R.string.otp_btn)
-    }
-
-    private fun showError(message: String) {
-        binding.tvError.text = message
-        binding.tvError.isVisible = true
-    }
-
-    private fun hideError() {
-        binding.tvError.isVisible = false
     }
 
     override fun onDestroyView() {

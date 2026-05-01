@@ -4,10 +4,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
-import com.urmyfood.user.databinding.FragmentChooseRoleBinding
+import com.urmyfood.user.databinding.FragmentAuthChooseRoleBinding
 
 /**
  * Choose Role screen fragment.
@@ -15,7 +16,7 @@ import com.urmyfood.user.databinding.FragmentChooseRoleBinding
  */
 class ChooseRoleFragment : Fragment() {
 
-    private var _binding: FragmentChooseRoleBinding? = null
+    private var _binding: FragmentAuthChooseRoleBinding? = null
     private val binding get() = _binding!!
 
     override fun onCreateView(
@@ -23,7 +24,7 @@ class ChooseRoleFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentChooseRoleBinding.inflate(inflater, container, false)
+        _binding = FragmentAuthChooseRoleBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -46,11 +47,19 @@ class ChooseRoleFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            // TODO: Implement Google Sign-In
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.toast_feature_in_development),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         binding.tvGuest.setOnClickListener {
-            // TODO: Navigate to main screen as guest
+            Toast.makeText(
+                requireContext(),
+                getString(R.string.toast_feature_in_development),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
