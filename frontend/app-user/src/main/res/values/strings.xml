@@ -6,6 +6,7 @@
     <string name="btn_back">Quay lại</string>
     <string name="loading">Đang xử lý…</string>
     <string name="error_connection">Lỗi kết nối. Vui lòng thử lại.</string>
+    <string name="toast_feature_in_development">Chức năng đang phát triển</string>
 
     <!-- Choose Role -->
     <string name="choose_role_login">Tôi đã có tài khoản</string>
@@ -61,6 +62,7 @@
     <string name="otp_btn">Xác nhận</string>
     <string name="otp_resend">Gửi lại mã</string>
     <string name="otp_resend_countdown">Gửi lại mã sau %d giây</string>
+    <string name="otp_verify_success">Xác thực OTP thành công!</string>
 
     <!-- Reset Password -->
     <string name="reset_password_title">Đặt lại mật khẩu</string>
