@@ -28,6 +28,15 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Mini Branding -->
+        <include
+            layout="@layout/layout_mini_branding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/btnBack" />
+
         <!-- Title -->
         <TextView
             android:id="@+id/tvTitle"
@@ -254,6 +263,20 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <!-- Continue as Guest -->
+        <TextView
+            android:id="@+id/tvGuest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/choose_role_guest"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:padding="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/llRegister" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

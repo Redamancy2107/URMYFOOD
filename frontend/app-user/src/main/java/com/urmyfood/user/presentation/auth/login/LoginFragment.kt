@@ -68,6 +68,10 @@ class LoginFragment : Fragment() {
         binding.btnGoogleLogin.setOnClickListener {
             // TODO: Implement Google Sign-In
         }
+
+        binding.tvGuest.setOnClickListener {
+            // TODO: Navigate to main screen as Guest
+        }
     }
 
     private fun observeViewModel() {
@@ -82,7 +86,9 @@ class LoginFragment : Fragment() {
                 }
                 is LoginUiState.Success -> {
                     setLoading(false)
-                    // TODO: Save token and navigate to main screen
+                    findNavController().navigate(
+                        R.id.action_loginFragment_to_otpFragment
+                    )
                 }
                 is LoginUiState.Error -> {
                     setLoading(false)

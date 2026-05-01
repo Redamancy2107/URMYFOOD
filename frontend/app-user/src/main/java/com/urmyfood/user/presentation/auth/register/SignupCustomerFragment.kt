@@ -85,15 +85,8 @@ class SignupCustomerFragment : Fragment() {
                 }
                 is RegisterUiState.Success -> {
                     setLoading(false)
-                    Snackbar.make(
-                        binding.root,
-                        "Đăng ký thành công! Vui lòng đăng nhập.",
-                        Snackbar.LENGTH_LONG
-                    ).show()
-                    // Navigate back to login
-                    findNavController().navigateUp()
                     findNavController().navigate(
-                        R.id.action_chooseRoleFragment_to_loginFragment
+                        R.id.action_signupCustomerFragment_to_otpFragment
                     )
                 }
                 is RegisterUiState.Error -> {
