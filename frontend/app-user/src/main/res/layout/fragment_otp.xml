@@ -28,20 +28,63 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Mini Branding -->
+        <include
+            layout="@layout/layout_mini_branding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/btnBack" />
+
+        <!-- Banner with food image + Lock icon -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvBanner"
+            android:layout_width="0dp"
+            android:layout_height="160dp"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnBack">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/cd_food_banner"
+                android:scaleType="centerCrop"
+                android:src="@drawable/bg_food_banner"
+                android:alpha="0.4" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Lock Icon overlapping banner -->
+        <ImageView
+            android:id="@+id/ivLockIcon"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/cd_lock_icon"
+            android:src="@drawable/ic_lock_circle"
+            app:layout_constraintBottom_toBottomOf="@+id/cvBanner"
+            app:layout_constraintEnd_toEndOf="@+id/cvBanner"
+            app:layout_constraintStart_toStartOf="@+id/cvBanner"
+            app:layout_constraintTop_toBottomOf="@+id/cvBanner" />
+
         <!-- Title -->
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="36dp"
             android:text="@string/otp_title"
             android:textColor="@color/text_primary"
             android:textSize="28sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
+            android:textAlignment="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+            app:layout_constraintTop_toBottomOf="@+id/cvBanner" />
 
         <!-- Subtitle -->
         <TextView
@@ -52,6 +95,7 @@
             android:text="@string/otp_subtitle"
             android:textColor="@color/text_secondary"
             android:textSize="15sp"
+            android:textAlignment="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvTitle" />

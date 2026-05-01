@@ -79,4 +79,6 @@
     <string name="cd_google_icon">Biểu tượng Google</string>
     <string name="cd_toggle_password">Hiện/ẩn mật khẩu</string>
     <string name="cd_background_image">Hình nền</string>
+    <string name="cd_food_banner">Banner đồ ăn</string>
+    <string name="cd_lock_icon">Biểu tượng khóa bảo mật</string>
 </resources>
