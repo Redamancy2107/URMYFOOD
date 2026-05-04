@@ -15,6 +15,9 @@ class ResetPasswordUseCase(
         newPassword: String,
         confirmPassword: String
     ): Result<Unit> {
+        if (resetToken.isBlank()) {
+            return Result.Error("Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.")
+        }
         if (newPassword.isBlank()) {
             return Result.Error("Mật khẩu mới không được để trống")
         }

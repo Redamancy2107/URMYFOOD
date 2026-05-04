@@ -1,7 +1,7 @@
 package com.urmyfood.user.domain.usecase
 
+import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.model.Result
-import com.urmyfood.user.domain.model.User
 import com.urmyfood.user.domain.repository.AuthRepository
 
 /**
@@ -11,18 +11,21 @@ import com.urmyfood.user.domain.repository.AuthRepository
 class RegisterUseCase(
     private val authRepository: AuthRepository
 ) {
+    private val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+
     suspend operator fun invoke(
-        name: String,
+        fullName: String,
         email: String,
         phone: String,
         password: String,
-        confirmPassword: String
-    ): Result<User> {
+        confirmPassword: String,
+        otpCode: String
+    ): Result<AuthToken> {
         // Validate name
-        if (name.isBlank()) {
+        if (fullName.isBlank()) {
             return Result.Error("Họ và tên không được để trống")
         }
-        if (name.length < 2) {
+        if (fullName.length < 2) {
             return Result.Error("Họ và tên phải có ít nhất 2 ký tự")
         }
 
@@ -30,7 +33,7 @@ class RegisterUseCase(
         if (email.isBlank()) {
             return Result.Error("Email không được để trống")
         }
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!emailRegex.matches(email)) {
             return Result.Error("Email không hợp lệ")
         }
 
@@ -55,6 +58,14 @@ class RegisterUseCase(
             return Result.Error("Mật khẩu xác nhận không khớp")
         }
 
-        return authRepository.register(name, email, phone, password)
+        // Validate OTP
+        if (otpCode.isBlank()) {
+            return Result.Error("Vui lòng nhập mã OTP")
+        }
+        if (otpCode.length != 6) {
+            return Result.Error("Mã OTP phải có 6 chữ số")
+        }
+
+        return authRepository.register(fullName, email, phone, password, otpCode)
     }
 }
