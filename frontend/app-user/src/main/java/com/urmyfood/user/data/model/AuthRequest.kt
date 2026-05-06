@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName
  * Request DTO for login API.
  */
 data class LoginRequest(
-    @SerializedName("email_or_phone")
+    @SerializedName("emailOrPhone")
     val emailOrPhone: String,
     @SerializedName("password")
     val password: String
@@ -16,14 +16,16 @@ data class LoginRequest(
  * Request DTO for registration API.
  */
 data class RegisterRequest(
-    @SerializedName("name")
-    val name: String,
+    @SerializedName("fullName")
+    val fullName: String,
     @SerializedName("email")
     val email: String,
     @SerializedName("phone")
     val phone: String,
     @SerializedName("password")
-    val password: String
+    val password: String,
+    @SerializedName("otpCode")
+    val otpCode: String
 )
 
 /**
