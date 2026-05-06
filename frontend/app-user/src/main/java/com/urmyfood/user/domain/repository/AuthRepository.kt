@@ -42,4 +42,19 @@ interface AuthRepository {
         resetToken: String,
         newPassword: String
     ): Result<Unit>
+
+    /**
+     * Login with Google ID Token.
+     */
+    suspend fun loginWithGoogle(idToken: String): Result<AuthToken>
+
+    /**
+     * Send OTP for login purpose.
+     */
+    suspend fun sendLoginOtp(email: String): Result<Unit>
+
+    /**
+     * Login with email and OTP code.
+     */
+    suspend fun loginWithOtp(email: String, otpCode: String): Result<AuthToken>
 }
