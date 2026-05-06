@@ -1,6 +1,7 @@
 # Môi trường và Bảo mật (Supabase, Spring Boot, JWT)
 .env
 .env.*
+!.env.example
 application-secret.properties
 application-dev.properties
 
