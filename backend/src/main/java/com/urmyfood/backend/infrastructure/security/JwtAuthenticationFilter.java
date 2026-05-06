@@ -18,6 +18,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -38,23 +39,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         
-        jwt = authHeader.substring(7);
-        accountEmail = jwtService.extractUsername(jwt);
-        
-        if (accountEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(accountEmail);
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        try {
+            jwt = authHeader.substring(7);
+            accountEmail = jwtService.extractUsername(jwt);
+            
+            if (accountEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(accountEmail);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request)
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            log.error("Could not set user authentication in security context", e);
         }
+        
         filterChain.doFilter(request, response);
     }
 }
