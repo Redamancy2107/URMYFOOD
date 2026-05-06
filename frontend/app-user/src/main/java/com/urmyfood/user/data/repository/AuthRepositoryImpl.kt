@@ -47,14 +47,15 @@ class AuthRepositoryImpl(
     }
 
     override suspend fun register(
-        name: String,
+        fullName: String,
         email: String,
         phone: String,
-        password: String
-    ): Result<User> {
+        password: String,
+        otpCode: String
+    ): Result<AuthToken> {
         return try {
             val response = authApiService.register(
-                RegisterRequest(name = name, email = email, phone = phone, password = password)
+                RegisterRequest(fullName = fullName, email = email, phone = phone, password = password, otpCode = otpCode)
             )
             if (response.isSuccessful) {
                 val body = response.body()
@@ -68,7 +69,7 @@ class AuthRepositoryImpl(
                 }
             } else {
                 Result.Error(
-                    message = "Đăng ký thất bại. Email hoặc số điện thoại đã tồn tại.",
+                    message = "Đăng ký thất bại. Email hoặc số điện thoại đã tồn tại hoặc mã OTP không đúng.",
                     code = response.code()
                 )
             }
