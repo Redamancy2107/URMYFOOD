@@ -154,4 +154,53 @@ class AuthRepositoryImpl(
             Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
         }
     }
+
+    override suspend fun loginWithGoogle(idToken: String): Result<AuthToken> {
+        return try {
+            val response = authApiService.loginGoogle(mapOf("idToken" to idToken))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.Success(body.data.toDomain())
+                } else {
+                    Result.Error(message = body?.message ?: "Đăng nhập Google thất bại")
+                }
+            } else {
+                Result.Error(message = "Lỗi xác thực Google")
+            }
+        } catch (e: Exception) {
+            Result.Error(message = e.message ?: "Lỗi kết nối")
+        }
+    }
+
+    override suspend fun sendLoginOtp(email: String): Result<Unit> {
+        return try {
+            val response = authApiService.sendOtp(mapOf("email" to email))
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.Success(Unit)
+            } else {
+                Result.Error(message = response.body()?.message ?: "Gửi OTP thất bại")
+            }
+        } catch (e: Exception) {
+            Result.Error(message = e.message ?: "Lỗi kết nối")
+        }
+    }
+
+    override suspend fun loginWithOtp(email: String, otpCode: String): Result<AuthToken> {
+        return try {
+            val response = authApiService.loginOtp(mapOf("email" to email, "code" to otpCode))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.Success(body.data.toDomain())
+                } else {
+                    Result.Error(message = body?.message ?: "Đăng nhập OTP thất bại")
+                }
+            } else {
+                Result.Error(message = "Lỗi xác thực OTP")
+            }
+        } catch (e: Exception) {
+            Result.Error(message = e.message ?: "Lỗi kết nối")
+        }
+    }
 }
