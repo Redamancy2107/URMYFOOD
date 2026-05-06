@@ -41,9 +41,17 @@ class SplashFragment : Fragment() {
     private fun navigateAfterDelay() {
         splashHandler.postDelayed({
             if (isAdded) {
-                findNavController().navigate(
-                    R.id.action_splashFragment_to_chooseRoleFragment
-                )
+                val isLoggedIn = com.urmyfood.user.di.ServiceLocator.tokenManager.isLoggedIn()
+                if (isLoggedIn) {
+                    // TODO: Navigate to main screen
+                    // For now, still go to ChooseRole but with a toast
+                    android.widget.Toast.makeText(requireContext(), "Đã đăng nhập: ${com.urmyfood.user.di.ServiceLocator.tokenManager.getFullName()}", android.widget.Toast.LENGTH_SHORT).show()
+                    findNavController().navigate(R.id.action_splashFragment_to_chooseRoleFragment)
+                } else {
+                    findNavController().navigate(
+                        R.id.action_splashFragment_to_chooseRoleFragment
+                    )
+                }
             }
         }, SPLASH_DELAY_MS)
     }

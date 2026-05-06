@@ -10,11 +10,13 @@ import com.urmyfood.user.domain.repository.AuthRepository
 class ForgotPasswordUseCase(
     private val authRepository: AuthRepository
 ) {
+    private val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+
     suspend operator fun invoke(email: String): Result<Unit> {
         if (email.isBlank()) {
             return Result.Error("Email không được để trống")
         }
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+        if (!emailRegex.matches(email)) {
             return Result.Error("Email không hợp lệ")
         }
 

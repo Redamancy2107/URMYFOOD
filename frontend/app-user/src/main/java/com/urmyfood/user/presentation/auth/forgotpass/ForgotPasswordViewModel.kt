@@ -29,16 +29,20 @@ class ForgotPasswordViewModel(
     var resetToken: String = ""
         private set
 
+    fun setEmail(email: String) {
+        this.email = email
+    }
+
     // ---- Forgot Password State ----
-    private val _forgotPasswordState = MutableLiveData<ForgotPasswordUiState>()
+    private val _forgotPasswordState = MutableLiveData<ForgotPasswordUiState>(ForgotPasswordUiState.Idle)
     val forgotPasswordState: LiveData<ForgotPasswordUiState> = _forgotPasswordState
 
     // ---- OTP State ----
-    private val _otpState = MutableLiveData<OtpUiState>()
+    private val _otpState = MutableLiveData<OtpUiState>(OtpUiState.Idle)
     val otpState: LiveData<OtpUiState> = _otpState
 
     // ---- Reset Password State ----
-    private val _resetPasswordState = MutableLiveData<ResetPasswordUiState>()
+    private val _resetPasswordState = MutableLiveData<ResetPasswordUiState>(ResetPasswordUiState.Idle)
     val resetPasswordState: LiveData<ResetPasswordUiState> = _resetPasswordState
 
     fun sendOtp(email: String) {
@@ -58,6 +62,11 @@ class ForgotPasswordViewModel(
     }
 
     fun verifyOtp(otpCode: String) {
+        if (email.isBlank()) {
+            _otpState.value = OtpUiState.Error("Email chưa được cung cấp. Vui lòng quay lại.")
+            return
+        }
+
         _otpState.value = OtpUiState.Loading
 
         viewModelScope.launch {
@@ -74,6 +83,11 @@ class ForgotPasswordViewModel(
     }
 
     fun resetPassword(newPassword: String, confirmPassword: String) {
+        if (resetToken.isBlank()) {
+            _resetPasswordState.value = ResetPasswordUiState.Error("Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.")
+            return
+        }
+
         _resetPasswordState.value = ResetPasswordUiState.Loading
 
         viewModelScope.launch {

@@ -11,6 +11,9 @@ class VerifyOtpUseCase(
     private val authRepository: AuthRepository
 ) {
     suspend operator fun invoke(email: String, otpCode: String): Result<String> {
+        if (email.isBlank()) {
+            return Result.Error("Email chưa được cung cấp. Vui lòng quay lại.")
+        }
         if (otpCode.isBlank()) {
             return Result.Error("Mã OTP không được để trống")
         }

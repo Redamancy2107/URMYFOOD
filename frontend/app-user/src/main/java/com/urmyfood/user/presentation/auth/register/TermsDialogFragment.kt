@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.DialogTermsChatBinding
+import kotlin.collections.joinToString
 
 /**
  * BottomSheet dialog that displays the terms of service
