@@ -19,11 +19,12 @@ interface AuthRepository {
      * Register a new customer account.
      */
     suspend fun register(
-        name: String,
+        fullName: String,
         email: String,
         phone: String,
-        password: String
-    ): Result<User>
+        password: String,
+        otpCode: String
+    ): Result<AuthToken>
 
     /**
      * Request a password reset OTP to be sent to the given email.
