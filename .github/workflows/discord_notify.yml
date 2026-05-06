@@ -2,7 +2,7 @@ name: PR Discord Notification
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, review_requested]
+    types: [opened, synchronize, reopened, review_requested, closed, ready_for_review]
 
 jobs:
   notify:
@@ -15,13 +15,14 @@ jobs:
           webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
           username: "GitHub Monitor"
           avatar_url: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          color: 4734347
+          color: ${{ github.event.pull_request.merged && 3066993 || (github.event.action == 'closed' && 15158332 || 3447003) }}
           message: |
-            ### 🚀 New Pull Request Update
+            ### ${{ github.event.pull_request.merged && '✅ Pull Request Merged' || (github.event.action == 'closed' && '❌ Pull Request Closed' || '🚀 Pull Request Update') }} [#${{ github.event.pull_request.number }}]
             **Title:** ${{ github.event.pull_request.title }}
             **Author:** ${{ github.event.pull_request.user.login }}
-            **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Status:** ${{ github.event.pull_request.state }}
+            **Action:** `${{ github.event.action }}`
+            **Branches:** `${{ github.event.pull_request.head.ref }}` ➔ `${{ github.event.pull_request.base.ref }}`
+            **Status:** ${{ github.event.pull_request.draft && '📝 Draft' || '✅ Ready' }}
             
             **Reviewers:** ${{ join(github.event.pull_request.requested_reviewers.*.login, ', ') || 'None assigned' }}
             
