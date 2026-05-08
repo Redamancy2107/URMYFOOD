@@ -1,0 +1,68 @@
+name: Issue Discord Notification
+on:
+  issues:
+    types: [opened, closed, reopened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_ISSUES }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK is not set. Skipping notification."
+            exit 0
+          fi
+          
+          ACTION="${{ github.event.action }}"
+          TITLE="${{ github.event.issue.title }}"
+          URL="${{ github.event.issue.html_url }}"
+          USER="${{ github.event.issue.user.login }}"
+          AVATAR="${{ github.event.issue.user.avatar_url }}"
+          NUMBER="${{ github.event.issue.number }}"
+          BODY=$(echo "${{ github.event.issue.body }}" | head -c 200 | sed 's/"/\\"/g' | tr -d '\n' | tr -d '\r')
+          LABELS=$(echo '${{ toJson(github.event.issue.labels.*.name) }}' | jq -r 'if length > 0 then join(", ") else "None" end')
+          ASSIGNEES=$(echo '${{ toJson(github.event.issue.assignees.*.login) }}' | jq -r 'if length > 0 then join(", ") else "None" end')
+
+          # Color based on action
+          COLOR=3447003 # Default Blue
+          EMOJI="📝"
+          if [ "$ACTION" == "opened" ]; then 
+            COLOR=3066993 # Green
+            EMOJI="🆕"
+          fi
+          if [ "$ACTION" == "closed" ]; then 
+            COLOR=15158332 # Red
+            EMOJI="✅"
+          fi
+          if [ "$ACTION" == "reopened" ]; then 
+            COLOR=15844367 # Orange/Gold
+            EMOJI="🔄"
+          fi
+
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"$EMOJI Issue #$NUMBER: $TITLE\",
+              \"url\": \"$URL\",
+              \"color\": $COLOR,
+              \"thumbnail\": { \"url\": \"$AVATAR\" },
+              \"author\": {
+                \"name\": \"$USER\",
+                \"icon_url\": \"$AVATAR\"
+              },
+              \"fields\": [
+                { \"name\": \"📍 Status\", \"value\": \"\`$ACTION\`\", \"inline\": true },
+                { \"name\": \"🏷️ Labels\", \"value\": \"\`$LABELS\`\", \"inline\": true },
+                { \"name\": \"👥 Assignees\", \"value\": \"\`$ASSIGNEES\`\", \"inline\": true },
+                { \"name\": \"📝 Description\", \"value\": \"$BODY...\", \"inline\": false }
+              ],
+              \"footer\": {
+                \"text\": \"GitHub Actions • Issues\",
+                \"icon_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\"
+              },
+              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+            }]
+          }" $DISCORD_WEBHOOK

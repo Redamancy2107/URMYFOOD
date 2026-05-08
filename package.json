@@ -1,0 +1,14 @@
+{
+  "name": "urmyfood",
+  "version": "1.0.0",
+  "description": "Git hooks for URMYFOOD project",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7"
+  }
+}

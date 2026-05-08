@@ -1,6 +1,7 @@
 # Môi trường và Bảo mật (Supabase, Spring Boot, JWT)
 .env
 .env.*
+!.env.example
 application-secret.properties
 application-dev.properties
 
@@ -140,4 +141,7 @@ crashlytics-build.properties
 fabric.properties
 
 # Gradle Wrapper (Bắt buộc phải keep lại file .jar này để người khác clone về chạy được)
-!.gradle/wrapper/gradle-wrapper.jar
+!**/gradle-wrapper.jar
+
+### VS Code ###
+.vscode/
