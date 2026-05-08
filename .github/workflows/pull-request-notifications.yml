@@ -1,0 +1,91 @@
+name: Pull Request Discord Notification
+on:
+  pull_request:
+    types: [opened, closed, reopened, synchronize]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_PR }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_WEBHOOK is not set. Skipping notification."
+            exit 0
+          fi
+          
+          ACTION="${{ github.event.action }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          TITLE="${{ github.event.pull_request.title }}"
+          URL="${{ github.event.pull_request.html_url }}"
+          USER="${{ github.event.pull_request.user.login }}"
+          AVATAR="${{ github.event.pull_request.user.avatar_url }}"
+          BASE="${{ github.event.pull_request.base.ref }}"
+          HEAD="${{ github.event.pull_request.head.ref }}"
+          MERGED="${{ github.event.pull_request.merged }}"
+          DRAFT="${{ github.event.pull_request.draft }}"
+          COMMITS="${{ github.event.pull_request.commits }}"
+          ADDITIONS="${{ github.event.pull_request.additions }}"
+          DELETIONS="${{ github.event.pull_request.deletions }}"
+          BODY=$(echo "${{ github.event.pull_request.body }}" | head -c 200 | sed 's/"/\\"/g' | tr -d '\n' | tr -d '\r')
+          REVIEWERS=$(echo '${{ toJson(github.event.pull_request.requested_reviewers.*.login) }}' | jq -r 'if length > 0 then join(", ") else "None" end')
+          
+          # Color and specific message for PR
+          COLOR=3447003 # Default Blue
+          MSG="Pull Request $ACTION"
+          EMOJI="🔀"
+          
+          if [ "$ACTION" == "opened" ]; then 
+            COLOR=3066993 # Green
+            EMOJI="🆕"
+            if [ "$DRAFT" == "true" ]; then
+              COLOR=9807270 # Grey
+              MSG="Draft Pull Request Opened"
+              EMOJI="🧪"
+            fi
+          fi
+          
+          if [ "$ACTION" == "synchronize" ]; then
+            COLOR=3447003 # Blue
+            MSG="Pull Request Updated"
+            EMOJI="🔄"
+          fi
+          
+          if [ "$ACTION" == "closed" ]; then
+            if [ "$MERGED" == "true" ]; then
+              COLOR=10181046 # Purple for Merged
+              MSG="Pull Request Merged"
+              EMOJI="🚀"
+            else
+              COLOR=15158332 # Red for Closed without merge
+              MSG="Pull Request Closed"
+              EMOJI="❌"
+            fi
+          fi
+
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{
+            \"embeds\": [{
+              \"title\": \"$EMOJI $MSG #$PR_NUMBER: $TITLE\",
+              \"url\": \"$URL\",
+              \"color\": $COLOR,
+              \"thumbnail\": { \"url\": \"$AVATAR\" },
+              \"author\": {
+                \"name\": \"$USER\",
+                \"icon_url\": \"$AVATAR\"
+              },
+              \"fields\": [
+                { \"name\": \"🌿 Branch\", \"value\": \"\`$HEAD\` → \`$BASE\`\", \"inline\": true },
+                { \"name\": \"🔍 Reviewers\", \"value\": \"\`$REVIEWERS\`\", \"inline\": true },
+                { \"name\": \"📊 Statistics\", \"value\": \"📂 $COMMITS commits\n🟢 +$ADDITIONS / 🔴 -$DELETIONS\", \"inline\": false },
+                { \"name\": \"📝 Description\", \"value\": \"$BODY...\", \"inline\": false }
+              ],
+              \"footer\": {
+                \"text\": \"GitHub Actions • Pull Requests\",
+                \"icon_url\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\"
+              },
+              \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
+            }]
+          }" $DISCORD_WEBHOOK
