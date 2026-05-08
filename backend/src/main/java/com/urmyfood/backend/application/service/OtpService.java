@@ -18,7 +18,7 @@ public class OtpService {
     private final JavaMailSender mailSender;
 
     public void sendOtp(String email) {
-        String code = String.format("%06d", new Random().nextInt(1000000));
+        String code = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
         Otp otp = Otp.builder()
                 .email(email)
                 .code(code)

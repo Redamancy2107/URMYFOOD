@@ -32,4 +32,13 @@ interface AuthApiService {
 
     @POST("api/v1/auth/reset-password")
     suspend fun resetPassword(@Body request: ResetPasswordRequest): Response<ApiResponse<Unit>>
+
+    @POST("api/v1/auth/login-google")
+    suspend fun loginGoogle(@Body request: Map<String, String>): Response<ApiResponse<LoginResponse>>
+
+    @POST("api/v1/auth/send-otp")
+    suspend fun sendOtp(@Body request: Map<String, String>): Response<ApiResponse<Unit>>
+
+    @POST("api/v1/auth/login-otp")
+    suspend fun loginOtp(@Body request: Map<String, String>): Response<ApiResponse<LoginResponse>>
 }

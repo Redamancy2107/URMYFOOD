@@ -19,11 +19,12 @@ interface AuthRepository {
      * Register a new customer account.
      */
     suspend fun register(
-        name: String,
+        fullName: String,
         email: String,
         phone: String,
-        password: String
-    ): Result<User>
+        password: String,
+        otpCode: String
+    ): Result<AuthToken>
 
     /**
      * Request a password reset OTP to be sent to the given email.
@@ -42,4 +43,19 @@ interface AuthRepository {
         resetToken: String,
         newPassword: String
     ): Result<Unit>
+
+    /**
+     * Login with Google ID Token.
+     */
+    suspend fun loginWithGoogle(idToken: String): Result<AuthToken>
+
+    /**
+     * Send OTP for login purpose.
+     */
+    suspend fun sendLoginOtp(email: String): Result<Unit>
+
+    /**
+     * Login with email and OTP code.
+     */
+    suspend fun loginWithOtp(email: String, otpCode: String): Result<AuthToken>
 }

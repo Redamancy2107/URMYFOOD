@@ -25,6 +25,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class AuthService {
 
     private final AccountRepository accountRepository;
@@ -38,15 +39,15 @@ public class AuthService {
 
 
     public AuthResponse register(RegisterRequest request) {
-        if (!otpService.verifyOtp(request.getEmail(), request.getOtpCode())) {
-            throw new RuntimeException("Mã OTP không chính xác hoặc đã hết hạn");
-        }
-        
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists");
         }
         if (accountRepository.findByPhone(request.getPhone()).isPresent()) {
             throw new RuntimeException("Phone number already exists");
+        }
+
+        if (!otpService.verifyOtp(request.getEmail(), request.getOtpCode())) {
+            throw new RuntimeException("Mã OTP không chính xác hoặc đã hết hạn");
         }
 
         Account account = Account.builder()
@@ -89,7 +90,7 @@ public class AuthService {
     }
 
     public AuthResponse loginWithGoogle(String idTokenString) {
-        System.out.println(">>> [AuthService] Receiving Google ID Token: " + idTokenString);
+        log.info("Receiving Google ID Token");
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
                     .setAudience(Collections.singletonList(googleClientId))
@@ -97,18 +98,18 @@ public class AuthService {
 
             GoogleIdToken idToken = verifier.verify(idTokenString);
             if (idToken == null) {
-                System.err.println(">>> [AuthService] Invalid Google ID Token (verifier returned null)");
+                log.error("Invalid Google ID Token (verifier returned null)");
                 throw new RuntimeException("Invalid Google ID Token");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
             String name = (String) payload.get("name");
-            System.out.println(">>> [AuthService] Google Login Successful for email: " + email);
+            log.info("Google Login Successful for email: {}", email);
 
             Account account = accountRepository.findByEmail(email)
                     .orElseGet(() -> {
-                        System.out.println(">>> [AuthService] Creating new account for Google user: " + email);
+                        log.info("Creating new account for Google user: {}", email);
                         Account newAccount = Account.builder()
                                 .email(email)
                                 .fullName(name)
@@ -120,8 +121,7 @@ public class AuthService {
 
             return generateAuthResponse(account);
         } catch (Exception e) {
-            System.err.println(">>> [AuthService] Google Authentication failed: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Google Authentication failed: {}", e.getMessage(), e);
             throw new RuntimeException("Google Authentication failed: " + e.getMessage());
         }
     }
