@@ -7,9 +7,14 @@ import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.usecase.*
+import com.urmyfood.user.presentation.auth.chooserole.ChooseRoleViewModel
 import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.user.presentation.auth.login.LoginViewModel
 import com.urmyfood.user.presentation.auth.register.RegisterViewModel
+import com.urmyfood.user.presentation.main.home.HomeViewModel
+import com.urmyfood.user.presentation.main.search.SearchViewModel
+import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
+import com.urmyfood.user.presentation.main.profile.ProfileViewModel
 
 /**
  * Manual Dependency Injection container (Service Locator pattern).
@@ -61,6 +66,10 @@ object ServiceLocator {
         )
     }
 
+    fun provideChooseRoleViewModelFactory(): ChooseRoleViewModel.Factory {
+        return ChooseRoleViewModel.Factory()
+    }
+
     fun provideRegisterViewModelFactory(): RegisterViewModel.Factory {
         return RegisterViewModel.Factory(
             registerUseCase,
@@ -74,5 +83,21 @@ object ServiceLocator {
             verifyOtpUseCase,
             resetPasswordUseCase
         )
+    }
+
+    fun provideHomeViewModelFactory(): HomeViewModel.Factory {
+        return HomeViewModel.Factory()
+    }
+
+    fun provideSearchViewModelFactory(): SearchViewModel.Factory {
+        return SearchViewModel.Factory()
+    }
+
+    fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {
+        return FavoritesViewModel.Factory()
+    }
+
+    fun provideProfileViewModelFactory(): ProfileViewModel.Factory {
+        return ProfileViewModel.Factory()
     }
 }
