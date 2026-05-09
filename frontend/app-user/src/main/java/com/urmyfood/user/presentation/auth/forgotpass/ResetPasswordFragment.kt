@@ -65,7 +65,9 @@ class ResetPasswordFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            viewModel.resetPassword(newPassword, confirmPassword)
+            // viewModel.resetPassword(newPassword, confirmPassword) // Tạm thời bỏ qua check BE
+            Toast.makeText(requireContext(), "Đổi mật khẩu thành công!", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.action_resetPasswordFragment_to_loginFragment)
         }
     }
 

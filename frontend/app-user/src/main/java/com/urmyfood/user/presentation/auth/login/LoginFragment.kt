@@ -22,8 +22,6 @@ import kotlinx.coroutines.launch
 
 /**
  * Login screen fragment.
- * Handles user login with email/phone and password.
- * Uses LoginViewModel for business logic and state management.
  */
 class LoginFragment : Fragment() {
 
@@ -55,9 +53,10 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnLogin.setOnClickListener {
-            val emailOrPhone = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString()
-            viewModel.login(emailOrPhone, password)
+            // FE only: navigate directly to main app (skip API call)
+            findNavController().navigate(
+                R.id.action_loginFragment_to_mainContainerFragment
+            )
         }
 
         binding.tvForgotPassword.setOnClickListener {
@@ -73,21 +72,15 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            handleGoogleLogin()
+            showFeatureInDevelopment()
         }
 
         binding.btnLoginOtp.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val otpCode = binding.etOtp.text.toString().trim()
-            viewModel.loginWithOtp(email, otpCode)
+            showFeatureInDevelopment()
         }
 
         binding.tvGuest.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                getString(R.string.toast_feature_in_development),
-                Toast.LENGTH_SHORT
-            ).show()
+            showFeatureInDevelopment()
         }
     }
 
@@ -106,27 +99,15 @@ class LoginFragment : Fragment() {
                     // Save token to SharedPreferences
                     com.urmyfood.user.di.ServiceLocator.tokenManager.saveToken(
                         token = state.authToken.accessToken,
-                        refreshToken = state.authToken.refreshToken,
-                        fullName = state.authToken.fullName,
-                        role = state.authToken.role
+                        refreshToken = state.authToken.refreshToken
                     )
                     
-                    val welcomeMessage = if (state.isGoogleLogin) {
-                        "Đăng nhập Google thành công! Chào mừng ${state.authToken.fullName}"
-                    } else {
-                        "Đăng nhập thành công! Chào mừng ${state.authToken.fullName}"
-                    }
+                    Toast.makeText(requireContext(), "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
 
-                    Toast.makeText(requireActivity().applicationContext, welcomeMessage, Toast.LENGTH_SHORT).show()
-
-                    // TODO: Navigate to main screen
-                    // For now, just go back to ChooseRole or show that we're logged in
-                    findNavController().popBackStack(R.id.chooseRoleFragment, true)
-                }
-                is LoginUiState.OtpSent -> {
-                    setLoading(false)
-                    binding.llOtpContainer.isVisible = true
-                    Toast.makeText(requireContext(), "Mã OTP đã được gửi về email của bạn", Toast.LENGTH_SHORT).show()
+                    // Navigate to main app
+                    findNavController().navigate(
+                        R.id.action_loginFragment_to_mainContainerFragment
+                    )
                 }
                 is LoginUiState.Error -> {
                     setLoading(false)
@@ -172,6 +153,14 @@ class LoginFragment : Fragment() {
                 showError("Lỗi đăng nhập Google: ${e.message}")
             }
         }
+    }
+
+    private fun showFeatureInDevelopment() {
+        Toast.makeText(
+            requireContext(),
+            getString(R.string.toast_feature_in_development),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     private fun setLoading(isLoading: Boolean) {

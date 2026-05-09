@@ -52,7 +52,7 @@ class AuthRepositoryImpl(
         phone: String,
         password: String,
         otpCode: String
-    ): Result<AuthToken> {
+    ): Result<User> {
         return try {
             val response = authApiService.register(
                 RegisterRequest(fullName = fullName, email = email, phone = phone, password = password, otpCode = otpCode)

@@ -15,6 +15,11 @@
             app:destination="@id/chooseRoleFragment"
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_splashFragment_to_mainContainerFragment"
+            app:destination="@id/mainContainerFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -36,6 +41,11 @@
             app:exitAnim="@anim/nav_default_exit_anim"
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim" />
+        <action
+            android:id="@+id/action_chooseRoleFragment_to_mainContainerFragment"
+            app:destination="@id/mainContainerFragment"
+            app:popUpTo="@id/nav_graph_auth"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -58,6 +68,11 @@
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim"
             app:popUpTo="@id/chooseRoleFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_mainContainerFragment"
+            app:destination="@id/mainContainerFragment"
+            app:popUpTo="@id/nav_graph_auth"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -80,6 +95,11 @@
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim"
             app:popUpTo="@id/chooseRoleFragment" />
+        <action
+            android:id="@+id/action_signupCustomerFragment_to_mainContainerFragment"
+            app:destination="@id/mainContainerFragment"
+            app:popUpTo="@id/nav_graph_auth"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -130,4 +150,12 @@
             app:popUpTo="@id/chooseRoleFragment"
             app:popUpToInclusive="false" />
     </fragment>
+
+    <!-- Main App Container (after login) -->
+    <fragment
+        android:id="@+id/mainContainerFragment"
+        android:name="com.urmyfood.user.presentation.main.MainContainerFragment"
+        android:label="MainContainer"
+        tools:layout="@layout/fragment_main_container" />
+
 </navigation>
