@@ -72,7 +72,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            handleGoogleLogin()
+            showFeatureInDevelopment()
         }
 
         binding.btnLoginOtp.setOnClickListener {
