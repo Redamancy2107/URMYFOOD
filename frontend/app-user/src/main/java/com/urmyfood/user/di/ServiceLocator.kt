@@ -72,8 +72,7 @@ object ServiceLocator {
 
     fun provideRegisterViewModelFactory(): RegisterViewModel.Factory {
         return RegisterViewModel.Factory(
-            registerUseCase,
-            sendLoginOtpUseCase
+            registerUseCase
         )
     }
 

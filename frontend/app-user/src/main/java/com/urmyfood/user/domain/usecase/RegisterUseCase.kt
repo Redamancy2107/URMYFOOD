@@ -26,7 +26,6 @@ class RegisterUseCase(
         if (phone.isBlank()) return Result.Error("Số điện thoại không được để trống")
         if (password.isBlank()) return Result.Error("Mật khẩu không được để trống")
         if (password != confirmPassword) return Result.Error("Mật khẩu xác nhận không khớp")
-        if (otpCode.isBlank()) return Result.Error("Vui lòng nhập mã OTP")
 
         return authRepository.register(fullName, email, phone, password, otpCode)
     }

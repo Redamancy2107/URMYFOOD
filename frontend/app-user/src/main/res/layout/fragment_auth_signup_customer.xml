@@ -204,49 +204,6 @@
                 android:textSize="15sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- OTP Send Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSendOtp"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Gửi mã xác nhận qua Email"
-            android:textColor="@color/primary"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilConfirmPassword" />
-
-        <!-- OTP Input (Hidden by default) -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilOtp"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:visibility="gone"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeColor="@color/input_stroke_focused"
-            app:startIconDrawable="@drawable/ic_lock"
-            app:startIconTint="@color/text_hint"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnSendOtp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etOtp"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:hint="Nhập mã OTP"
-                android:inputType="number"
-                android:maxLength="6"
-                android:textSize="15sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
         <!-- Terms (moved above Register button) -->
         <LinearLayout
             android:id="@+id/llTerms"
@@ -257,7 +214,7 @@
             android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tilOtp">
+            app:layout_constraintTop_toBottomOf="@+id/tilConfirmPassword">
 
             <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/cbTerms"
