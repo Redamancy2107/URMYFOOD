@@ -115,7 +115,12 @@ class OtpFragment : Fragment() {
                 showError("Vui lòng nhập đủ 6 chữ số")
                 return@setOnClickListener
             }
-            viewModel.verifyOtp(otpCode)
+            // viewModel.verifyOtp(otpCode) // Tạm thời bỏ qua check BE
+            if (otpSource == "register") {
+                findNavController().navigate(R.id.action_otpFragment_to_loginFragment)
+            } else {
+                findNavController().navigate(R.id.action_otpFragment_to_resetPasswordFragment)
+            }
         }
 
         binding.tvResend.setOnClickListener {

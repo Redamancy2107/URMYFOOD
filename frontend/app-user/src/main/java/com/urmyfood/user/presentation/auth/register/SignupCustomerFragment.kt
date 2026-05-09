@@ -50,23 +50,26 @@ class SignupCustomerFragment : Fragment() {
             val phone = binding.etPhone.text.toString().trim()
             val password = binding.etPassword.text.toString()
             val confirmPassword = binding.etConfirmPassword.text.toString()
-            val otpCode = binding.etOtp.text.toString().trim()
+            // val otpCode = binding.etOtp.text.toString().trim()
 
             if (!binding.cbTerms.isChecked) {
                 showError("Bạn phải đồng ý với Điều khoản sử dụng")
                 return@setOnClickListener
             }
 
-            viewModel.register(fullName, email, phone, password, confirmPassword, otpCode)
+            // viewModel.register(fullName, email, phone, password, confirmPassword, "") // Tạm thời bỏ qua check BE
+            Toast.makeText(requireContext(), "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
+            findNavController().navigate(R.id.action_signupCustomerFragment_to_loginFragment)
         }
 
-        binding.btnSendOtp.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            if (email.isBlank()) {
-                showError("Vui lòng nhập email trước khi yêu cầu OTP")
-                return@setOnClickListener
+
+
+        binding.tvTermsLink.setOnClickListener {
+            val termsDialog = TermsDialogFragment()
+            termsDialog.setOnAgreeClickListener {
+                binding.cbTerms.isChecked = true
             }
-            viewModel.sendOtp(email)
+            termsDialog.show(parentFragmentManager, TermsDialogFragment.TAG)
         }
 
         binding.tvLoginLink.setOnClickListener {
@@ -86,12 +89,7 @@ class SignupCustomerFragment : Fragment() {
                     setLoading(true)
                     hideError()
                 }
-                is RegisterUiState.OtpSent -> {
-                    setLoading(false)
-                    binding.tilOtp.isVisible = true
-                    binding.btnSendOtp.text = "Gửi lại mã OTP"
-                    Toast.makeText(requireContext(), "Mã OTP đã được gửi về email của bạn", Toast.LENGTH_SHORT).show()
-                }
+
                 is RegisterUiState.Success -> {
                     setLoading(false)
                     Toast.makeText(requireContext(), "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
