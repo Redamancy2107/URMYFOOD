@@ -9,14 +9,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentAuthSignupCustomerBinding
 
 /**
  * Registration screen fragment.
- * Handles new customer account creation.
- * Uses RegisterViewModel for business logic and state management.
  */
 class SignupCustomerFragment : Fragment() {
 
@@ -77,14 +74,6 @@ class SignupCustomerFragment : Fragment() {
                 R.id.action_signupCustomerFragment_to_loginFragment
             )
         }
-
-        binding.tvTermsLink.setOnClickListener {
-            val dialog = TermsDialogFragment()
-            dialog.setOnAgreeClickListener {
-                binding.cbTerms.isChecked = true
-            }
-            dialog.show(childFragmentManager, TermsDialogFragment.TAG)
-        }
     }
 
     private fun observeViewModel() {
@@ -105,22 +94,12 @@ class SignupCustomerFragment : Fragment() {
                 }
                 is RegisterUiState.Success -> {
                     setLoading(false)
-                    // Save token to SharedPreferences
-                    com.urmyfood.user.di.ServiceLocator.tokenManager.saveToken(
-                        token = state.authToken.accessToken,
-                        refreshToken = state.authToken.refreshToken,
-                        fullName = state.authToken.fullName,
-                        role = state.authToken.role
+                    Toast.makeText(requireContext(), "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
+
+                    // Navigate back to login screen
+                    findNavController().navigate(
+                        R.id.action_signupCustomerFragment_to_loginFragment
                     )
-
-                    Toast.makeText(
-                        requireContext(),
-                        "Đăng ký thành công! Chào mừng ${state.authToken.fullName}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    // TODO: Navigate to main screen
-                    findNavController().popBackStack(R.id.chooseRoleFragment, true)
                 }
                 is RegisterUiState.Error -> {
                     setLoading(false)

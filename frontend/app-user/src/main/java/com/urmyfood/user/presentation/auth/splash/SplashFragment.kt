@@ -14,7 +14,9 @@ import com.urmyfood.user.util.BrandingHelper
 
 /**
  * Splash screen fragment.
- * Displays the app branding and auto-navigates to the ChooseRole screen after a delay.
+ * Displays the app branding and auto-navigates based on login state.
+ * If logged in → MainContainerFragment (main app with bottom nav)
+ * If not → ChooseRoleFragment (auth flow)
  */
 class SplashFragment : Fragment() {
 
@@ -43,10 +45,8 @@ class SplashFragment : Fragment() {
             if (isAdded) {
                 val isLoggedIn = com.urmyfood.user.di.ServiceLocator.tokenManager.isLoggedIn()
                 if (isLoggedIn) {
-                    // TODO: Navigate to main screen
-                    // For now, still go to ChooseRole but with a toast
-                    android.widget.Toast.makeText(requireContext(), "Đã đăng nhập: ${com.urmyfood.user.di.ServiceLocator.tokenManager.getFullName()}", android.widget.Toast.LENGTH_SHORT).show()
-                    findNavController().navigate(R.id.action_splashFragment_to_chooseRoleFragment)
+                    // Navigate to main app
+                    findNavController().navigate(R.id.action_splashFragment_to_mainContainerFragment)
                 } else {
                     findNavController().navigate(
                         R.id.action_splashFragment_to_chooseRoleFragment
