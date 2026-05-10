@@ -80,7 +80,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.tvGuest.setOnClickListener {
-            showFeatureInDevelopment()
+            viewModel.loginAsGuest()
         }
     }
 
@@ -105,6 +105,12 @@ class LoginFragment : Fragment() {
                     Toast.makeText(requireContext(), "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
 
                     // Navigate to main app
+                    findNavController().navigate(
+                        R.id.action_loginFragment_to_mainContainerFragment
+                    )
+                }
+                is LoginUiState.GuestSuccess -> {
+                    setLoading(false)
                     findNavController().navigate(
                         R.id.action_loginFragment_to_mainContainerFragment
                     )

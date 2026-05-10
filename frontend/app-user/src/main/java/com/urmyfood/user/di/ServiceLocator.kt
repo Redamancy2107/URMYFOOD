@@ -1,12 +1,15 @@
 package com.urmyfood.user.di
 
 import android.content.Context
+import com.urmyfood.user.data.local.GuestSessionManager
 import com.urmyfood.user.data.local.TokenManager
+import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
 import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.usecase.*
+import com.urmyfood.user.domain.usecase.LoginAsGuestUseCase
 import com.urmyfood.user.presentation.auth.chooserole.ChooseRoleViewModel
 import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.user.presentation.auth.login.LoginViewModel
@@ -38,6 +41,10 @@ object ServiceLocator {
         TokenManager(applicationContext)
     }
 
+    val guestSessionManager: GuestRepository by lazy {
+        GuestSessionManager(applicationContext)
+    }
+
     // ==================== DOMAIN LAYER ====================
 
     private val authRepository: AuthRepository by lazy {
@@ -54,6 +61,7 @@ object ServiceLocator {
     val forgotPasswordUseCase: ForgotPasswordUseCase by lazy { ForgotPasswordUseCase(authRepository) }
     val verifyOtpUseCase: VerifyOtpUseCase by lazy { VerifyOtpUseCase(authRepository) }
     val resetPasswordUseCase: ResetPasswordUseCase by lazy { ResetPasswordUseCase(authRepository) }
+    val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -62,12 +70,13 @@ object ServiceLocator {
             loginUseCase,
             loginWithGoogleUseCase,
             sendLoginOtpUseCase,
-            loginWithOtpUseCase
+            loginWithOtpUseCase,
+            loginAsGuestUseCase
         )
     }
 
     fun provideChooseRoleViewModelFactory(): ChooseRoleViewModel.Factory {
-        return ChooseRoleViewModel.Factory()
+        return ChooseRoleViewModel.Factory(loginAsGuestUseCase)
     }
 
     fun provideRegisterViewModelFactory(): RegisterViewModel.Factory {
