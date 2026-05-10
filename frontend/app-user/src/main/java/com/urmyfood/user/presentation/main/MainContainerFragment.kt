@@ -4,7 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.urmyfood.user.R
@@ -30,15 +32,27 @@ class MainContainerFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupBottomNavigation()
+        val navController = setupBottomNavigation()
+        setupBackNavigation(navController)
     }
 
-    private fun setupBottomNavigation() {
+    private fun setupBottomNavigation(): NavController {
         val navHostFragment = childFragmentManager
             .findFragmentById(R.id.nav_host_main) as NavHostFragment
         val navController = navHostFragment.navController
-
         binding.bottomNavigation.setupWithNavController(navController)
+        return navController
+    }
+
+    private fun setupBackNavigation(navController: NavController) {
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
+            if (navController.currentDestination?.id != R.id.homeFragment) {
+                navController.navigate(R.id.homeFragment)
+            } else {
+                isEnabled = false
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
+        }
     }
 
     override fun onDestroyView() {
