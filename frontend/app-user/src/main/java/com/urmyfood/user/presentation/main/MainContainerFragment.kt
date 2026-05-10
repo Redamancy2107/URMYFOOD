@@ -47,7 +47,7 @@ class MainContainerFragment : Fragment() {
     private fun setupBackNavigation(navController: NavController) {
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner) {
             if (navController.currentDestination?.id != R.id.homeFragment) {
-                navController.navigate(R.id.homeFragment)
+                binding.bottomNavigation.selectedItemId = R.id.homeFragment
             } else {
                 isEnabled = false
                 requireActivity().onBackPressedDispatcher.onBackPressed()
