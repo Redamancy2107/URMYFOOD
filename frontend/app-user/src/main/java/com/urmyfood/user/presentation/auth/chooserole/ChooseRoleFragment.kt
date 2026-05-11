@@ -36,6 +36,7 @@ class ChooseRoleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun setupClickListeners() {
@@ -56,7 +57,17 @@ class ChooseRoleFragment : Fragment() {
         }
 
         binding.tvGuest.setOnClickListener {
-            showFeatureInDevelopment()
+            viewModel.loginAsGuest()
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            if (state is ChooseRoleUiState.GuestSuccess) {
+                findNavController().navigate(
+                    R.id.action_chooseRoleFragment_to_mainContainerFragment
+                )
+            }
         }
     }
 

@@ -11,6 +11,8 @@ import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.presentation.common.GuestLoginDialog
+import com.urmyfood.user.domain.repository.GuestRepository
 
 /**
  * Profile screen fragment.
@@ -41,49 +43,67 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupUserInfo() {
-        // Display user's name from TokenManager
-        val fullName = ServiceLocator.tokenManager.getFullName()
-        binding.tvUserName.text = fullName ?: getString(R.string.profile_default_name)
+        if (ServiceLocator.guestSessionManager.isGuest()) {
+            binding.tvUserName.text = getString(R.string.guest_profile_name)
+        } else {
+            val fullName = ServiceLocator.tokenManager.getFullName()
+            binding.tvUserName.text = fullName ?: getString(R.string.profile_default_name)
+        }
     }
 
     private fun setupClickListeners() {
-        // Back button
         binding.btnBack.setOnClickListener {
             showFeatureInDevelopment()
         }
 
-        // Settings button → feature in development
         binding.btnSettings.setOnClickListener {
             showFeatureInDevelopment()
         }
 
-        // Menu items → all feature in development
-        binding.menuEditProfile.setOnClickListener { showFeatureInDevelopment() }
-        binding.menuAddress.setOnClickListener { showFeatureInDevelopment() }
-        binding.menuOrderHistory.setOnClickListener { showFeatureInDevelopment() }
-        binding.menuCoupons.setOnClickListener { showFeatureInDevelopment() }
-        binding.menuChangePassword.setOnClickListener { showFeatureInDevelopment() }
+        binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        binding.menuChangePassword.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
 
-        // Logout button
         binding.btnLogout.setOnClickListener {
             ServiceLocator.tokenManager.clear()
-            Toast.makeText(
-                requireContext(),
-                "Đã đăng xuất thành công",
-                Toast.LENGTH_SHORT
-            ).show()
+            ServiceLocator.guestSessionManager.clearGuest()
+            Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
+            navigateToAuth()
+        }
+    }
 
-            // Navigate back to auth flow
-            // Pop up to the MainContainerFragment and go back to auth
-            val parentNavController = requireActivity()
-                .supportFragmentManager
-                .findFragmentById(R.id.nav_host_fragment)
-                ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+    private fun showGuestDialogOrRun(action: () -> Unit) {
+        if (ServiceLocator.guestSessionManager.isGuest()) {
+            showGuestLoginDialog()
+        } else {
+            action()
+        }
+    }
 
-            parentNavController?.let {
-                it.popBackStack(R.id.nav_graph_auth, false)
-                it.navigate(R.id.splashFragment)
-            }
+    private fun showGuestLoginDialog() {
+        val dialog = GuestLoginDialog()
+        dialog.onLoginClick = {
+            ServiceLocator.guestSessionManager.clearGuest()
+            navigateToAuth()
+        }
+        dialog.onRegisterClick = {
+            ServiceLocator.guestSessionManager.clearGuest()
+            navigateToAuth()
+        }
+        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
+    }
+
+    private fun navigateToAuth() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.popBackStack(R.id.nav_graph_auth, false)
+            it.navigate(R.id.splashFragment)
         }
     }
 
