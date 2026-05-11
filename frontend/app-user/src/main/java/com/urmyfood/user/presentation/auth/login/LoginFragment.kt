@@ -80,7 +80,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.tvGuest.setOnClickListener {
-            showFeatureInDevelopment()
+            viewModel.loginAsGuest()
         }
     }
 
@@ -108,6 +108,10 @@ class LoginFragment : Fragment() {
                     findNavController().navigate(
                         R.id.action_loginFragment_to_mainContainerFragment
                     )
+                }
+                is LoginUiState.GuestSuccess -> {
+                    setLoading(false)
+                    findNavController().navigate(R.id.action_loginFragment_to_mainContainerFragment)
                 }
                 is LoginUiState.Error -> {
                     setLoading(false)
