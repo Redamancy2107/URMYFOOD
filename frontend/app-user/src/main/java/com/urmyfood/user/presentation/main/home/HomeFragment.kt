@@ -7,22 +7,22 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainHomeBinding
+import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.util.BrandingHelper
 
-/**
- * Home screen fragment.
- * Displays featured food items, categories, and promotional content.
- */
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentMainHomeBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels {
-        com.urmyfood.user.di.ServiceLocator.provideHomeViewModelFactory()
+        ServiceLocator.provideHomeViewModelFactory()
     }
+
+    private val adapter = FoodPostAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,37 +36,71 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         BrandingHelper.styleAppName(binding.tvLogo)
+        setupRecyclerView()
+        setupSwipeRefresh()
         setupClickListeners()
+        observeUiState()
+    }
+
+    private fun setupRecyclerView() {
+        binding.rvPosts.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvPosts.adapter = adapter
+        binding.rvPosts.isNestedScrollingEnabled = false
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.loadPosts()
+        }
+    }
+
+    private fun observeUiState() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is NewsfeedUiState.Loading -> {
+                    // Only show shimmer on initial load (no data yet).
+                    // During swipe-to-refresh the spinner already indicates loading,
+                    // so we keep the existing list visible.
+                    if (adapter.currentList.isEmpty()) {
+                        binding.shimmerLayout.visibility = View.VISIBLE
+                        binding.shimmerLayout.startShimmer()
+                        binding.rvPosts.visibility = View.GONE
+                    }
+                    binding.tvError.visibility = View.GONE
+                }
+                is NewsfeedUiState.Success -> {
+                    binding.swipeRefresh.isRefreshing = false
+                    binding.shimmerLayout.stopShimmer()
+                    binding.shimmerLayout.visibility = View.GONE
+                    if (state.posts.isEmpty()) {
+                        binding.rvPosts.visibility = View.GONE
+                        binding.tvError.visibility = View.VISIBLE
+                        binding.tvError.text = getString(R.string.home_empty_posts)
+                    } else {
+                        binding.tvError.visibility = View.GONE
+                        binding.rvPosts.visibility = View.VISIBLE
+                        adapter.submitList(state.posts)
+                    }
+                }
+                is NewsfeedUiState.Error -> {
+                    binding.swipeRefresh.isRefreshing = false
+                    binding.shimmerLayout.stopShimmer()
+                    binding.shimmerLayout.visibility = View.GONE
+                    binding.rvPosts.visibility = View.GONE
+                    binding.tvError.visibility = View.VISIBLE
+                    binding.tvError.text = state.message
+                }
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        // Notification button → feature in development
-        binding.btnNotification.setOnClickListener {
-            showFeatureInDevelopment()
-        }
-
-        // "Xem tất cả" link → feature in development
-        binding.tvSeeAll.setOnClickListener {
-            showFeatureInDevelopment()
-        }
-
-        // Category icons → feature in development
+        binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
+        binding.tvSeeAll.setOnClickListener { showFeatureInDevelopment() }
         binding.catVietnamese.setOnClickListener { showFeatureInDevelopment() }
         binding.catFastFood.setOnClickListener { showFeatureInDevelopment() }
         binding.catCoffee.setOnClickListener { showFeatureInDevelopment() }
         binding.catRestaurant.setOnClickListener { showFeatureInDevelopment() }
-
-        // Featured food cards → feature in development
-        binding.cardFeatured1.setOnClickListener { showFeatureInDevelopment() }
-        binding.cardFeatured2.setOnClickListener { showFeatureInDevelopment() }
-
-        // Favorite buttons → feature in development
-        binding.btnFav1.setOnClickListener { showFeatureInDevelopment() }
-        binding.btnFav2.setOnClickListener { showFeatureInDevelopment() }
-
-        // Add to cart buttons → feature in development
-        binding.btnAdd1.setOnClickListener { showFeatureInDevelopment() }
-        binding.btnAdd2.setOnClickListener { showFeatureInDevelopment() }
     }
 
     private fun showFeatureInDevelopment() {

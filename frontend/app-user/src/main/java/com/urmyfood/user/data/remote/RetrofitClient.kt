@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
  */
 object RetrofitClient {
 
-    // TODO: Update with actual backend URL
-    private const val BASE_URL = "https://api.urmyfood.com/"
+    // 10.0.2.2 = localhost from Android emulator
+    private const val BASE_URL = "http://10.0.2.2:8080/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -32,4 +32,5 @@ object RetrofitClient {
         .build()
 
     val authApiService: AuthApiService = retrofit.create(AuthApiService::class.java)
+    val postApiService: PostApiService = retrofit.create(PostApiService::class.java)
 }
