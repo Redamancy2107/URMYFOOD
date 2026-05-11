@@ -4,20 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainContainerBinding
 
-/**
- * Main container fragment that hosts the bottom navigation bar
- * and the inner NavHostFragment for the 4 main tabs.
- */
 class MainContainerFragment : Fragment() {
 
     private var _binding: FragmentMainContainerBinding? = null
     private val binding get() = _binding!!
+
+    private lateinit var innerNavController: NavController
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,14 +32,41 @@ class MainContainerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupBottomNavigation()
+        setupBackPress()
     }
 
     private fun setupBottomNavigation() {
         val navHostFragment = childFragmentManager
             .findFragmentById(R.id.nav_host_main) as NavHostFragment
-        val navController = navHostFragment.navController
+        innerNavController = navHostFragment.navController
+        binding.bottomNavigation.setupWithNavController(innerNavController)
+    }
 
-        binding.bottomNavigation.setupWithNavController(navController)
+    private fun setupBackPress() {
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    val currentDest = innerNavController.currentDestination?.id
+                    if (currentDest != R.id.homeFragment) {
+                        binding.bottomNavigation.selectedItemId = R.id.homeFragment
+                    } else {
+                        showExitDialog()
+                    }
+                }
+            }
+        )
+    }
+
+    private fun showExitDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.exit_dialog_title)
+            .setMessage(R.string.exit_dialog_message)
+            .setPositiveButton(R.string.exit_dialog_confirm) { _, _ ->
+                requireActivity().finish()
+            }
+            .setNegativeButton(R.string.exit_dialog_cancel, null)
+            .show()
     }
 
     override fun onDestroyView() {

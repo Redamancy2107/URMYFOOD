@@ -15,6 +15,20 @@
     <string name="choose_role_google">Đăng nhập bằng Google</string>
     <string name="choose_role_guest">Tiếp tục với Guest</string>
 
+    <!-- Guest Login Dialog -->
+    <string name="guest_dialog_title">Đăng nhập để tiếp tục</string>
+    <string name="guest_dialog_message">Tính năng này yêu cầu tài khoản. Bạn muốn đăng nhập hay tạo tài khoản mới?</string>
+    <string name="guest_dialog_login">Đăng nhập</string>
+    <string name="guest_dialog_register">Đăng ký</string>
+    <string name="guest_dialog_cancel">Để sau</string>
+    <string name="guest_profile_name">Khách</string>
+
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_dialog_title">Thoát ứng dụng</string>
+    <string name="exit_dialog_message">Bạn có chắc muốn thoát không?</string>
+    <string name="exit_dialog_confirm">Thoát</string>
+    <string name="exit_dialog_cancel">Ở lại</string>
+
     <!-- Terms Dialog -->
     <string name="terms_dialog_title">Điều khoản sử dụng</string>
     <string name="terms_msg_1">Chào bạn!Trước khi sử dụng URMYFOOD, bạn cần đồng ý với một số điều khoản nhé.</string>
@@ -86,6 +100,7 @@
     <string name="home_category_title">Danh Mục</string>
     <string name="home_category_see_all">Xem tất cả</string>
     <string name="home_featured_title">Món Mới Nổi Bật</string>
+    <string name="home_empty_posts">Chưa có bài đăng nào</string>
     <string name="home_tag_recommend">KHUYÊN THỬ</string>
     <string name="home_cat_vietnamese">Món Việt</string>
     <string name="home_cat_fast_food">Đồ Ăn Nhanh</string>
