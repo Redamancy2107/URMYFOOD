@@ -11,6 +11,7 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.presentation.common.GuestLoginDialog
+import com.urmyfood.user.domain.repository.GuestRepository
 
 class ProfileFragment : Fragment() {
 
@@ -84,10 +85,10 @@ class ProfileFragment : Fragment() {
                 ServiceLocator.guestSessionManager.clearGuest()
                 navigateToAuth()
             }
-        }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
+        }
     }
-
+    
     private fun navigateToAuth() {
         val parentNavController = requireActivity()
             .supportFragmentManager
@@ -98,6 +99,7 @@ class ProfileFragment : Fragment() {
             it.popBackStack(R.id.nav_graph_auth, false)
             it.navigate(R.id.splashFragment)
         }
+        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
     private fun showFeatureInDevelopment() {

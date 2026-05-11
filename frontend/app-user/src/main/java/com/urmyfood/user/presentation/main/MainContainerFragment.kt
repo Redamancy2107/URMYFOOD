@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -35,7 +36,7 @@ class MainContainerFragment : Fragment() {
         setupBackPress()
     }
 
-    private fun setupBottomNavigation() {
+    private fun setupBottomNavigation(): NavController {
         val navHostFragment = childFragmentManager
             .findFragmentById(R.id.nav_host_main) as NavHostFragment
         innerNavController = navHostFragment.navController

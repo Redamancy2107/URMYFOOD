@@ -3,6 +3,7 @@ package com.urmyfood.user.di
 import android.content.Context
 import com.urmyfood.user.data.local.GuestSessionManager
 import com.urmyfood.user.data.local.TokenManager
+import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
 import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.repository.AuthRepositoryImpl

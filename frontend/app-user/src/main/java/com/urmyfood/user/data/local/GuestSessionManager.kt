@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import com.urmyfood.user.domain.repository.GuestRepository
 
 class GuestSessionManager(context: Context) : GuestRepository {
-
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
