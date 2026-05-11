@@ -9,7 +9,7 @@ class GuestSessionManager(context: Context) : GuestRepository {
         context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     companion object {
-        private const val PREF_NAME = "urmyfood_prefs"
+        private const val PREF_NAME = "urmyfood_guest_prefs"
         private const val KEY_IS_GUEST = "is_guest"
     }
 

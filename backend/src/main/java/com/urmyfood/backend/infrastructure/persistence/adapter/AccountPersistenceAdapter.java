@@ -48,7 +48,7 @@ public class AccountPersistenceAdapter implements AccountRepository {
                 .build();
     }
 
-    private Account toDomain(AccountEntity entity) {
+    Account toDomain(AccountEntity entity) {
         return Account.builder()
                 .id(entity.getId())
                 .fullName(entity.getFullName())

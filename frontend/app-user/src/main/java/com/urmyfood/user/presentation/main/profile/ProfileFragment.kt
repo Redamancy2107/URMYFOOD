@@ -7,24 +7,19 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 import com.urmyfood.user.domain.repository.GuestRepository
 
-/**
- * Profile screen fragment.
- * Displays user info, settings menu items, and logout button.
- */
 class ProfileFragment : Fragment() {
 
     private var _binding: FragmentMainProfileBinding? = null
     private val binding get() = _binding!!
 
     private val viewModel: ProfileViewModel by viewModels {
-        com.urmyfood.user.di.ServiceLocator.provideProfileViewModelFactory()
+        ServiceLocator.provideProfileViewModelFactory()
     }
 
     override fun onCreateView(
@@ -52,13 +47,8 @@ class ProfileFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener {
-            showFeatureInDevelopment()
-        }
-
-        binding.btnSettings.setOnClickListener {
-            showFeatureInDevelopment()
-        }
+        binding.btnBack.setOnClickListener { showFeatureInDevelopment() }
+        binding.btnSettings.setOnClickListener { showFeatureInDevelopment() }
 
         binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
@@ -85,16 +75,20 @@ class ProfileFragment : Fragment() {
     private fun showGuestLoginDialog() {
         val dialog = GuestLoginDialog()
         dialog.onLoginClick = {
-            ServiceLocator.guestSessionManager.clearGuest()
-            navigateToAuth()
+            if (isAdded) {
+                ServiceLocator.guestSessionManager.clearGuest()
+                navigateToAuth()
+            }
         }
         dialog.onRegisterClick = {
-            ServiceLocator.guestSessionManager.clearGuest()
-            navigateToAuth()
-        }
+            if (isAdded) {
+                ServiceLocator.guestSessionManager.clearGuest()
+                navigateToAuth()
+            }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
+        }
     }
-
+    
     private fun navigateToAuth() {
         val parentNavController = requireActivity()
             .supportFragmentManager
@@ -105,6 +99,7 @@ class ProfileFragment : Fragment() {
             it.popBackStack(R.id.nav_graph_auth, false)
             it.navigate(R.id.splashFragment)
         }
+        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
     private fun showFeatureInDevelopment() {

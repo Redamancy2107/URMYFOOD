@@ -7,9 +7,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.usecase.LoginAsGuestUseCase
 
-/**
- * ViewModel for the ChooseRole screen.
- */
 class ChooseRoleViewModel(
     private val loginAsGuestUseCase: LoginAsGuestUseCase
 ) : ViewModel() {

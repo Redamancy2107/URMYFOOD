@@ -11,10 +11,6 @@ import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentAuthChooseRoleBinding
 
-/**
- * Choose Role screen fragment.
- * Allows the user to choose between Login, Register, or Google Login.
- */
 class ChooseRoleFragment : Fragment() {
 
     private var _binding: FragmentAuthChooseRoleBinding? = null
@@ -41,15 +37,11 @@ class ChooseRoleFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnLogin.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_chooseRoleFragment_to_loginFragment
-            )
+            findNavController().navigate(R.id.action_chooseRoleFragment_to_loginFragment)
         }
 
         binding.btnRegister.setOnClickListener {
-            findNavController().navigate(
-                R.id.action_chooseRoleFragment_to_signupCustomerFragment
-            )
+            findNavController().navigate(R.id.action_chooseRoleFragment_to_signupCustomerFragment)
         }
 
         binding.btnGoogleLogin.setOnClickListener {
@@ -63,10 +55,10 @@ class ChooseRoleFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            if (state is ChooseRoleUiState.GuestSuccess) {
-                findNavController().navigate(
-                    R.id.action_chooseRoleFragment_to_mainContainerFragment
-                )
+            when (state) {
+                is ChooseRoleUiState.GuestSuccess ->
+                    findNavController().navigate(R.id.action_chooseRoleFragment_to_mainContainerFragment)
+                else -> Unit
             }
         }
     }

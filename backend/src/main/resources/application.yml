@@ -53,6 +53,12 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+debug: true
+
+logging:
+  level:
+    org.flywaydb: DEBUG
+
 management:
   endpoints:
     web:

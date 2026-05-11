@@ -14,9 +14,6 @@ import com.urmyfood.user.domain.usecase.LoginWithOtpUseCase
 import com.urmyfood.user.domain.usecase.SendLoginOtpUseCase
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for the Login screen.
- */
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
@@ -30,15 +27,10 @@ class LoginViewModel(
 
     fun login(emailOrPhone: String, password: String) {
         _loginState.value = LoginUiState.Loading
-
         viewModelScope.launch {
             when (val result = loginUseCase(emailOrPhone, password)) {
-                is Result.Success -> {
-                    _loginState.value = LoginUiState.Success(result.data)
-                }
-                is Result.Error -> {
-                    _loginState.value = LoginUiState.Error(result.message)
-                }
+                is Result.Success -> _loginState.value = LoginUiState.Success(result.data)
+                is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
         }
     }

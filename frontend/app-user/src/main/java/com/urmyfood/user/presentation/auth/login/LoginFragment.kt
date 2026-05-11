@@ -20,9 +20,6 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
-/**
- * Login screen fragment.
- */
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentAuthLoginBinding? = null
@@ -96,7 +93,6 @@ class LoginFragment : Fragment() {
                 }
                 is LoginUiState.Success -> {
                     setLoading(false)
-                    // Save token to SharedPreferences
                     com.urmyfood.user.di.ServiceLocator.tokenManager.saveToken(
                         token = state.authToken.accessToken,
                         refreshToken = state.authToken.refreshToken
@@ -104,16 +100,13 @@ class LoginFragment : Fragment() {
                     
                     Toast.makeText(requireContext(), "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
 
-                    // Navigate to main app
                     findNavController().navigate(
                         R.id.action_loginFragment_to_mainContainerFragment
                     )
                 }
                 is LoginUiState.GuestSuccess -> {
                     setLoading(false)
-                    findNavController().navigate(
-                        R.id.action_loginFragment_to_mainContainerFragment
-                    )
+                    findNavController().navigate(R.id.action_loginFragment_to_mainContainerFragment)
                 }
                 is LoginUiState.Error -> {
                     setLoading(false)
