@@ -9,7 +9,6 @@ import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.data.repository.PostRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
-import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.domain.repository.PostRepository
 import com.urmyfood.user.domain.usecase.*
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
@@ -84,7 +83,8 @@ object ServiceLocator {
             loginWithGoogleUseCase,
             sendLoginOtpUseCase,
             loginWithOtpUseCase,
-            loginAsGuestUseCase
+            loginAsGuestUseCase,
+            tokenManager
         )
     }
 
@@ -119,6 +119,9 @@ object ServiceLocator {
     }
 
     fun provideProfileViewModelFactory(): ProfileViewModel.Factory {
-        return ProfileViewModel.Factory()
+        return ProfileViewModel.Factory(
+            tokenManager,
+            guestSessionManager
+        )
     }
 }
