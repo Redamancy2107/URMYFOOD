@@ -19,6 +19,9 @@ import java.util.Locale
 class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCallback()) {
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
+    
+    var onCommentClick: (() -> Unit)? = null
+    var onShareClick: (() -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -35,10 +38,15 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(post: FoodPost) {
+            val ctx = binding.root.context
             with(binding) {
                 // --- Header: shop info ---
                 tvShopName.text = post.shopName
-                tvPostMeta.text = post.endTime?.let { "Hết hạn lúc $it" } ?: "Đang mở bán"
+                
+                // Mock metadata: Time + Dot + Location
+                val mockTime = listOf("Vừa xong", "5 phút trước", "1 giờ trước", "3 giờ trước").random()
+                val mockLocation = listOf("Hà Nội", "KTX Khu A", "Làng Đại học", "Thủ Đức").random()
+                tvPostMeta.text = "$mockTime • $mockLocation"
 
                 // --- Content description ---
                 tvContent.text = post.content ?: post.dishName
@@ -46,17 +54,25 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 // --- Price ---
                 tvPrice.text = "${currencyFormat.format(post.price)}đ"
 
-                // --- Remaining quantity badge ---
-                tvRemainingQuantity.text = "Còn lại: ${post.remainingQuantity} suất"
-
-                // --- Flash sale badge and original price ---
-                if (post.isFlashSale && post.originalPrice > post.price) {
+                // --- Flash sale / Best seller badge ---
+                if (post.isFlashSale) {
                     tvFlashSaleBadge.visibility = View.VISIBLE
+                    tvFlashSaleBadge.text = ctx.getString(R.string.badge_flash_sale)
+                    tvRemainingQuantity.visibility = View.VISIBLE
+                    tvRemainingQuantity.text = "Còn lại: ${post.remainingQuantity} suất"
+                    
                     tvOriginalPrice.visibility = View.VISIBLE
                     tvOriginalPrice.paintFlags = tvOriginalPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                     tvOriginalPrice.text = "${currencyFormat.format(post.originalPrice)}đ"
                 } else {
-                    tvFlashSaleBadge.visibility = View.GONE
+                    // Mock "Best Seller" for items with low remaining quantity or randomly
+                    if (post.remainingQuantity < 10 || (0..1).random() == 1) {
+                        tvFlashSaleBadge.visibility = View.VISIBLE
+                        tvFlashSaleBadge.text = ctx.getString(R.string.badge_best_seller)
+                    } else {
+                        tvFlashSaleBadge.visibility = View.GONE
+                    }
+                    tvRemainingQuantity.visibility = View.GONE
                     tvOriginalPrice.visibility = View.GONE
                 }
 
@@ -81,26 +97,46 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .circleCrop()
                     .into(ivShopAvatar)
 
-                // --- Action buttons (placeholder - feature in dev) ---
-                // Mock data - remove when BE ready
+                // --- Action buttons logic ---
+                // Mock data
                 tvLikeCount.text = "${(50..200).random()}"
                 tvCommentCount.text = "${(2..30).random()}"
 
-                val ctx = root.context
-                btnLike.setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                // Follow toggle
+                var isFollowing = false
+                btnFollow.setOnClickListener {
+                    isFollowing = !isFollowing
+                    if (isFollowing) {
+                        btnFollow.text = ctx.getString(R.string.following)
+                        btnFollow.setTextColor(ctx.getColor(R.color.text_secondary))
+                    } else {
+                        btnFollow.text = ctx.getString(R.string.follow)
+                        btnFollow.setTextColor(ctx.getColor(R.color.primary))
+                    }
                 }
+
+                // Like toggle
+                var isLiked = false
+                btnLike.setOnClickListener {
+                    isLiked = !isLiked
+                    btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                }
+
+                // Bookmark toggle
+                var isBookmarked = false
+                btnBookmark.setOnClickListener {
+                    isBookmarked = !isBookmarked
+                    btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
+                }
+
                 btnComment.setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                    onCommentClick?.invoke()
                 }
                 btnShare.setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
-                }
-                btnBookmark.setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                    onShareClick?.invoke()
                 }
                 btnOrder.setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, R.string.toast_feature_in_development, Toast.LENGTH_SHORT).show()
                 }
             }
         }
