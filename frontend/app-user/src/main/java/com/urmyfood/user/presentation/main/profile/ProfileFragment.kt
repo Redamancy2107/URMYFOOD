@@ -11,7 +11,6 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.presentation.common.GuestLoginDialog
-import com.urmyfood.user.domain.repository.GuestRepository
 
 class ProfileFragment : Fragment() {
 

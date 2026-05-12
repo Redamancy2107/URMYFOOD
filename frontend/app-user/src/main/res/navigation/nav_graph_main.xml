@@ -24,6 +24,18 @@
         tools:layout="@layout/fragment_main_favorites" />
 
     <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.urmyfood.user.presentation.main.chat.ChatFragment"
+        android:label="Trò chuyện"
+        tools:layout="@layout/fragment_main_chat" />
+
+    <fragment
+        android:id="@+id/chatDetailFragment"
+        android:name="com.urmyfood.user.presentation.main.chat.ChatDetailFragment"
+        android:label="Chi tiết trò chuyện"
+        tools:layout="@layout/fragment_chat_detail" />
+
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.urmyfood.user.presentation.main.profile.ProfileFragment"
         android:label="Tài khoản"
