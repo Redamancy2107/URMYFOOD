@@ -36,7 +36,7 @@ class MainContainerFragment : Fragment() {
         setupBackPress()
     }
 
-    private fun setupBottomNavigation(): NavController {
+    private fun setupBottomNavigation() {
         val navHostFragment = childFragmentManager
             .findFragmentById(R.id.nav_host_main) as NavHostFragment
         innerNavController = navHostFragment.navController
