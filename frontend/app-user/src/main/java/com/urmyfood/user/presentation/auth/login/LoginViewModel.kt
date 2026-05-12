@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.LoginAsGuestUseCase
@@ -19,7 +20,8 @@ class LoginViewModel(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val sendLoginOtpUseCase: SendLoginOtpUseCase,
     private val loginWithOtpUseCase: LoginWithOtpUseCase,
-    private val loginAsGuestUseCase: LoginAsGuestUseCase
+    private val loginAsGuestUseCase: LoginAsGuestUseCase,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _loginState = MutableLiveData<LoginUiState>(LoginUiState.Idle)
@@ -29,10 +31,20 @@ class LoginViewModel(
         _loginState.value = LoginUiState.Loading
         viewModelScope.launch {
             when (val result = loginUseCase(emailOrPhone, password)) {
-                is Result.Success -> _loginState.value = LoginUiState.Success(result.data)
+                is Result.Success -> {
+                    saveToken(result.data)
+                    _loginState.value = LoginUiState.Success(result.data)
+                }
                 is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
         }
+    }
+
+    private fun saveToken(authToken: AuthToken) {
+        tokenManager.saveToken(
+            token = authToken.accessToken,
+            refreshToken = authToken.refreshToken
+        )
     }
 
     fun loginAsGuest() {
@@ -44,7 +56,10 @@ class LoginViewModel(
         _loginState.value = LoginUiState.Loading
         viewModelScope.launch {
             when (val result = loginWithGoogleUseCase(idToken)) {
-                is Result.Success -> _loginState.value = LoginUiState.Success(result.data)
+                is Result.Success -> {
+                    saveToken(result.data)
+                    _loginState.value = LoginUiState.Success(result.data)
+                }
                 is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
         }
@@ -55,7 +70,8 @@ class LoginViewModel(
         private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
         private val sendLoginOtpUseCase: SendLoginOtpUseCase,
         private val loginWithOtpUseCase: LoginWithOtpUseCase,
-        private val loginAsGuestUseCase: LoginAsGuestUseCase
+        private val loginAsGuestUseCase: LoginAsGuestUseCase,
+        private val tokenManager: TokenManager
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -65,7 +81,8 @@ class LoginViewModel(
                     loginWithGoogleUseCase,
                     sendLoginOtpUseCase,
                     loginWithOtpUseCase,
-                    loginAsGuestUseCase
+                    loginAsGuestUseCase,
+                    tokenManager
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
