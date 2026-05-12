@@ -80,6 +80,11 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.gson)
 
+    // Image loading & UI extras
+    implementation(libs.glide)
+    implementation(libs.shimmer)
+    implementation(libs.androidx.swiperefreshlayout)
+
     // Auth & Google Services
     implementation(libs.play.services.auth)
     implementation(libs.androidx.credentials)
@@ -88,6 +93,8 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.arch.core.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -1,0 +1,17 @@
+package com.urmyfood.user.domain.model
+
+data class FoodPost(
+    val postId: String,
+    val dishName: String,
+    val price: Double,
+    val originalPrice: Double,
+    val maxQuantity: Int,
+    val remainingQuantity: Int,
+    val endTime: String?,
+    val isFlashSale: Boolean,
+    val status: String,
+    val content: String?,
+    val imageUrl: String?,
+    val shopName: String,
+    val shopAvatarUrl: String?
+)

@@ -9,11 +9,26 @@
     <string name="error_connection">Lỗi kết nối. Vui lòng thử lại.</string>
     <string name="toast_feature_in_development">Chức năng đang phát triển</string>
 
-    <!-- Choose Role -->
-    <string name="choose_role_login">Tôi đã có tài khoản</string>
-    <string name="choose_role_register">Tạo tài khoản mới</string>
-    <string name="choose_role_google">Đăng nhập bằng Google</string>
-    <string name="choose_role_guest">Tiếp tục với Guest</string>
+    <!-- Exit Confirmation Dialog -->
+    <string name="exit_dialog_title">Thoát ứng dụng</string>
+    <string name="exit_dialog_message">Bạn có chắc muốn thoát không?</string>
+    <string name="exit_dialog_confirm">Thoát</string>
+    <string name="exit_dialog_cancel">Ở lại</string>
+
+    <!-- Guest Login Dialog -->
+    <string name="guest_dialog_title">Đăng nhập để tiếp tục</string>
+    <string name="guest_dialog_message">Tính năng này yêu cầu tài khoản. Bạn muốn đăng nhập hay tạo tài khoản mới?</string>
+    <string name="guest_dialog_login">Đăng nhập</string>
+    <string name="guest_dialog_register">Đăng ký</string>
+    <string name="guest_dialog_cancel">Để sau</string>
+    <string name="guest_profile_name">Khách</string>
+
+
+
+    <!-- Guest Profile -->
+    <string name="guest_profile_prompt">Đăng nhập để xem thông tin tài khoản và theo dõi đơn hàng của bạn.</string>
+    <string name="guest_profile_login_btn">Đăng nhập</string>
+    <string name="guest_profile_register_btn">Tạo tài khoản</string>
 
     <!-- Terms Dialog -->
     <string name="terms_dialog_title">Điều khoản sử dụng</string>
@@ -76,6 +91,44 @@
     <!-- Splash -->
     <string name="splash_tagline">Đặt đồ ăn nhanh chóng</string>
 
+    <!-- Bottom Navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_search">Tìm kiếm</string>
+    <string name="nav_favorites">Yêu thích</string>
+    <string name="nav_profile">Tài khoản</string>
+
+    <!-- Home Screen -->
+    <string name="home_category_title">Danh Mục</string>
+    <string name="home_category_see_all">Xem tất cả</string>
+    <string name="home_featured_title">Món Mới Nổi Bật</string>
+    <string name="home_empty_posts">Chưa có bài đăng nào</string>
+    <string name="home_tag_recommend">KHUYÊN THỬ</string>
+    <string name="home_cat_vietnamese">Món Việt</string>
+    <string name="home_cat_fast_food">Đồ Ăn Nhanh</string>
+    <string name="home_cat_coffee">Cà phê</string>
+    <string name="home_cat_restaurant">Nhà Hàng</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_title">Tài khoản</string>
+    <string name="profile_membership_gold">HỘI VIÊN VÀNG</string>
+    <string name="profile_edit">Chỉnh sửa Profile</string>
+    <string name="profile_address">Địa chỉ của tôi</string>
+    <string name="profile_order_history">Lịch sử mua hàng</string>
+    <string name="profile_coupons">Mã khuyến mãi</string>
+    <string name="profile_change_password">Đổi mật khẩu</string>
+    <string name="profile_logout">Đăng xuất</string>
+    <string name="profile_default_name">Người dùng</string>
+    <string name="profile_my_orders">Đơn hàng\ncủa tôi</string>
+    <string name="profile_my_vouchers">Voucher\ncủa tôi</string>
+    <string name="profile_address_book">Sổ\nđịa chỉ</string>
+    <string name="profile_account_settings">Cài đặt tài khoản</string>
+    <string name="profile_personal_info">Thông tin cá nhân</string>
+    <string name="profile_notification_settings">Cài đặt thông báo</string>
+    <string name="profile_support_center">Trung tâm hỗ trợ</string>
+    <string name="profile_terms_policies">Điều khoản &amp; Chính sách</string>
+    <string name="profile_student_verified">Sinh viên đã xác thực</string>
+    <string name="profile_student_unverified">Chưa xác thực sinh viên</string>
+
     <!-- Content Descriptions -->
     <string name="cd_back_button">Nút quay lại</string>
     <string name="cd_logo">Logo URMYFOOD</string>
@@ -84,4 +137,24 @@
     <string name="cd_background_image">Hình nền</string>
     <string name="cd_food_banner">Banner đồ ăn</string>
     <string name="cd_lock_icon">Biểu tượng khóa bảo mật</string>
+    <string name="cd_notification">Thông báo</string>
+    <string name="cd_settings">Cài đặt</string>
+    <string name="cd_food_image">Hình ảnh món ăn</string>
+    <string name="cd_add_to_cart">Thêm vào giỏ</string>
+    <string name="cd_favorite">Yêu thích</string>
+    <string name="cd_avatar">Ảnh đại diện</string>
+
+    <!-- Search Screen -->
+    <string name="search_title">Tìm kiếm</string>
+    <string name="search_hint">Bạn muốn ăn gì hôm nay?</string>
+    <string name="search_recent_title">Tìm kiếm gần đây</string>
+    <string name="search_recent_clear_all">Xóa tất cả</string>
+    <string name="search_suggestion_title">Gợi ý cho bạn</string>
+    <string name="search_popular_category_title">Danh mục phổ biến</string>
+
+    <!-- Favorites Screen -->
+    <string name="favorites_title">Yêu thích</string>
+
+    <!-- Auth Choices -->
+    <string name="choose_role_guest">Tiếp tục với tư cách khách</string>
 </resources>

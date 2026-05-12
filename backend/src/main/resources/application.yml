@@ -1,29 +1,28 @@
 spring:
   application:
     name: urmyfood-backend
-  
+
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/urmyfood}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
-
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-  
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
   mail:
     host: ${MAIL_HOST:localhost}
     port: ${MAIL_PORT:587}
@@ -42,7 +41,7 @@ google:
 
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-  expiration: ${JWT_EXPIRATION:86400000} # 1 day
+  expiration: ${JWT_EXPIRATION:86400000}
 
 server:
   port: 8080
@@ -52,6 +51,12 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+debug: true
+
+logging:
+  level:
+    org.flywaydb: DEBUG
 
 management:
   endpoints:

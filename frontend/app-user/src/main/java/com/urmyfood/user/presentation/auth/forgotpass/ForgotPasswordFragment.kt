@@ -57,7 +57,14 @@ class ForgotPasswordFragment : Fragment() {
                 showError("Email không hợp lệ")
                 return@setOnClickListener
             }
-            viewModel.sendOtp(email)
+            // viewModel.sendOtp(email) // Tạm thời bỏ qua check BE
+            findNavController().navigate(
+                R.id.action_forgotPasswordFragment_to_otpFragment,
+                androidx.core.os.bundleOf(
+                    "otpSource" to "forgot_password",
+                    "email" to email
+                )
+            )
         }
     }
 

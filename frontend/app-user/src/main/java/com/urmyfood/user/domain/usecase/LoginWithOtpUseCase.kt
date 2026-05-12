@@ -8,9 +8,6 @@ class LoginWithOtpUseCase(
     private val authRepository: AuthRepository
 ) {
     suspend operator fun invoke(email: String, otpCode: String): Result<AuthToken> {
-        if (email.isBlank() || otpCode.isBlank()) {
-            return Result.Error("Email và mã OTP không được để trống")
-        }
         return authRepository.loginWithOtp(email, otpCode)
     }
 }
