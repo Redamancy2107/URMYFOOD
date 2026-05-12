@@ -41,6 +41,12 @@ class ProfileFragment : Fragment() {
         viewModel.isGuest.observe(viewLifecycleOwner) { isGuest ->
             if (isGuest) {
                 binding.tvUserName.text = getString(R.string.guest_profile_name)
+                binding.ivAvatar.setImageResource(R.drawable.ic_person_placeholder)
+                binding.btnLogout.visibility = View.GONE
+            } else {
+                binding.btnLogout.visibility = View.VISIBLE
+                // For logged in users, we might want to load their real avatar
+                // binding.ivAvatar.load(user.avatarUrl) 
             }
         }
         viewModel.userName.observe(viewLifecycleOwner) { name ->
@@ -50,17 +56,34 @@ class ProfileFragment : Fragment() {
                 binding.tvUserName.text = getString(R.string.profile_default_name)
             }
         }
+        viewModel.isStudentVerified.observe(viewLifecycleOwner) { isVerified ->
+            if (isVerified) {
+                binding.tvVerifyStatus.text = getString(R.string.profile_student_verified)
+                binding.tvVerifyStatus.setTextColor(resources.getColor(R.color.white, null))
+                binding.badgeVerified.setBackgroundResource(R.drawable.bg_badge_verified)
+                binding.ivVerifyIcon.setImageResource(R.drawable.ic_favorite)
+                binding.ivVerifyIcon.setColorFilter(resources.getColor(R.color.white, null))
+            } else {
+                binding.tvVerifyStatus.text = getString(R.string.profile_student_unverified)
+                binding.tvVerifyStatus.setTextColor(android.graphics.Color.parseColor("#D97706"))
+                binding.badgeVerified.setBackgroundResource(R.drawable.bg_badge_unverified)
+                binding.ivVerifyIcon.setImageResource(R.drawable.ic_favorite)
+                binding.ivVerifyIcon.setColorFilter(android.graphics.Color.parseColor("#D97706"))
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener { showFeatureInDevelopment() }
         binding.btnSettings.setOnClickListener { showFeatureInDevelopment() }
 
         binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuChangePassword.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        
+        binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        binding.menuSupportCenter.setOnClickListener { showFeatureInDevelopment() }
+        binding.menuTermsPolicies.setOnClickListener { showFeatureInDevelopment() }
 
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
