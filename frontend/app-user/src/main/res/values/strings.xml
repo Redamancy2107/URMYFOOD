@@ -8,6 +8,11 @@
     <string name="loading">Đang xử lý…</string>
     <string name="error_connection">Lỗi kết nối. Vui lòng thử lại.</string>
     <string name="toast_feature_in_development">Chức năng đang phát triển</string>
+    <string name="follow">Theo dõi</string>
+    <string name="following">Đã theo dõi</string>
+    <string name="badge_flash_sale">⚡ Flash Sale</string>
+    <string name="badge_best_seller">🔥 Bán chạy</string>
+
 
     <!-- Exit Confirmation Dialog -->
     <string name="exit_dialog_title">Thoát ứng dụng</string>
