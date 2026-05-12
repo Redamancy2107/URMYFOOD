@@ -33,16 +33,22 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupUserInfo()
+        observeViewModel()
         setupClickListeners()
     }
 
-    private fun setupUserInfo() {
-        if (ServiceLocator.guestSessionManager.isGuest()) {
-            binding.tvUserName.text = getString(R.string.guest_profile_name)
-        } else {
-            val fullName = ServiceLocator.tokenManager.getFullName()
-            binding.tvUserName.text = fullName ?: getString(R.string.profile_default_name)
+    private fun observeViewModel() {
+        viewModel.isGuest.observe(viewLifecycleOwner) { isGuest ->
+            if (isGuest) {
+                binding.tvUserName.text = getString(R.string.guest_profile_name)
+            }
+        }
+        viewModel.userName.observe(viewLifecycleOwner) { name ->
+            if (name != null) {
+                binding.tvUserName.text = name
+            } else if (viewModel.isGuest.value != true) {
+                binding.tvUserName.text = getString(R.string.profile_default_name)
+            }
         }
     }
 
@@ -57,15 +63,14 @@ class ProfileFragment : Fragment() {
         binding.menuChangePassword.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
 
         binding.btnLogout.setOnClickListener {
-            ServiceLocator.tokenManager.clear()
-            ServiceLocator.guestSessionManager.clearGuest()
+            viewModel.logout()
             Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
             navigateToAuth()
         }
     }
 
     private fun showGuestDialogOrRun(action: () -> Unit) {
-        if (ServiceLocator.guestSessionManager.isGuest()) {
+        if (viewModel.isGuest.value == true) {
             showGuestLoginDialog()
         } else {
             action()
@@ -76,17 +81,17 @@ class ProfileFragment : Fragment() {
         val dialog = GuestLoginDialog()
         dialog.onLoginClick = {
             if (isAdded) {
-                ServiceLocator.guestSessionManager.clearGuest()
+                viewModel.logout()
                 navigateToAuth()
             }
         }
         dialog.onRegisterClick = {
             if (isAdded) {
-                ServiceLocator.guestSessionManager.clearGuest()
+                viewModel.logout()
                 navigateToAuth()
             }
-        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
         }
+        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
     
     private fun navigateToAuth() {
@@ -96,10 +101,8 @@ class ProfileFragment : Fragment() {
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.popBackStack(R.id.nav_graph_auth, false)
             it.navigate(R.id.splashFragment)
         }
-        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
     private fun showFeatureInDevelopment() {
