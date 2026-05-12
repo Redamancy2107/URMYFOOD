@@ -39,7 +39,6 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        BrandingHelper.styleAppName(binding.tvLogo)
         
         setupRecyclerView()
         setupCategories()

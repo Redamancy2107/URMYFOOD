@@ -56,6 +56,10 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.btnNotification.setOnClickListener {
+            Toast.makeText(requireContext(), getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+        }
+
         // Placeholder for search action
         binding.etSearchChat.setOnEditorActionListener { _, _, _ ->
             Toast.makeText(requireContext(), "Tìm kiếm: ${binding.etSearchChat.text}", Toast.LENGTH_SHORT).show()
