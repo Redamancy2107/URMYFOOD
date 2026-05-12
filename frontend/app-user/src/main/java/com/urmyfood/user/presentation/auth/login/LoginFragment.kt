@@ -50,10 +50,9 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnLogin.setOnClickListener {
-            // FE only: navigate directly to main app (skip API call)
-            findNavController().navigate(
-                R.id.action_loginFragment_to_mainContainerFragment
-            )
+            val emailOrPhone = binding.etEmail.text.toString().trim()
+            val password = binding.etPassword.text.toString()
+            viewModel.login(emailOrPhone, password)
         }
 
         binding.tvForgotPassword.setOnClickListener {
@@ -93,10 +92,6 @@ class LoginFragment : Fragment() {
                 }
                 is LoginUiState.Success -> {
                     setLoading(false)
-                    com.urmyfood.user.di.ServiceLocator.tokenManager.saveToken(
-                        token = state.authToken.accessToken,
-                        refreshToken = state.authToken.refreshToken
-                    )
                     
                     Toast.makeText(requireContext(), "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
 
