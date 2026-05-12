@@ -24,6 +24,9 @@ class ProfileViewModel(
     private val _isGuest = MutableLiveData<Boolean>()
     val isGuest: LiveData<Boolean> = _isGuest
 
+    private val _isStudentVerified = MutableLiveData<Boolean>()
+    val isStudentVerified: LiveData<Boolean> = _isStudentVerified
+
     init {
         loadUserInfo()
     }
@@ -33,6 +36,12 @@ class ProfileViewModel(
         _isGuest.value = guest
         if (!guest) {
             _userName.value = tokenManager.getFullName()
+            // For now, let's assume it's true if logged in, or check TokenManager if it has the field
+            // But the user said: "Phần Sinh viên đã xác thực thì mặc định sẽ là Chưa xác thực sinh viên"
+            // This might mean even for logged in users, it defaults to false until verified.
+            _isStudentVerified.value = false 
+        } else {
+            _isStudentVerified.value = false
         }
     }
 
