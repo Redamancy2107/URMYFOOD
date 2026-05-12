@@ -30,7 +30,6 @@
     <string name="exit_dialog_cancel">Ở lại</string>
 
     <!-- Guest Profile -->
-    <string name="guest_profile_name">Khách</string>
     <string name="guest_profile_prompt">Đăng nhập để xem thông tin tài khoản và theo dõi đơn hàng của bạn.</string>
     <string name="guest_profile_login_btn">Đăng nhập</string>
     <string name="guest_profile_register_btn">Tạo tài khoản</string>
