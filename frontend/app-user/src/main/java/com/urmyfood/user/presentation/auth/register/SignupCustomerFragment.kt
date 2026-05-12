@@ -57,9 +57,7 @@ class SignupCustomerFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            // viewModel.register(fullName, email, phone, password, confirmPassword, "") // Tạm thời bỏ qua check BE
-            Toast.makeText(requireContext(), "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
-            findNavController().navigate(R.id.action_signupCustomerFragment_to_loginFragment)
+            viewModel.register(fullName, email, phone, password, confirmPassword, "")
         }
 
 
