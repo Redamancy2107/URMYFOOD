@@ -4,6 +4,7 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -35,13 +36,20 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
 
         fun bind(post: FoodPost) {
             with(binding) {
-                tvDishName.text = post.dishName
-                tvContent.text = post.content ?: ""
+                // --- Header: shop info ---
                 tvShopName.text = post.shopName
-                tvPrice.text = "${currencyFormat.format(post.price)}đ"
-                tvRemainingQuantity.text = "Còn ${post.remainingQuantity} suất"
+                tvPostMeta.text = post.endTime?.let { "Hết hạn lúc $it" } ?: "Đang mở bán"
 
-                // Flash sale badge and original price
+                // --- Content description ---
+                tvContent.text = post.content ?: post.dishName
+
+                // --- Price ---
+                tvPrice.text = "${currencyFormat.format(post.price)}đ"
+
+                // --- Remaining quantity badge ---
+                tvRemainingQuantity.text = "Còn lại: ${post.remainingQuantity} suất"
+
+                // --- Flash sale badge and original price ---
                 if (post.isFlashSale && post.originalPrice > post.price) {
                     tvFlashSaleBadge.visibility = View.VISIBLE
                     tvOriginalPrice.visibility = View.VISIBLE
@@ -52,26 +60,48 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     tvOriginalPrice.visibility = View.GONE
                 }
 
-                // Sold out overlay
+                // --- Sold out overlay ---
                 val isSoldOut = post.status == "SOLD_OUT" || post.remainingQuantity <= 0
                 viewSoldOutOverlay.visibility = if (isSoldOut) View.VISIBLE else View.GONE
                 tvSoldOutLabel.visibility = if (isSoldOut) View.VISIBLE else View.GONE
 
-                // Dish image
+                // --- Dish image ---
                 Glide.with(ivDishImage)
                     .load(post.imageUrl)
                     .placeholder(R.drawable.ic_image_placeholder)
-                    .error(R.drawable.ic_image_placeholder)
+                    .error(R.drawable.bg_food_banner)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(ivDishImage)
 
-                // Shop avatar
+                // --- Shop avatar ---
                 Glide.with(ivShopAvatar)
                     .load(post.shopAvatarUrl)
                     .placeholder(R.drawable.ic_person_placeholder)
                     .error(R.drawable.ic_person_placeholder)
                     .circleCrop()
                     .into(ivShopAvatar)
+
+                // --- Action buttons (placeholder - feature in dev) ---
+                // Mock data - remove when BE ready
+                tvLikeCount.text = "${(50..200).random()}"
+                tvCommentCount.text = "${(2..30).random()}"
+
+                val ctx = root.context
+                btnLike.setOnClickListener {
+                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                }
+                btnComment.setOnClickListener {
+                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                }
+                btnShare.setOnClickListener {
+                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                }
+                btnBookmark.setOnClickListener {
+                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                }
+                btnOrder.setOnClickListener {
+                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

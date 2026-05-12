@@ -9,9 +9,13 @@
         android:icon="@drawable/ic_search"
         android:title="Tìm kiếm" />
     <item
-        android:id="@+id/favoritesFragment"
-        android:icon="@drawable/ic_favorite"
-        android:title="Yêu thích" />
+        android:id="@+id/nav_cart"
+        android:icon="@drawable/ic_cart_white"
+        android:title="Giỏ hàng" />
+    <item
+        android:id="@+id/chatFragment"
+        android:icon="@drawable/ic_chat"
+        android:title="Trò chuyện" />
     <item
         android:id="@+id/profileFragment"
         android:icon="@drawable/ic_account"

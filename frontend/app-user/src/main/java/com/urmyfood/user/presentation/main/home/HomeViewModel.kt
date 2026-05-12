@@ -16,8 +16,11 @@ sealed class NewsfeedUiState {
     data class Error(val message: String) : NewsfeedUiState()
 }
 
+/**
+ * ViewModel for the Home screen.
+ */
 class HomeViewModel(private val getPostsUseCase: GetPostsUseCase) : ViewModel() {
-
+    
     private val _uiState = MutableLiveData<NewsfeedUiState>(NewsfeedUiState.Loading)
     val uiState: LiveData<NewsfeedUiState> = _uiState
 
@@ -35,6 +38,9 @@ class HomeViewModel(private val getPostsUseCase: GetPostsUseCase) : ViewModel() 
         }
     }
 
+    /**
+     * Factory for creating HomeViewModel.
+     */
     class Factory(private val getPostsUseCase: GetPostsUseCase) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {

@@ -38,6 +38,8 @@ class SearchFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
+
         // "Xóa tất cả" → feature in development
         binding.tvClearAll.setOnClickListener {
             showFeatureInDevelopment()

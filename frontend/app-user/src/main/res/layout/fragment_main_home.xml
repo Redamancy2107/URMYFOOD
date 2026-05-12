@@ -15,21 +15,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="16dp"
             android:paddingBottom="16dp">
 
-            <!-- Header: Logo + Notification -->
+            <!-- Header: Logo + Notification (New design) -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:paddingTop="16dp"
+                android:layout_marginBottom="20dp">
 
                 <com.urmyfood.user.util.BrandingTextView
                     android:id="@+id/tvLogo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/app_name"
+                    android:textColor="@color/primary"
                     android:textSize="26sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -54,8 +55,8 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:paddingHorizontal="20dp">
+                android:paddingHorizontal="20dp"
+                android:layout_marginBottom="12dp">
 
                 <TextView
                     android:id="@+id/tvCategoryTitle"
@@ -83,134 +84,113 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <!-- Category Row -->
-            <LinearLayout
+            <!-- Category Row (Scrollable - New Design) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvCategories"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:paddingHorizontal="20dp"
+                android:clipToPadding="false"
                 android:orientation="horizontal"
-                android:gravity="center_horizontal"
-                android:layout_marginBottom="24dp"
-                android:paddingHorizontal="20dp">
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
+            <!-- Filter Row 1 (Scrollable Buttons - New Design) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingHorizontal="20dp"
+                android:clipToPadding="false"
+                android:layout_marginBottom="8dp">
+                
                 <LinearLayout
-                    android:id="@+id/catVietnamese"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_category_active">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="🍜"
-                            android:textSize="28sp" />
-                    </FrameLayout>
-
-                    <TextView
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/home_cat_vietnamese"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                        android:text="Gần tôi"
+                        app:backgroundTint="@color/white"
+                        android:layout_marginEnd="8dp" />
 
-                <LinearLayout
-                    android:id="@+id/catFastFood"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_category_inactive">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="🍔"
-                            android:textSize="28sp" />
-                    </FrameLayout>
-
-                    <TextView
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/home_cat_fast_food"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                        android:text="Giá"
+                        app:backgroundTint="@color/white"
+                        android:layout_marginEnd="8dp" />
 
-                <LinearLayout
-                    android:id="@+id/catCoffee"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_category_inactive">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="☕"
-                            android:textSize="28sp" />
-                    </FrameLayout>
-
-                    <TextView
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/home_cat_coffee"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
-                </LinearLayout>
+                        android:text="Đánh giá cao"
+                        app:backgroundTint="@color/white"
+                        android:layout_marginEnd="8dp" />
 
-                <LinearLayout
-                    android:id="@+id/catRestaurant"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="@drawable/bg_category_inactive">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:text="🍽️"
-                            android:textSize="28sp" />
-                    </FrameLayout>
-
-                    <TextView
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:text="@string/home_cat_restaurant"
-                        android:textColor="@color/text_primary"
-                        android:textSize="12sp" />
+                        android:text="Bán chạy"
+                        app:backgroundTint="@color/white"
+                        android:layout_marginEnd="8dp" />
+                    
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Giao nhanh"
+                        app:backgroundTint="@color/white" />
                 </LinearLayout>
+            </HorizontalScrollView>
 
-            </LinearLayout>
+            <!-- Filter Row 2 (Flash Sale - New Design) -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none"
+                android:paddingHorizontal="20dp"
+                android:clipToPadding="false"
+                android:layout_marginBottom="24dp">
+                
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
 
-            <!-- Featured / Feed Section Title -->
+                    <Button
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="⚡ Flash Sale"
+                        android:backgroundTint="@color/primary"
+                        android:textColor="@android:color/white"
+                        app:cornerRadius="28dp"
+                        android:layout_marginEnd="8dp" />
+
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ưu đãi hôm nay"
+                        app:backgroundTint="@color/white"
+                        android:layout_marginEnd="8dp" />
+
+                    <Button
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Món mới"
+                        app:backgroundTint="@color/white" />
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Featured Section Title -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -226,16 +206,18 @@
                 android:id="@+id/shimmerLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
                 android:visibility="visible">
-
+                
                 <include layout="@layout/layout_shimmer_home" />
-            </com.facebook.shimmer.ShimmerFrameLayout>
+        </com.facebook.shimmer.ShimmerFrameLayout>
 
-            <!-- Feed RecyclerView -->
+            <!-- Newsfeed RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvPosts"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:paddingHorizontal="20dp"
                 android:nestedScrollingEnabled="false"
                 android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
