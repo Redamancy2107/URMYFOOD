@@ -18,12 +18,16 @@ data class ApiResponse<T>(
  * Response DTO for login (contains tokens).
  */
 data class LoginResponse(
-    @SerializedName("access_token")
+    @SerializedName("token")
     val accessToken: String,
-    @SerializedName("refresh_token")
-    val refreshToken: String,
-    @SerializedName("expires_in")
-    val expiresIn: Long
+    @SerializedName("refreshToken")
+    val refreshToken: String?,
+    @SerializedName("expiresIn")
+    val expiresIn: Long?,
+    @SerializedName("fullName")
+    val fullName: String?,
+    @SerializedName("role")
+    val role: String?
 )
 
 /**

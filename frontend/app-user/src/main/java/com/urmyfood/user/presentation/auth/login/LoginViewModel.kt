@@ -30,16 +30,6 @@ class LoginViewModel(
 
     fun login(emailOrPhone: String, password: String) {
         _loginState.value = LoginUiState.Loading
-        
-        // --- BYPASS LOGIC FOR UI TESTING ---
-        // Manually clear guest session and set success to bypass backend issues
-        viewModelScope.launch {
-            kotlinx.coroutines.delay(1000) // Small delay for feel
-            guestRepository.clearGuest()
-            _loginState.value = LoginUiState.Success(AuthToken("mock_access", "mock_refresh", 3600L))
-        }
-        
-        /* Original logic muted
         viewModelScope.launch {
             when (val result = loginUseCase(emailOrPhone, password)) {
                 is Result.Success -> {
@@ -49,13 +39,14 @@ class LoginViewModel(
                 is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
         }
-        */
     }
 
     private fun saveToken(authToken: AuthToken) {
         tokenManager.saveToken(
             token = authToken.accessToken,
-            refreshToken = authToken.refreshToken
+            refreshToken = authToken.refreshToken,
+            fullName = authToken.fullName,
+            role = authToken.role
         )
     }
 
