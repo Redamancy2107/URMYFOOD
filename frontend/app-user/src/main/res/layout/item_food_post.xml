@@ -30,19 +30,32 @@
 
         <TextView
             android:id="@+id/tvShopName"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/tvFlashSaleBadge"
             app:layout_constraintStart_toEndOf="@id/ivShopAvatar"
             app:layout_constraintTop_toTopOf="@id/ivShopAvatar"
             tools:text="Burger Bự Sinh Viên" />
+
+        <TextView
+            android:id="@+id/btnFollow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/follow"
+            android:textColor="@color/primary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="4dp"
+            app:layout_constraintBottom_toBottomOf="@id/tvShopName"
+            app:layout_constraintStart_toEndOf="@id/tvShopName"
+            app:layout_constraintTop_toTopOf="@id/tvShopName" />
+
 
         <TextView
             android:id="@+id/tvPostMeta"
@@ -56,7 +69,8 @@
             app:layout_constraintEnd_toStartOf="@id/tvFlashSaleBadge"
             app:layout_constraintStart_toStartOf="@id/tvShopName"
             app:layout_constraintTop_toBottomOf="@id/tvShopName"
-            tools:text="Vừa xong • Gần KTX Khu A" />
+            tools:text="10 phút trước • Hà Nội" />
+
 
         <!-- Flash sale badge (top right of header) -->
         <TextView
@@ -225,7 +239,8 @@
                 android:layout_marginEnd="12dp"
                 android:textColor="@color/primary"
                 android:textSize="13sp"
-                tools:text="124" />
+                tools:text="156" />
+
 
             <!-- Comment -->
             <ImageView
@@ -265,8 +280,9 @@
                 android:layout_height="28dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:padding="2dp"
-                android:src="@drawable/ic_bookmark"
+                android:src="@drawable/ic_bookmark_border"
                 app:tint="@color/primary" />
+
 
             <!-- Spacer -->
             <View

@@ -118,11 +118,15 @@
                         android:layout_marginEnd="8dp" />
 
                     <Button
+                        android:id="@+id/btnFilterPrice"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Giá"
                         app:backgroundTint="@color/white"
+                        app:icon="@drawable/ic_arrow_drop_down"
+                        app:iconGravity="end"
+                        app:iconTint="@color/primary"
                         android:layout_marginEnd="8dp" />
 
                     <Button

@@ -4,7 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.ListPopupWindow
+import android.widget.TextView
 import android.widget.Toast
+import com.urmyfood.user.presentation.common.GuestLoginDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,7 +28,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: HomeViewModel by viewModels {
-        ServiceLocator.provideHomeViewModelFactory()
+        com.urmyfood.user.di.ServiceLocator.provideHomeViewModelFactory()
     }
 
     private val adapter = FoodPostAdapter()
@@ -165,6 +170,100 @@ class HomeFragment : Fragment() {
     private fun setupClickListeners() {
         binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
         binding.tvSeeAll.setOnClickListener { showFeatureInDevelopment() }
+        
+        binding.btnFilterPrice.setOnClickListener { view ->
+            showPriceFilterMenu(view)
+        }
+
+        // Feature in development for posts in adapter
+        adapter.onCommentClick = { showCommentSheet() }
+        adapter.onShareClick = { showShareSheet() }
+    }
+
+    private fun showShareSheet() {
+        showGuestDialogOrRun {
+            val shareSheet = ShareBottomSheetFragment()
+            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
+        }
+    }
+
+    private fun showCommentSheet() {
+        showGuestDialogOrRun {
+            val commentSheet = QuickCommentFragment()
+            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+        }
+    }
+
+    private fun showGuestDialogOrRun(action: () -> Unit) {
+        if (viewModel.isGuest) {
+            showGuestLoginDialog()
+        } else {
+            action()
+        }
+    }
+
+    private fun showGuestLoginDialog() {
+        val dialog = GuestLoginDialog()
+        dialog.onLoginClick = { navigateToAuth() }
+        dialog.onRegisterClick = { navigateToAuth() }
+        dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
+    }
+
+    private fun navigateToAuth() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.splashFragment)
+        }
+    }
+
+    private fun showPriceFilterMenu(anchor: View) {
+        val items = listOf(
+            Pair("Từ thấp -> cao", R.drawable.ic_trending_up),
+            Pair("Từ cao -> thấp", R.drawable.ic_trending_down)
+        )
+
+        val adapter = object : ArrayAdapter<Pair<String, Int>>(
+            requireContext(),
+            R.layout.item_dropdown_menu,
+            items
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.item_dropdown_menu, parent, false)
+                
+                val item = getItem(position)
+                val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+                val ivIcon = view.findViewById<ImageView>(R.id.ivIcon)
+                
+                tvTitle.text = item?.first
+                item?.second?.let { ivIcon.setImageResource(it) }
+                
+                return view
+            }
+        }
+
+        ListPopupWindow(requireContext()).apply {
+            setAdapter(adapter)
+            setAnchorView(anchor)
+            width = 500 // pixels
+            height = ListPopupWindow.WRAP_CONTENT
+            isModal = true
+            setBackgroundDrawable(requireContext().getDrawable(R.drawable.bg_dropdown_menu))
+            
+            // Offset to look better
+            verticalOffset = 8 
+            
+            setOnItemClickListener { _, _, position, _ ->
+                val selected = items[position].first
+                Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
+                dismiss()
+            }
+            show()
+        }
     }
 
     private fun showFeatureInDevelopment() {
