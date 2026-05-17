@@ -1,22 +1,24 @@
 package com.urmyfood.user.presentation.main.profile
 
-/**
- * ViewModel for the Profile screen.
- */
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.urmyfood.user.data.local.TokenManager
+import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.GuestRepository
+import com.urmyfood.user.domain.usecase.GetUserProfileUseCase
+import kotlinx.coroutines.launch
 
-/**
- * ViewModel for the Profile screen.
- */
 class ProfileViewModel(
     private val tokenManager: TokenManager,
-    private val guestRepository: GuestRepository
+    private val guestRepository: GuestRepository,
+    private val getUserProfileUseCase: GetUserProfileUseCase
 ) : ViewModel() {
+
+    private val _profileState = MutableLiveData<ProfileUiState>(ProfileUiState.Idle)
+    val profileState: LiveData<ProfileUiState> = _profileState
 
     private val _userName = MutableLiveData<String?>()
     val userName: LiveData<String?> = _userName
@@ -36,12 +38,20 @@ class ProfileViewModel(
         _isGuest.value = guest
         if (!guest) {
             _userName.value = tokenManager.getFullName()
-            // For now, let's assume it's true if logged in, or check TokenManager if it has the field
-            // But the user said: "Phần Sinh viên đã xác thực thì mặc định sẽ là Chưa xác thực sinh viên"
-            // This might mean even for logged in users, it defaults to false until verified.
-            _isStudentVerified.value = false 
+            _isStudentVerified.value = false
         } else {
             _isStudentVerified.value = false
+        }
+    }
+
+    fun loadProfile() {
+        if (guestRepository.isGuest()) return
+        _profileState.value = ProfileUiState.Loading
+        viewModelScope.launch {
+            when (val result = getUserProfileUseCase()) {
+                is Result.Success -> _profileState.value = ProfileUiState.Success(result.data)
+                is Result.Error -> _profileState.value = ProfileUiState.Error(result.message)
+            }
         }
     }
 
@@ -50,17 +60,15 @@ class ProfileViewModel(
         guestRepository.clearGuest()
     }
 
-    /**
-     * Factory for creating ProfileViewModel.
-     */
     class Factory(
         private val tokenManager: TokenManager,
-        private val guestRepository: GuestRepository
+        private val guestRepository: GuestRepository,
+        private val getUserProfileUseCase: GetUserProfileUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
-                return ProfileViewModel(tokenManager, guestRepository) as T
+                return ProfileViewModel(tokenManager, guestRepository, getUserProfileUseCase) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

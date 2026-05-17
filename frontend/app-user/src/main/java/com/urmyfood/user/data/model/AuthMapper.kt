@@ -12,7 +12,9 @@ fun LoginResponse.toDomain(): AuthToken {
     return AuthToken(
         accessToken = accessToken,
         refreshToken = refreshToken,
-        expiresIn = expiresIn
+        expiresIn = expiresIn,
+        fullName = fullName,
+        role = role
     )
 }
 
