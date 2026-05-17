@@ -1,24 +1,35 @@
 package com.urmyfood.user.presentation.auth.register
 
 import android.os.Bundle
+import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import androidx.fragment.app.DialogFragment
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.DialogTermsChatBinding
-import kotlin.collections.joinToString
 
 /**
- * BottomSheet dialog that displays the terms of service
- * in a single scrollable message box.
+ * DialogFragment that displays the terms of service
+ * in a center pop-up.
  */
-class TermsDialogFragment : BottomSheetDialogFragment() {
+class TermsDialogFragment : DialogFragment() {
 
     private var _binding: DialogTermsChatBinding? = null
     private val binding get() = _binding!!
 
     private var onAgreeClickListener: (() -> Unit)? = null
+
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.apply {
+            setLayout(
+                (resources.displayMetrics.widthPixels * 0.9).toInt(),
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setBackgroundDrawableResource(android.R.color.transparent)
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,9 +55,9 @@ class TermsDialogFragment : BottomSheetDialogFragment() {
             getString(R.string.terms_msg_8),
             getString(R.string.terms_msg_9),
             getString(R.string.terms_msg_10)
-        ).joinToString("\n\n")
+        ).joinToString("<br><br>")
 
-        binding.tvTermsContent.text = termsContent
+        binding.tvTermsContent.text = Html.fromHtml(termsContent, Html.FROM_HTML_MODE_LEGACY)
 
         binding.btnAgree.setOnClickListener {
             onAgreeClickListener?.invoke()

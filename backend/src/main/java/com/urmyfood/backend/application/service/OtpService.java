@@ -31,14 +31,15 @@ public class OtpService {
         
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("URMYFOOD - Your OTP Code");
+        message.setSubject("[URMYFOOD] Mã xác thực (OTP) đăng ký tài khoản");
         message.setText(
-            "Your security code for URMYFOOD is:\n\n" +
-            code + "\n\n" +
-            "The code is valid for 5 minutes and cannot be reused.\n\n" +
-            "Keep this code private. Our team will never ask you to provide it over the phone or by email.\n\n" +
-            "Thanks,\n" +
-            "URMYFOOD Team"  
+            "Chào bạn,\n\n" +
+            "Bạn đang thực hiện đăng ký tài khoản tại ứng dụng URMYFOOD.\n" +
+            "Mã xác thực (OTP) của bạn là: " + code + "\n\n" +
+            "Mã này có hiệu lực trong vòng 5 phút. Vì lý do bảo mật, vui lòng không cung cấp mã này cho bất kỳ ai.\n\n" +
+            "Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ của chúng tôi.\n\n" +
+            "Trân trọng,\n" +
+            "Đội ngũ URMYFOOD"
         );
         mailSender.send(message);
     }
