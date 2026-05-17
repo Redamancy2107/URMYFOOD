@@ -1,14 +1,15 @@
 package com.urmyfood.backend.application.service;
 
-import com.urmyfood.backend.domain.model.Otp;
-import com.urmyfood.backend.domain.repository.OtpRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Random;
+import com.urmyfood.backend.domain.model.Otp;
+import com.urmyfood.backend.domain.repository.OtpRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +31,16 @@ public class OtpService {
         
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
-        message.setSubject("URMYFOOD - Your OTP Code");
-        message.setText("Your OTP code is: " + code + ". It will expire in 5 minutes.");
+        message.setSubject("[URMYFOOD] Mã xác thực (OTP) đăng ký tài khoản");
+        message.setText(
+            "Chào bạn,\n\n" +
+            "Bạn đang thực hiện đăng ký tài khoản tại ứng dụng URMYFOOD.\n" +
+            "Mã xác thực (OTP) của bạn là: " + code + "\n\n" +
+            "Mã này có hiệu lực trong vòng 5 phút. Vì lý do bảo mật, vui lòng không cung cấp mã này cho bất kỳ ai.\n\n" +
+            "Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này hoặc liên hệ với bộ phận hỗ trợ của chúng tôi.\n\n" +
+            "Trân trọng,\n" +
+            "Đội ngũ URMYFOOD"
+        );
         mailSender.send(message);
     }
 

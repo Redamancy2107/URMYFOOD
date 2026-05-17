@@ -37,12 +37,27 @@
 
     <!-- Terms Dialog -->
     <string name="terms_dialog_title">Điều khoản sử dụng</string>
-    <string name="terms_msg_1">Chào bạn!Trước khi sử dụng URMYFOOD, bạn cần đồng ý với một số điều khoản nhé.</string>
-    <string name="terms_msg_2">Bạn cần cung cấp thông tin chính xác khi đăng ký tài khoản.</string>
-    <string name="terms_msg_3">Chúng tôi cam kết bảo mật thông tin cá nhân của bạn theo chính sách bảo mật.</string>
-    <string name="terms_msg_4">Khi đặt đơn hàng, bạn đồng ý thanh toán đầy đủ cho các sản phẩm và dịch vụ đã chọn.</string>
-    <string name="terms_msg_5">Chúng tôi có quyền tạm ngưng hoặc chấm dứt tài khoản nếu phát hiện hành vi vi phạm.</string>
-    <string name="terms_msg_6">Nếu có thắc mắc, hãy liên hệ với chúng tôi qua email: support@urmyfood.com</string>
+
+    <string name="terms_msg_1">Chào mừng bạn đến với URMYFOOD.\nTrước khi sử dụng ứng dụng và các dịch vụ liên quan, vui lòng đọc kỹ các điều khoản dưới đây.\nBằng việc truy cập, đăng ký tài khoản hoặc sử dụng dịch vụ, bạn xác nhận rằng mình đã đọc, hiểu và đồng ý tuân thủ các điều khoản này.</string>
+
+    <string name="terms_msg_2"><![CDATA[<b>1. Chấp nhận điều khoản</b><br>Khi sử dụng URMYFOOD, bạn đồng ý tuân thủ các điều khoản sử dụng, chính sách bảo mật và các quy định khác được công bố trong ứng dụng. Nếu bạn không đồng ý với bất kỳ nội dung nào, vui lòng ngừng sử dụng dịch vụ.]]></string>
+
+    <string name="terms_msg_3"><![CDATA[<b>2. Tài khoản người dùng</b><br>Bạn có trách nhiệm cung cấp thông tin chính xác, đầy đủ và cập nhật khi đăng ký tài khoản. Bạn chịu trách nhiệm bảo mật thông tin đăng nhập của mình và mọi hoạt động phát sinh từ tài khoản đó.<br><br>URMYFOOD không chịu trách nhiệm đối với các thiệt hại phát sinh do bạn để lộ thông tin tài khoản hoặc sử dụng tài khoản không đúng quy định.]]></string>
+
+    <string name="terms_msg_4"><![CDATA[<b>3. Sử dụng dịch vụ</b><br>Bạn cam kết sử dụng URMYFOOD cho các mục đích hợp pháp, phù hợp với quy định của pháp luật và không thực hiện các hành vi gây ảnh hưởng đến hệ thống, người dùng khác hoặc hoạt động của dịch vụ.<br><br>Bạn không được lợi dụng ứng dụng để thực hiện hành vi gian lận, giả mạo thông tin, đặt hàng sai mục đích, gây rối hệ thống hoặc vi phạm quyền lợi của bên thứ ba.]]></string>
+
+    <string name="terms_msg_5"><![CDATA[<b>4. Đặt hàng và thanh toán</b><br>Khi thực hiện đặt hàng qua URMYFOOD, bạn đồng ý cung cấp thông tin đặt hàng chính xác và thanh toán đầy đủ các khoản phí liên quan, bao gồm giá sản phẩm, phí giao hàng, phí dịch vụ và các chi phí phát sinh nếu có.<br><br>URMYFOOD có quyền từ chối, hủy hoặc điều chỉnh đơn hàng trong trường hợp phát hiện thông tin không chính xác, giao dịch bất thường hoặc có dấu hiệu vi phạm điều khoản sử dụng.]]></string>
+
+    <string name="terms_msg_6"><![CDATA[<b>5. Bảo mật thông tin</b><br>URMYFOOD cam kết bảo vệ thông tin cá nhân của bạn theo Chính sách bảo mật hiện hành. Thông tin của bạn chỉ được thu thập, sử dụng và lưu trữ nhằm phục vụ cho việc cung cấp, cải thiện dịch vụ và tuân thủ quy định pháp luật.]]></string>
+
+    <string name="terms_msg_7"><![CDATA[<b>6. Quyền và trách nhiệm của URMYFOOD</b><br>URMYFOOD có quyền cập nhật, thay đổi, tạm ngưng hoặc chấm dứt một phần hoặc toàn bộ dịch vụ khi cần thiết. Chúng tôi cũng có quyền tạm khóa hoặc chấm dứt tài khoản nếu phát hiện người dùng vi phạm điều khoản sử dụng hoặc có hành vi gây ảnh hưởng đến hệ thống.]]></string>
+
+    <string name="terms_msg_8"><![CDATA[<b>7. Giới hạn trách nhiệm</b><br>URMYFOOD nỗ lực duy trì dịch vụ ổn định và an toàn, tuy nhiên không đảm bảo rằng dịch vụ sẽ luôn hoạt động liên tục, không có lỗi hoặc không bị gián đoạn. Chúng tôi không chịu trách nhiệm đối với các thiệt hại phát sinh từ sự cố kỹ thuật, lỗi kết nối, lỗi từ bên thứ ba hoặc các trường hợp bất khả kháng.]]></string>
+
+    <string name="terms_msg_9"><![CDATA[<b>8. Thay đổi điều khoản</b><br>URMYFOOD có thể cập nhật hoặc điều chỉnh điều khoản sử dụng theo từng thời điểm. Các thay đổi sẽ được thông báo trên ứng dụng hoặc thông qua các kênh phù hợp. Việc bạn tiếp tục sử dụng dịch vụ sau khi điều khoản được cập nhật đồng nghĩa với việc bạn đồng ý với các thay đổi đó.]]></string>
+
+    <string name="terms_msg_10"><![CDATA[<b>9. Liên hệ</b><br>Nếu có bất kỳ câu hỏi, góp ý hoặc yêu cầu hỗ trợ nào liên quan đến điều khoản sử dụng, vui lòng liên hệ với chúng tôi qua email: urmyfood.helpcenter@gmail.com.]]></string>
+
     <string name="terms_agree_btn">Tôi đồng ý</string>
 
     <!-- Login -->
