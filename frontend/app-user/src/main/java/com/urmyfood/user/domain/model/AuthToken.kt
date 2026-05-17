@@ -5,6 +5,8 @@ package com.urmyfood.user.domain.model
  */
 data class AuthToken(
     val accessToken: String,
-    val refreshToken: String,
-    val expiresIn: Long
+    val refreshToken: String?,
+    val expiresIn: Long?,
+    val fullName: String? = null,
+    val role: String? = null
 )

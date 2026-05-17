@@ -35,6 +35,9 @@ spring:
           starttls:
             enable: true
             required: true
+  output:
+    ansi:
+      enabled: always
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}

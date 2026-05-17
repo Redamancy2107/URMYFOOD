@@ -21,7 +21,8 @@ class LoginViewModel(
     private val sendLoginOtpUseCase: SendLoginOtpUseCase,
     private val loginWithOtpUseCase: LoginWithOtpUseCase,
     private val loginAsGuestUseCase: LoginAsGuestUseCase,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val guestRepository: com.urmyfood.user.domain.repository.GuestRepository
 ) : ViewModel() {
 
     private val _loginState = MutableLiveData<LoginUiState>(LoginUiState.Idle)
@@ -43,7 +44,9 @@ class LoginViewModel(
     private fun saveToken(authToken: AuthToken) {
         tokenManager.saveToken(
             token = authToken.accessToken,
-            refreshToken = authToken.refreshToken
+            refreshToken = authToken.refreshToken,
+            fullName = authToken.fullName,
+            role = authToken.role
         )
     }
 
@@ -82,7 +85,8 @@ class LoginViewModel(
                     sendLoginOtpUseCase,
                     loginWithOtpUseCase,
                     loginAsGuestUseCase,
-                    tokenManager
+                    tokenManager,
+                    com.urmyfood.user.di.ServiceLocator.guestSessionManager
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

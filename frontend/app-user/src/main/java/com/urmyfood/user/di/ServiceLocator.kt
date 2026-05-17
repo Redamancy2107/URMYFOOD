@@ -6,12 +6,16 @@ import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
 import com.urmyfood.user.data.remote.RetrofitClient
+import com.urmyfood.user.data.remote.UserApiService
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.data.repository.PostRepositoryImpl
+import com.urmyfood.user.data.repository.UserRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.UserRepository
 import com.urmyfood.user.domain.usecase.*
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
+import com.urmyfood.user.domain.usecase.GetUserProfileUseCase
 import com.urmyfood.user.domain.usecase.LoginAsGuestUseCase
 import com.urmyfood.user.presentation.auth.chooserole.ChooseRoleViewModel
 import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
@@ -52,6 +56,10 @@ object ServiceLocator {
         RetrofitClient.postApiService
     }
 
+    private val userApiService: UserApiService by lazy {
+        RetrofitClient.userApiService
+    }
+
     // ==================== DOMAIN LAYER ====================
 
     private val authRepository: AuthRepository by lazy {
@@ -60,6 +68,10 @@ object ServiceLocator {
 
     private val postRepository: PostRepository by lazy {
         PostRepositoryImpl(postApiService)
+    }
+
+    private val userRepository: UserRepository by lazy {
+        UserRepositoryImpl(userApiService)
     }
 
     // ==================== USE CASES ====================
@@ -74,6 +86,7 @@ object ServiceLocator {
     val resetPasswordUseCase: ResetPasswordUseCase by lazy { ResetPasswordUseCase(authRepository) }
     val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
+    val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -121,7 +134,8 @@ object ServiceLocator {
     fun provideProfileViewModelFactory(): ProfileViewModel.Factory {
         return ProfileViewModel.Factory(
             tokenManager,
-            guestSessionManager
+            guestSessionManager,
+            getUserProfileUseCase
         )
     }
 }

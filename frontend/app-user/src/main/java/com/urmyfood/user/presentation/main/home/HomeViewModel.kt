@@ -19,7 +19,12 @@ sealed class NewsfeedUiState {
 /**
  * ViewModel for the Home screen.
  */
-class HomeViewModel(private val getPostsUseCase: GetPostsUseCase) : ViewModel() {
+class HomeViewModel(
+    private val getPostsUseCase: GetPostsUseCase,
+    private val guestRepository: com.urmyfood.user.domain.repository.GuestRepository
+) : ViewModel() {
+    
+    val isGuest: Boolean get() = guestRepository.isGuest()
     
     private val _uiState = MutableLiveData<NewsfeedUiState>(NewsfeedUiState.Loading)
     val uiState: LiveData<NewsfeedUiState> = _uiState
@@ -45,7 +50,10 @@ class HomeViewModel(private val getPostsUseCase: GetPostsUseCase) : ViewModel() 
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
-                return HomeViewModel(getPostsUseCase) as T
+                return HomeViewModel(
+                    getPostsUseCase,
+                    com.urmyfood.user.di.ServiceLocator.guestSessionManager
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

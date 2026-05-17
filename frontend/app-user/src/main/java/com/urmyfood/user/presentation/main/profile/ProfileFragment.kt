@@ -34,6 +34,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         observeViewModel()
         setupClickListeners()
+        viewModel.loadProfile()
     }
 
     private fun observeViewModel() {
@@ -42,12 +43,12 @@ class ProfileFragment : Fragment() {
                 binding.tvUserName.text = getString(R.string.guest_profile_name)
                 binding.ivAvatar.setImageResource(R.drawable.ic_person_placeholder)
                 binding.btnLogout.visibility = View.GONE
+                binding.layoutContactInfo.visibility = View.GONE
             } else {
                 binding.btnLogout.visibility = View.VISIBLE
-                // For logged in users, we might want to load their real avatar
-                // binding.ivAvatar.load(user.avatarUrl) 
             }
         }
+
         viewModel.userName.observe(viewLifecycleOwner) { name ->
             if (name != null) {
                 binding.tvUserName.text = name
@@ -55,6 +56,7 @@ class ProfileFragment : Fragment() {
                 binding.tvUserName.text = getString(R.string.profile_default_name)
             }
         }
+
         viewModel.isStudentVerified.observe(viewLifecycleOwner) { isVerified ->
             if (isVerified) {
                 binding.tvVerifyStatus.text = getString(R.string.profile_student_verified)
@@ -70,6 +72,25 @@ class ProfileFragment : Fragment() {
                 binding.ivVerifyIcon.setColorFilter(android.graphics.Color.parseColor("#D97706"))
             }
         }
+
+        viewModel.profileState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ProfileUiState.Loading -> {
+                    // Name from TokenManager is already shown; no full-screen loading needed
+                }
+                is ProfileUiState.Success -> {
+                    val profile = state.profile
+                    binding.tvUserName.text = profile.fullName
+                    binding.tvUserEmail.text = profile.email
+                    binding.tvUserPhone.text = profile.phone
+                    binding.layoutContactInfo.visibility = View.VISIBLE
+                }
+                is ProfileUiState.Error -> {
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                is ProfileUiState.Idle -> Unit
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -79,7 +100,7 @@ class ProfileFragment : Fragment() {
         binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        
+
         binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuSupportCenter.setOnClickListener { showFeatureInDevelopment() }
         binding.menuTermsPolicies.setOnClickListener { showFeatureInDevelopment() }
@@ -115,7 +136,7 @@ class ProfileFragment : Fragment() {
         }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
-    
+
     private fun navigateToAuth() {
         val parentNavController = requireActivity()
             .supportFragmentManager
