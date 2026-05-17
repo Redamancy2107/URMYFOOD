@@ -1,14 +1,15 @@
 package com.urmyfood.backend.application.service;
 
-import com.urmyfood.backend.domain.model.Otp;
-import com.urmyfood.backend.domain.repository.OtpRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Random;
+import com.urmyfood.backend.domain.model.Otp;
+import com.urmyfood.backend.domain.repository.OtpRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,14 @@ public class OtpService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setSubject("URMYFOOD - Your OTP Code");
-        message.setText("Your OTP code is: " + code + ". It will expire in 5 minutes.");
+        message.setText(
+            "Your security code for URMYFOOD is:\n\n" +
+            code + "\n\n" +
+            "The code is valid for 5 minutes and cannot be reused.\n\n" +
+            "Keep this code private. Our team will never ask you to provide it over the phone or by email.\n\n" +
+            "Thanks,\n" +
+            "URMYFOOD Team"  
+        );
         mailSender.send(message);
     }
 

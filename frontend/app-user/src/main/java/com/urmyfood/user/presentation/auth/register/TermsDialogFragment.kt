@@ -39,7 +39,11 @@ class TermsDialogFragment : BottomSheetDialogFragment() {
             getString(R.string.terms_msg_3),
             getString(R.string.terms_msg_4),
             getString(R.string.terms_msg_5),
-            getString(R.string.terms_msg_6)
+            getString(R.string.terms_msg_6),
+            getString(R.string.terms_msg_7),
+            getString(R.string.terms_msg_8),
+            getString(R.string.terms_msg_9),
+            getString(R.string.terms_msg_10)
         ).joinToString("\n\n")
 
         binding.tvTermsContent.text = termsContent
