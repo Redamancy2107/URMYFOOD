@@ -41,4 +41,36 @@
         android:label="Tài khoản"
         tools:layout="@layout/fragment_main_profile" />
 
+    <!-- Profile sub-screens -->
+    <fragment
+        android:id="@+id/profileEditFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.ProfileEditFragment"
+        android:label="Thông tin cá nhân"
+        tools:layout="@layout/fragment_profile_edit" />
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.ChangePasswordFragment"
+        android:label="Đổi mật khẩu"
+        tools:layout="@layout/fragment_change_password" />
+
+    <fragment
+        android:id="@+id/addressBookFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.AddressBookFragment"
+        android:label="Địa chỉ của tôi"
+        tools:layout="@layout/fragment_address_book" />
+
+    <fragment
+        android:id="@+id/vouchersFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.VouchersFragment"
+        android:label="Voucher của tôi"
+        tools:layout="@layout/fragment_vouchers" />
+
+    <fragment
+        android:id="@+id/orderHistoryFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.OrderHistoryFragment"
+        android:label="Đơn hàng của tôi"
+        tools:layout="@layout/fragment_order_history" />
+
 </navigation>
+
