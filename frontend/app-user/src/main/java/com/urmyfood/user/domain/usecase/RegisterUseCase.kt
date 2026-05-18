@@ -1,5 +1,6 @@
 package com.urmyfood.user.domain.usecase
 
+import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.User
 import com.urmyfood.user.domain.repository.AuthRepository
@@ -19,7 +20,7 @@ class RegisterUseCase(
         password: String,
         confirmPassword: String,
         otpCode: String
-    ): Result<User> {
+    ): Result<AuthToken> {
         // Validation logic
         if (fullName.isBlank()) return Result.Error("Họ và tên không được để trống")
         if (email.isBlank()) return Result.Error("Email không được để trống")

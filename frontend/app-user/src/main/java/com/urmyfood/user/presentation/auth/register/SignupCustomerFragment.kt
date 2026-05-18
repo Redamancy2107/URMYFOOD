@@ -50,14 +50,24 @@ class SignupCustomerFragment : Fragment() {
             val phone = binding.etPhone.text.toString().trim()
             val password = binding.etPassword.text.toString()
             val confirmPassword = binding.etConfirmPassword.text.toString()
-            // val otpCode = binding.etOtp.text.toString().trim()
+
+            if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty()) {
+                showError("Vui lòng điền đầy đủ thông tin")
+                return@setOnClickListener
+            }
+
+            if (password != confirmPassword) {
+                showError("Mật khẩu xác nhận không khớp")
+                return@setOnClickListener
+            }
 
             if (!binding.cbTerms.isChecked) {
                 showError("Bạn phải đồng ý với Điều khoản sử dụng")
                 return@setOnClickListener
             }
 
-            viewModel.register(fullName, email, phone, password, confirmPassword, "")
+            setLoading(true)
+            viewModel.sendOtp(email, phone)
         }
 
 
@@ -78,6 +88,28 @@ class SignupCustomerFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        viewModel.sendOtpState.observe(viewLifecycleOwner) { result ->
+            if (result == null) return@observe
+            
+            when (result) {
+                is com.urmyfood.user.domain.model.Result.Success -> {
+                    setLoading(false)
+                    val bundle = Bundle().apply {
+                        putString("otpSource", "registration")
+                        putString("fullName", binding.etName.text.toString().trim())
+                        putString("email", binding.etEmail.text.toString().trim())
+                        putString("phone", binding.etPhone.text.toString().trim())
+                        putString("password", binding.etPassword.text.toString())
+                    }
+                    findNavController().navigate(R.id.action_signupCustomerFragment_to_otpFragment, bundle)
+                }
+                is com.urmyfood.user.domain.model.Result.Error -> {
+                    setLoading(false)
+                    showError(result.message)
+                }
+            }
+        }
+
         viewModel.registerState.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is RegisterUiState.Idle -> {
@@ -90,17 +122,11 @@ class SignupCustomerFragment : Fragment() {
 
                 is RegisterUiState.Success -> {
                     setLoading(false)
-                    Toast.makeText(requireContext(), "Đăng ký thành công! Vui lòng đăng nhập.", Toast.LENGTH_LONG).show()
-
-                    // Navigate back to login screen
-                    findNavController().navigate(
-                        R.id.action_signupCustomerFragment_to_loginFragment
-                    )
+                    // Navigation or success state handling
                 }
                 is RegisterUiState.Error -> {
                     setLoading(false)
                     showError(state.message)
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }

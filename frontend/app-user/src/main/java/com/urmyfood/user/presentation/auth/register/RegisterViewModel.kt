@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.User
 import com.urmyfood.user.domain.usecase.RegisterUseCase
@@ -22,6 +23,15 @@ class RegisterViewModel(
     val registerState: LiveData<RegisterUiState> = _registerState
 
 
+
+    private val _sendOtpState = MutableLiveData<Result<Unit>>(null)
+    val sendOtpState: LiveData<Result<Unit>> = _sendOtpState
+
+    fun sendOtp(email: String, phone: String) {
+        viewModelScope.launch {
+            _sendOtpState.value = com.urmyfood.user.di.ServiceLocator.sendLoginOtpUseCase(email, phone)
+        }
+    }
 
     fun register(
         fullName: String,
@@ -61,6 +71,6 @@ class RegisterViewModel(
 sealed class RegisterUiState {
     data object Idle : RegisterUiState()
     data object Loading : RegisterUiState()
-    data class Success(val user: User) : RegisterUiState()
+    data class Success(val authToken: AuthToken) : RegisterUiState()
     data class Error(val message: String) : RegisterUiState()
 }

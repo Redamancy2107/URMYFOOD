@@ -68,7 +68,7 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            showFeatureInDevelopment()
+            handleGoogleLogin()
         }
 
         binding.btnLoginOtp.setOnClickListener {
@@ -92,9 +92,6 @@ class LoginFragment : Fragment() {
                 }
                 is LoginUiState.Success -> {
                     setLoading(false)
-                    
-                    Toast.makeText(requireContext(), "Đăng nhập thành công!", Toast.LENGTH_SHORT).show()
-
                     findNavController().navigate(
                         R.id.action_loginFragment_to_mainContainerFragment
                     )
@@ -106,7 +103,6 @@ class LoginFragment : Fragment() {
                 is LoginUiState.Error -> {
                     setLoading(false)
                     showError(state.message)
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -143,7 +139,6 @@ class LoginFragment : Fragment() {
                 }
             } catch (e: GetCredentialException) {
                 android.util.Log.e("URMYFOOD_AUTH", ">>> [LoginFragment] Google Login Exception: ${e.message}", e)
-                Toast.makeText(requireContext(), "Lỗi Google: ${e.message}", Toast.LENGTH_SHORT).show()
                 showError("Lỗi đăng nhập Google: ${e.message}")
             }
         }

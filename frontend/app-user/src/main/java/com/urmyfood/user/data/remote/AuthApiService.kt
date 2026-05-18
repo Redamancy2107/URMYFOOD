@@ -22,7 +22,7 @@ interface AuthApiService {
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginResponse>>
 
     @POST("api/v1/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<ApiResponse<UserResponse>>
+    suspend fun register(@Body request: RegisterRequest): Response<ApiResponse<LoginResponse>>
 
     @POST("api/v1/auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ApiResponse<Unit>>
@@ -37,7 +37,7 @@ interface AuthApiService {
     suspend fun loginGoogle(@Body request: Map<String, String>): Response<ApiResponse<LoginResponse>>
 
     @POST("api/v1/auth/send-otp")
-    suspend fun sendOtp(@Body request: Map<String, String>): Response<ApiResponse<Unit>>
+    suspend fun sendOtp(@Body request: Map<String, String?>): Response<ApiResponse<Unit>>
 
     @POST("api/v1/auth/login-otp")
     suspend fun loginOtp(@Body request: Map<String, String>): Response<ApiResponse<LoginResponse>>

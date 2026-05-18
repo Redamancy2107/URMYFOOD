@@ -36,13 +36,21 @@ class OtpFragment : Fragment() {
         ServiceLocator.provideForgotPasswordViewModelFactory()
     }
 
+    private val registerViewModel: com.urmyfood.user.presentation.auth.register.RegisterViewModel by navGraphViewModels(R.id.nav_graph_auth) {
+        ServiceLocator.provideRegisterViewModelFactory()
+    }
+
     private var countDownTimer: CountDownTimer? = null
     private lateinit var otpFields: List<EditText>
 
-    /** Source of the OTP flow: "register" or "forgot_password" */
+    /** Source of the OTP flow: "registration" or "forgot_password" */
     private val otpSource: String by lazy {
         arguments?.getString("otpSource") ?: "forgot_password"
     }
+
+    private val fullName: String by lazy { arguments?.getString("fullName") ?: "" }
+    private val phone: String by lazy { arguments?.getString("phone") ?: "" }
+    private val password: String by lazy { arguments?.getString("password") ?: "" }
 
     private val email: String by lazy {
         arguments?.getString("email") ?: ""
@@ -65,10 +73,14 @@ class OtpFragment : Fragment() {
             binding.etOtp4, binding.etOtp5, binding.etOtp6
         )
 
-        if (email.isNotEmpty()) {
-            viewModel.setEmail(email)
+        if (otpSource == "registration") {
+            binding.tvEmail.text = email
+        } else {
+            if (email.isNotEmpty()) {
+                viewModel.setEmail(email)
+            }
+            binding.tvEmail.text = viewModel.email
         }
-        binding.tvEmail.text = viewModel.email
 
         setupOtpAutoFocus()
         setupClickListeners()
@@ -115,18 +127,28 @@ class OtpFragment : Fragment() {
                 showError("Vui lòng nhập đủ 6 chữ số")
                 return@setOnClickListener
             }
-            viewModel.verifyOtp(otpCode)
+            
+            if (otpSource == "registration") {
+                registerViewModel.register(fullName, email, phone, password, password, otpCode)
+            } else {
+                viewModel.verifyOtp(otpCode)
+            }
         }
 
         binding.tvResend.setOnClickListener {
             val targetEmail = if (email.isNotEmpty()) email else viewModel.email
-            viewModel.sendOtp(targetEmail)
+            if (otpSource == "registration") {
+                registerViewModel.sendOtp(targetEmail, phone)
+            } else {
+                viewModel.sendOtp(targetEmail)
+            }
             startResendCountdown()
         }
     }
 
     private fun observeViewModel() {
         viewModel.otpState.observe(viewLifecycleOwner) { state ->
+            if (otpSource == "registration") return@observe
             when (state) {
                 is OtpUiState.Idle -> {
                     setLoading(false)
@@ -137,26 +159,39 @@ class OtpFragment : Fragment() {
                 }
                 is OtpUiState.Success -> {
                     setLoading(false)
-                    Toast.makeText(requireContext(), getString(R.string.otp_verify_success), Toast.LENGTH_SHORT).show()
-                    
-                    if (otpSource == "register") {
-                        findNavController().navigate(
-                            R.id.action_otpFragment_to_loginFragment
-                        )
-                    } else {
-                        findNavController().navigate(
-                            R.id.action_otpFragment_to_resetPasswordFragment
-                        )
-                    }
+                    findNavController().navigate(R.id.action_otpFragment_to_resetPasswordFragment)
                 }
                 is OtpUiState.Error -> {
                     setLoading(false)
                     showError(state.message)
+                    clearOtpFields()
                 }
             }
         }
 
-        // Also observe forgotPasswordState for Resend OTP action
+        registerViewModel.registerState.observe(viewLifecycleOwner) { state ->
+            if (otpSource != "registration") return@observe
+            when (state) {
+                is com.urmyfood.user.presentation.auth.register.RegisterUiState.Idle -> {
+                    setLoading(false)
+                }
+                is com.urmyfood.user.presentation.auth.register.RegisterUiState.Loading -> {
+                    setLoading(true)
+                    hideError()
+                }
+                is com.urmyfood.user.presentation.auth.register.RegisterUiState.Success -> {
+                    setLoading(false)
+                    findNavController().navigate(R.id.action_otpFragment_to_loginFragment)
+                }
+                is com.urmyfood.user.presentation.auth.register.RegisterUiState.Error -> {
+                    setLoading(false)
+                    showError(state.message)
+                    clearOtpFields()
+                }
+            }
+        }
+
+        // Also observe resend states
         viewModel.forgotPasswordState.observe(viewLifecycleOwner) { state ->
             if (state is ForgotPasswordUiState.Success) {
                 Toast.makeText(requireContext(), "Đã gửi lại mã OTP", Toast.LENGTH_SHORT).show()
@@ -164,6 +199,19 @@ class OtpFragment : Fragment() {
                 showError(state.message)
             }
         }
+        
+        registerViewModel.sendOtpState.observe(viewLifecycleOwner) { result ->
+            if (result is com.urmyfood.user.domain.model.Result.Success) {
+                Toast.makeText(requireContext(), "Đã gửi lại mã OTP", Toast.LENGTH_SHORT).show()
+            } else if (result is com.urmyfood.user.domain.model.Result.Error) {
+                showError(result.message)
+            }
+        }
+    }
+
+    private fun clearOtpFields() {
+        otpFields.forEach { it.text.clear() }
+        otpFields.firstOrNull()?.requestFocus()
     }
 
     private fun setLoading(isLoading: Boolean) {

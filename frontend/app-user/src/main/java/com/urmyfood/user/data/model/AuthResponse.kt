@@ -41,7 +41,7 @@ data class UserResponse(
     @SerializedName("email")
     val email: String,
     @SerializedName("phone")
-    val phone: String,
+    val phone: String?,
     @SerializedName("avatar_url")
     val avatarUrl: String?,
     @SerializedName("status")

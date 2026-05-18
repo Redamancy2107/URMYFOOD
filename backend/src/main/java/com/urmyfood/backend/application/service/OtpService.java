@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.urmyfood.backend.domain.model.Otp;
@@ -18,6 +19,7 @@ public class OtpService {
     private final OtpRepository otpRepository;
     private final JavaMailSender mailSender;
 
+    @Async
     public void sendOtp(String email) {
         String code = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
         Otp otp = Otp.builder()

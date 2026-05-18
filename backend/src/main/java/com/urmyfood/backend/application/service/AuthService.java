@@ -60,14 +60,7 @@ public class AuthService {
 
         accountRepository.save(account);
         
-        CustomAccountDetails accountDetails = new CustomAccountDetails(account);
-        String token = jwtService.generateToken(accountDetails);
-        
-        return AuthResponse.builder()
-                .token(token)
-                .fullName(account.getFullName())
-                .role(account.getRole())
-                .build();
+        return generateAuthResponse(account);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -85,7 +78,13 @@ public class AuthService {
         return generateAuthResponse(account);
     }
 
-    public void sendOtp(String email) {
+    public void sendOtp(String email, String phone) {
+        if (email != null && accountRepository.findByEmail(email).isPresent()) {
+            throw new RuntimeException("Email đã được sử dụng bởi tài khoản khác");
+        }
+        if (phone != null && accountRepository.findByPhone(phone).isPresent()) {
+            throw new RuntimeException("Số điện thoại đã được sử dụng bởi tài khoản khác");
+        }
         otpService.sendOtp(email);
     }
 
@@ -172,9 +171,11 @@ public class AuthService {
     private AuthResponse generateAuthResponse(Account account) {
         CustomAccountDetails accountDetails = new CustomAccountDetails(account);
         String token = jwtService.generateToken(accountDetails);
+        String refreshToken = jwtService.generateRefreshToken(accountDetails);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .fullName(account.getFullName())
                 .role(account.getRole())
                 .build();
