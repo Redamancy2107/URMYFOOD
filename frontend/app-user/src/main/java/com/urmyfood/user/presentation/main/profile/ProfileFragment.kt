@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
+import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 
 class ProfileFragment : Fragment() {
@@ -96,10 +97,12 @@ class ProfileFragment : Fragment() {
     private fun setupClickListeners() {
         binding.btnSettings.setOnClickListener { showFeatureInDevelopment() }
 
-        binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        // Quick Actions - navigate to sub-screens
+        binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.profileEditFragment) } }
+        binding.menuAddress.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.addressBookFragment) } }
+        binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.orderHistoryFragment) } }
+        binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.vouchersFragment) } }
+        binding.menuFavorite.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.favoritesFragment) } }
 
         binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuSupportCenter.setOnClickListener { showFeatureInDevelopment() }
