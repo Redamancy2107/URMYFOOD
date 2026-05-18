@@ -37,23 +37,34 @@ class SplashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         BrandingHelper.styleAppName(binding.tvAppName)
+        
+        // Splash screen always shows with delay
         navigateAfterDelay()
     }
 
     private fun navigateAfterDelay() {
         splashHandler.postDelayed({
             if (isAdded) {
-                val isLoggedIn = com.urmyfood.user.di.ServiceLocator.tokenManager.isLoggedIn()
-                if (isLoggedIn) {
-                    // Navigate to main app
-                    findNavController().navigate(R.id.action_splashFragment_to_mainContainerFragment)
-                } else {
-                    findNavController().navigate(
-                        R.id.action_splashFragment_to_chooseRoleFragment
-                    )
-                }
+                navigateToNextScreen()
             }
         }, SPLASH_DELAY_MS)
+    }
+
+    private fun navigateToNextScreen() {
+        val tokenManager = com.urmyfood.user.di.ServiceLocator.tokenManager
+        val isLoggedIn = tokenManager.isLoggedIn()
+        
+        if (isLoggedIn) {
+            findNavController().navigate(R.id.action_splashFragment_to_mainContainerFragment)
+        } else {
+            if (tokenManager.isFirstTime()) {
+                // First time ever: show ChooseRole (onboarding)
+                findNavController().navigate(R.id.action_splashFragment_to_chooseRoleFragment)
+            } else {
+                // Not first time: go straight to Login
+                findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+            }
+        }
     }
 
     override fun onDestroyView() {

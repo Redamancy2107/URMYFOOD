@@ -16,6 +16,7 @@ class TokenManager(context: Context) {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_IS_FIRST_TIME = "is_first_time"
     }
 
     fun saveToken(token: String, refreshToken: String? = null, fullName: String? = null, role: String? = null) {
@@ -30,10 +31,24 @@ class TokenManager(context: Context) {
 
     fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
 
+    fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
+
     fun getFullName(): String? = prefs.getString(KEY_USER_NAME, null)
 
+    fun isFirstTime(): Boolean = prefs.getBoolean(KEY_IS_FIRST_TIME, true)
+
+    fun setFirstTime(isFirstTime: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_FIRST_TIME, isFirstTime).apply()
+    }
+
     fun clear() {
-        prefs.edit().clear().apply()
+        prefs.edit().apply {
+            remove(KEY_ACCESS_TOKEN)
+            remove(KEY_REFRESH_TOKEN)
+            remove(KEY_USER_NAME)
+            remove(KEY_USER_ROLE)
+            apply()
+        }
     }
 
     fun isLoggedIn(): Boolean = getAccessToken() != null

@@ -11,7 +11,7 @@ data class AccountProfileResponse(
     @SerializedName("email")
     val email: String,
     @SerializedName("phone")
-    val phone: String,
+    val phone: String?,
     @SerializedName("role")
     val role: String
 )

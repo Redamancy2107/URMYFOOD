@@ -177,4 +177,5 @@
 
     <!-- Auth Choices -->
     <string name="choose_role_guest">Tiếp tục với tư cách khách</string>
+    <string name="profile_no_phone">Chưa cập nhật số điện thoại</string>
 </resources>
