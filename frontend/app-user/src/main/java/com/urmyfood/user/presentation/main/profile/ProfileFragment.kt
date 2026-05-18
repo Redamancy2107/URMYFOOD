@@ -82,11 +82,11 @@ class ProfileFragment : Fragment() {
                     val profile = state.profile
                     binding.tvUserName.text = profile.fullName
                     binding.tvUserEmail.text = profile.email
-                    binding.tvUserPhone.text = profile.phone
+                    binding.tvUserPhone.text = profile.phone ?: getString(R.string.profile_no_phone)
                     binding.layoutContactInfo.visibility = View.VISIBLE
                 }
                 is ProfileUiState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    // Fail silently or handle with UI
                 }
                 is ProfileUiState.Idle -> Unit
             }
@@ -107,7 +107,6 @@ class ProfileFragment : Fragment() {
 
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
-            Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
             navigateToAuth()
         }
     }
@@ -144,7 +143,7 @@ class ProfileFragment : Fragment() {
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.splashFragment)
+            it.navigate(R.id.loginFragment)
         }
     }
 

@@ -37,10 +37,12 @@ class ChooseRoleFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnLogin.setOnClickListener {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.setFirstTime(false)
             findNavController().navigate(R.id.action_chooseRoleFragment_to_loginFragment)
         }
 
         binding.btnRegister.setOnClickListener {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.setFirstTime(false)
             findNavController().navigate(R.id.action_chooseRoleFragment_to_signupCustomerFragment)
         }
 
@@ -49,6 +51,7 @@ class ChooseRoleFragment : Fragment() {
         }
 
         binding.tvGuest.setOnClickListener {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.setFirstTime(false)
             viewModel.loginAsGuest()
         }
     }

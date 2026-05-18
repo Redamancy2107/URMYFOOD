@@ -16,6 +16,16 @@
             app:popUpTo="@id/splashFragment"
             app:popUpToInclusive="true" />
         <action
+            android:id="@+id/action_splashFragment_to_signupCustomerFragment"
+            app:destination="@id/signupCustomerFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_splashFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/splashFragment"
+            app:popUpToInclusive="true" />
+        <action
             android:id="@+id/action_splashFragment_to_mainContainerFragment"
             app:destination="@id/mainContainerFragment"
             app:popUpTo="@id/nav_graph_auth"
@@ -67,7 +77,8 @@
             app:exitAnim="@anim/nav_default_exit_anim"
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim"
-            app:popUpTo="@id/chooseRoleFragment" />
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_loginFragment_to_mainContainerFragment"
             app:destination="@id/mainContainerFragment"
@@ -94,7 +105,8 @@
             app:exitAnim="@anim/nav_default_exit_anim"
             app:popEnterAnim="@anim/nav_default_pop_enter_anim"
             app:popExitAnim="@anim/nav_default_pop_exit_anim"
-            app:popUpTo="@id/chooseRoleFragment" />
+            app:popUpTo="@id/signupCustomerFragment"
+            app:popUpToInclusive="true" />
         <action
             android:id="@+id/action_signupCustomerFragment_to_mainContainerFragment"
             app:destination="@id/mainContainerFragment"

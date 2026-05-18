@@ -30,7 +30,7 @@ public class AuthController {
 
     @PostMapping("/send-otp")
     public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestBody OtpRequest request) {
-        authService.sendOtp(request.getEmail());
+        authService.sendOtp(request.getEmail(), request.getPhone());
         return ResponseEntity.ok(ApiResponse.success("Mã OTP đã được gửi", null));
     }
 

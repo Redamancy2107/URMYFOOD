@@ -1,5 +1,6 @@
 package com.urmyfood.user.data.repository
 
+import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.ForgotPasswordRequest
 import com.urmyfood.user.data.model.LoginRequest
 import com.urmyfood.user.data.model.RegisterRequest
@@ -36,8 +37,15 @@ class AuthRepositoryImpl(
                     )
                 }
             } else {
+                val errorMsg = try {
+                    val errorBody = response.errorBody()?.string()
+                    val apiResponse = com.google.gson.Gson().fromJson(errorBody, ApiResponse::class.java)
+                    apiResponse.message
+                } catch (e: Exception) {
+                    null
+                }
                 Result.Error(
-                    message = "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+                    message = errorMsg ?: "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
                     code = response.code()
                 )
             }
@@ -52,7 +60,7 @@ class AuthRepositoryImpl(
         phone: String,
         password: String,
         otpCode: String
-    ): Result<User> {
+    ): Result<AuthToken> {
         return try {
             val response = authApiService.register(
                 RegisterRequest(fullName = fullName, email = email, phone = phone, password = password, otpCode = otpCode)
@@ -68,8 +76,15 @@ class AuthRepositoryImpl(
                     )
                 }
             } else {
+                val errorMsg = try {
+                    val errorBody = response.errorBody()?.string()
+                    val apiResponse = com.google.gson.Gson().fromJson(errorBody, ApiResponse::class.java)
+                    apiResponse.message
+                } catch (e: Exception) {
+                    null
+                }
                 Result.Error(
-                    message = "Đăng ký thất bại. Email hoặc số điện thoại đã tồn tại hoặc mã OTP không đúng.",
+                    message = errorMsg ?: "Đăng ký thất bại. Email hoặc số điện thoại đã tồn tại hoặc mã OTP không đúng.",
                     code = response.code()
                 )
             }
@@ -174,13 +189,20 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun sendLoginOtp(email: String): Result<Unit> {
+    override suspend fun sendLoginOtp(email: String, phone: String?): Result<Unit> {
         return try {
-            val response = authApiService.sendOtp(mapOf("email" to email))
-            if (response.isSuccessful && response.body()?.success == true) {
+            val response = authApiService.sendOtp(mapOf("email" to email, "phone" to phone))
+            if (response.isSuccessful) {
                 Result.Success(Unit)
             } else {
-                Result.Error(message = response.body()?.message ?: "Gửi OTP thất bại")
+                val errorMsg = try {
+                    val errorBody = response.errorBody()?.string()
+                    val apiResponse = com.google.gson.Gson().fromJson(errorBody, ApiResponse::class.java)
+                    apiResponse.message
+                } catch (e: Exception) {
+                    null
+                }
+                Result.Error(message = errorMsg ?: "Gửi OTP thất bại")
             }
         } catch (e: Exception) {
             Result.Error(message = e.message ?: "Lỗi kết nối")

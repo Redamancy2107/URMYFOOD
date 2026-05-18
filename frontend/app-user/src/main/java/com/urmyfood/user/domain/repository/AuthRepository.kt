@@ -17,7 +17,7 @@ interface AuthRepository {
         phone: String,
         password: String,
         otpCode: String
-    ): Result<User>
+    ): Result<AuthToken>
 
     suspend fun forgotPassword(email: String): Result<Unit>
 
@@ -30,7 +30,7 @@ interface AuthRepository {
 
     suspend fun loginWithGoogle(idToken: String): Result<AuthToken>
 
-    suspend fun sendLoginOtp(email: String): Result<Unit>
+    suspend fun sendLoginOtp(email: String, phone: String? = null): Result<Unit>
 
     suspend fun loginWithOtp(email: String, otpCode: String): Result<AuthToken>
 }
