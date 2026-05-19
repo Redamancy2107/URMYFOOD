@@ -26,7 +26,14 @@ class OrderHistoryFragment : Fragment() {
     private val binding get() = _binding!!
     private var selectedTab = 0
 
-    data class Order(val shop: String, val desc: String, val price: String, val date: String, val status: Int)
+    data class Order(
+        val shop: String,
+        val desc: String,
+        val price: String,
+        val date: String,
+        val status: Int,
+        val imageUrl: String? = null
+    )
 
     // Orders list is now loaded dynamically from CartManager below
 
@@ -143,9 +150,13 @@ class OrderHistoryFragment : Fragment() {
             }
             val imgView = android.widget.ImageView(ctx).apply {
                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                setImageResource(R.drawable.bg_food_banner)
                 scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
             }
+            com.bumptech.glide.Glide.with(ctx)
+                .load(order.imageUrl)
+                .placeholder(R.drawable.ic_image_placeholder)
+                .error(R.drawable.bg_food_banner)
+                .into(imgView)
             imgCard.addView(imgView)
             bodyRow.addView(imgCard)
 

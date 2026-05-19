@@ -75,7 +75,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = true,
                 status = "ACTIVE",
                 content = "Siêu béo, topping ngập tràn, free size L",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
                 shopName = "Tiệm Trà Sữa Mây",
                 shopAvatarUrl = null
             ),
@@ -90,7 +90,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
                 shopName = "Cơm Tấm Bụi",
                 shopAvatarUrl = null
             ),
@@ -105,7 +105,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
                 shopName = "Quán Bà Chiểu",
                 shopAvatarUrl = null
             )

@@ -107,11 +107,11 @@ class CartManager(context: Context) {
         if (json == null) {
             // Populate initial mock orders - remove when BE ready
             val initial = listOf(
-                Order("Phở Hà Nội", "Phở bò tái nạm x1", "65.000đ", "18/05/2026 12:30", 0),
-                Order("Bún Đậu Mắm Tôm", "Bún đậu đặc biệt x2", "110.000đ", "17/05/2026 19:00", 1),
-                Order("Cơm Tấm Sà Bi Chưởng", "Cơm tấm sườn bì chả x1", "75.000đ", "15/05/2026 11:45", 2),
-                Order("Bánh Mì Huỳnh Hoa", "Bánh mì đặc biệt x1", "68.000đ", "14/05/2026 08:00", 2),
-                Order("Trà Sữa Gong Cha", "Trà sữa truyền thống x2", "96.000đ", "10/05/2026 15:20", 3)
+                Order("Phở Hà Nội", "Phở bò tái nạm x1", "65.000đ", "18/05/2026 12:30", 0, "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=500"),
+                Order("Bún Đậu Mắm Tôm", "Bún đậu đặc biệt x2", "110.000đ", "17/05/2026 19:00", 1, "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500"),
+                Order("Cơm Tấm Sà Bi Chưởng", "Cơm tấm sườn bì chả x1", "75.000đ", "15/05/2026 11:45", 2, "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"),
+                Order("Bánh Mì Huỳnh Hoa", "Bánh mì đặc biệt x1", "68.000đ", "14/05/2026 08:00", 2, "https://images.unsplash.com/photo-1600454021970-351feb2a5149?w=500"),
+                Order("Trà Sữa Gong Cha", "Trà sữa truyền thống x2", "96.000đ", "10/05/2026 15:20", 3, "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500")
             )
             saveOrders(initial)
             return initial

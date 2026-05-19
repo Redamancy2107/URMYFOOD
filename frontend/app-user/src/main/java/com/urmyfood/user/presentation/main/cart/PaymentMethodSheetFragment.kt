@@ -121,7 +121,8 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
                     desc = "${item.dishName} x${item.quantity}",
                     price = "${currencyFormat.format(item.price * item.quantity)}đ",
                     date = currentDateStr,
-                    status = 0 // Đang xử lý
+                    status = 0, // Đang xử lý
+                    imageUrl = item.imageUrl
                 )
                 cartManager.addOrder(order)
             }
