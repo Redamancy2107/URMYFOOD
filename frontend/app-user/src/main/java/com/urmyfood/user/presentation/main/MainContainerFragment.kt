@@ -46,24 +46,6 @@ class MainContainerFragment : Fragment() {
             .findFragmentById(R.id.nav_host_main) as NavHostFragment
         innerNavController = navHostFragment.navController
         binding.bottomNavigation.setupWithNavController(innerNavController)
-
-        // Intercept the cart item — show toast instead of navigating
-        binding.bottomNavigation.setOnItemSelectedListener { item ->
-            if (item.itemId == R.id.nav_cart) {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.toast_feature_in_development),
-                    Toast.LENGTH_SHORT
-                ).show()
-                false // Don't select, don't navigate
-            } else {
-                val currentDestination = innerNavController.currentDestination?.id
-                if (currentDestination != item.itemId) {
-                    innerNavController.navigate(item.itemId)
-                }
-                true
-            }
-        }
     }
 
     /**
