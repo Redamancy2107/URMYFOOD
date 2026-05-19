@@ -175,9 +175,14 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        // Feature in development for posts in adapter
         adapter.onCommentClick = { showCommentSheet() }
         adapter.onShareClick = { showShareSheet() }
+        adapter.onOrderClick = { foodPost ->
+            showGuestDialogOrRun {
+                val orderSheet = OrderBottomSheetFragment(foodPost)
+                orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+            }
+        }
     }
 
     private fun showShareSheet() {

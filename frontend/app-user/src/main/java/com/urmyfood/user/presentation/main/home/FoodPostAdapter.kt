@@ -22,6 +22,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     
     var onCommentClick: (() -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
+    var onOrderClick: ((FoodPost) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -136,7 +137,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     onShareClick?.invoke()
                 }
                 btnOrder.setOnClickListener {
-                    Toast.makeText(ctx, R.string.toast_feature_in_development, Toast.LENGTH_SHORT).show()
+                    onOrderClick?.invoke(post)
                 }
             }
         }

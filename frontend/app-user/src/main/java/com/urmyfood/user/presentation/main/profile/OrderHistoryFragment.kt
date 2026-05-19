@@ -28,13 +28,7 @@ class OrderHistoryFragment : Fragment() {
 
     data class Order(val shop: String, val desc: String, val price: String, val date: String, val status: Int)
 
-    private val orders = listOf(
-        Order("Phở Hà Nội", "Phở bò tái nạm x1", "65.000đ", "18/05/2026 12:30", 0),
-        Order("Bún Đậu Mắm Tôm", "Bún đậu đặc biệt x2", "110.000đ", "17/05/2026 19:00", 1),
-        Order("Cơm Tấm Sà Bi Chưởng", "Cơm tấm sườn bì chả x1", "75.000đ", "15/05/2026 11:45", 2),
-        Order("Bánh Mì Huỳnh Hoa", "Bánh mì đặc biệt x1", "68.000đ", "14/05/2026 08:00", 2),
-        Order("Trà Sữa Gong Cha", "Trà sữa truyền thống x2", "96.000đ", "10/05/2026 15:20", 3)
-    )
+    // Orders list is now loaded dynamically from CartManager below
 
     private val tabTitles by lazy {
         listOf(
@@ -94,7 +88,8 @@ class OrderHistoryFragment : Fragment() {
         val dp = { v: Int -> (v * ctx.resources.displayMetrics.density).toInt() }
         binding.orderContainer.removeAllViews()
 
-        val filtered = orders.filter { it.status == selectedTab }
+        val dynamicOrders = com.urmyfood.user.data.local.CartManager(ctx).getOrders()
+        val filtered = dynamicOrders.filter { it.status == selectedTab }
         if (filtered.isEmpty()) {
             binding.orderContainer.addView(TextView(ctx).apply {
                 text = "Không có đơn hàng nào"
