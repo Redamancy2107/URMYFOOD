@@ -111,7 +111,7 @@ class ProfileFragment : Fragment() {
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
             Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
-            navigateToAuth()
+            navigateToChooseRole()
         }
     }
 
@@ -128,26 +128,48 @@ class ProfileFragment : Fragment() {
         dialog.onLoginClick = {
             if (isAdded) {
                 viewModel.logout()
-                navigateToAuth()
+                navigateToLogin()
             }
         }
         dialog.onRegisterClick = {
             if (isAdded) {
                 viewModel.logout()
-                navigateToAuth()
+                navigateToRegister()
             }
         }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
-    private fun navigateToAuth() {
+    private fun navigateToChooseRole() {
         val parentNavController = requireActivity()
             .supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.splashFragment)
+            it.navigate(R.id.chooseRoleFragment)
+        }
+    }
+
+    private fun navigateToLogin() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.loginFragment)
+        }
+    }
+
+    private fun navigateToRegister() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.signupCustomerFragment)
         }
     }
 

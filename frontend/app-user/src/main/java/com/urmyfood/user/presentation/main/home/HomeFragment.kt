@@ -209,19 +209,38 @@ class HomeFragment : Fragment() {
 
     private fun showGuestLoginDialog() {
         val dialog = GuestLoginDialog()
-        dialog.onLoginClick = { navigateToAuth() }
-        dialog.onRegisterClick = { navigateToAuth() }
+        dialog.onLoginClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToLogin()
+        }
+        dialog.onRegisterClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToRegister()
+        }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
-    private fun navigateToAuth() {
+    private fun navigateToLogin() {
         val parentNavController = requireActivity()
             .supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.splashFragment)
+            it.navigate(R.id.loginFragment)
+        }
+    }
+
+    private fun navigateToRegister() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.signupCustomerFragment)
         }
     }
 
