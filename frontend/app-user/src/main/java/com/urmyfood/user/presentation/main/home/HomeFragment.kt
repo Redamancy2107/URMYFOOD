@@ -32,6 +32,7 @@ class HomeFragment : Fragment() {
     }
 
     private val adapter = FoodPostAdapter()
+    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -183,6 +184,17 @@ class HomeFragment : Fragment() {
                 orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
             }
         }
+        adapter.checkIsBookmarked = { post ->
+            favoritesManager.isFavorite(post.postId)
+        }
+        adapter.onSaveClick = { post ->
+            showGuestDialogOrRun {
+                val isSaved = favoritesManager.toggleFavorite(post)
+                val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun showShareSheet() {
@@ -296,6 +308,11 @@ class HomeFragment : Fragment() {
             getString(R.string.toast_feature_in_development),
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {

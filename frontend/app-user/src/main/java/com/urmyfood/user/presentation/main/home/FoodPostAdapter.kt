@@ -23,6 +23,8 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     var onCommentClick: (() -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
+    var onSaveClick: ((FoodPost) -> Unit)? = null
+    var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -124,10 +126,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 // Bookmark toggle
-                var isBookmarked = false
+                val isBookmarked = checkIsBookmarked?.invoke(post) ?: false
+                btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
                 btnBookmark.setOnClickListener {
-                    isBookmarked = !isBookmarked
-                    btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
+                    onSaveClick?.invoke(post)
                 }
 
                 btnComment.setOnClickListener {

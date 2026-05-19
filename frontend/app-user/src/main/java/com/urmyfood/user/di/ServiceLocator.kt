@@ -52,6 +52,10 @@ object ServiceLocator {
         GuestSessionManager(applicationContext)
     }
 
+    val favoritesManager: com.urmyfood.user.data.local.FavoritesManager by lazy {
+        com.urmyfood.user.data.local.FavoritesManager(applicationContext)
+    }
+
     private val postApiService by lazy {
         RetrofitClient.postApiService
     }
