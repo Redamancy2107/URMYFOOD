@@ -32,6 +32,7 @@ class HomeFragment : Fragment() {
     }
 
     private val adapter = FoodPostAdapter()
+    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -74,7 +75,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = true,
                 status = "ACTIVE",
                 content = "Siêu béo, topping ngập tràn, free size L",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
                 shopName = "Tiệm Trà Sữa Mây",
                 shopAvatarUrl = null
             ),
@@ -89,7 +90,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
                 shopName = "Cơm Tấm Bụi",
                 shopAvatarUrl = null
             ),
@@ -104,7 +105,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
                 shopName = "Quán Bà Chiểu",
                 shopAvatarUrl = null
             )
@@ -175,9 +176,25 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        // Feature in development for posts in adapter
         adapter.onCommentClick = { showCommentSheet() }
         adapter.onShareClick = { showShareSheet() }
+        adapter.onOrderClick = { foodPost ->
+            showGuestDialogOrRun {
+                val orderSheet = OrderBottomSheetFragment(foodPost)
+                orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+            }
+        }
+        adapter.checkIsBookmarked = { post ->
+            favoritesManager.isFavorite(post.postId)
+        }
+        adapter.onSaveClick = { post ->
+            showGuestDialogOrRun {
+                val isSaved = favoritesManager.toggleFavorite(post)
+                val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun showShareSheet() {
@@ -204,19 +221,38 @@ class HomeFragment : Fragment() {
 
     private fun showGuestLoginDialog() {
         val dialog = GuestLoginDialog()
-        dialog.onLoginClick = { navigateToAuth() }
-        dialog.onRegisterClick = { navigateToAuth() }
+        dialog.onLoginClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToLogin()
+        }
+        dialog.onRegisterClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToRegister()
+        }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
-    private fun navigateToAuth() {
+    private fun navigateToLogin() {
         val parentNavController = requireActivity()
             .supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.splashFragment)
+            it.navigate(R.id.loginFragment)
+        }
+    }
+
+    private fun navigateToRegister() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.signupCustomerFragment)
         }
     }
 
@@ -272,6 +308,11 @@ class HomeFragment : Fragment() {
             getString(R.string.toast_feature_in_development),
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {

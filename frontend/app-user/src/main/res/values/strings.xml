@@ -148,6 +148,51 @@
     <string name="profile_terms_policies">Điều khoản &amp; Chính sách</string>
     <string name="profile_student_verified">Sinh viên đã xác thực</string>
     <string name="profile_student_unverified">Chưa xác thực sinh viên</string>
+    <string name="profile_my_favorites">Yêu\nthích</string>
+
+    <!-- Profile Edit Screen -->
+    <string name="profile_edit_title">Thông tin cá nhân</string>
+    <string name="profile_edit_name_hint">Họ và tên</string>
+    <string name="profile_edit_phone_hint">Số điện thoại</string>
+    <string name="profile_edit_email_hint">Email</string>
+    <string name="profile_edit_dob_hint">Ngày sinh</string>
+    <string name="profile_edit_save">Lưu thay đổi</string>
+    <string name="profile_edit_save_success">Cập nhật thông tin thành công!</string>
+    <string name="profile_edit_name_empty">Vui lòng nhập họ tên</string>
+
+    <!-- Change Password Screen -->
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="change_password_current_hint">Mật khẩu hiện tại</string>
+    <string name="change_password_new_hint">Mật khẩu mới</string>
+    <string name="change_password_confirm_hint">Xác nhận mật khẩu mới</string>
+    <string name="change_password_btn">Xác nhận</string>
+    <string name="change_password_success">Đổi mật khẩu thành công!</string>
+    <string name="change_password_empty">Vui lòng điền đầy đủ thông tin</string>
+    <string name="change_password_mismatch">Mật khẩu mới không khớp</string>
+    <string name="change_password_too_short">Mật khẩu phải có ít nhất 6 ký tự</string>
+
+    <!-- Address Book Screen -->
+    <string name="address_book_title">Địa chỉ của tôi</string>
+    <string name="address_book_add_new">+ Thêm địa chỉ mới</string>
+    <string name="address_book_label_home">Nhà riêng</string>
+    <string name="address_book_label_company">Công ty</string>
+    <string name="address_book_default">Mặc định</string>
+    <string name="address_book_delete_confirm">Bạn có chắc muốn xóa địa chỉ này?</string>
+    <string name="address_book_deleted">Đã xóa địa chỉ</string>
+
+    <!-- Vouchers Screen -->
+    <string name="vouchers_title">Voucher của tôi</string>
+    <string name="voucher_use_now">Dùng ngay</string>
+    <string name="voucher_expired">Hết hạn</string>
+
+    <!-- Order History Screen -->
+    <string name="order_history_title">Đơn hàng của tôi</string>
+    <string name="order_tab_processing">Đang xử lý</string>
+    <string name="order_tab_delivering">Đang giao</string>
+    <string name="order_tab_delivered">Đã giao</string>
+    <string name="order_tab_cancelled">Đã hủy</string>
+    <string name="order_btn_review">Đánh giá</string>
+    <string name="order_btn_reorder">Đặt lại</string>
 
     <!-- Content Descriptions -->
     <string name="cd_back_button">Nút quay lại</string>

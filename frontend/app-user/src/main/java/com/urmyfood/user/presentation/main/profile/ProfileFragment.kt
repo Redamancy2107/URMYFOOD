@@ -10,6 +10,7 @@ import androidx.fragment.app.viewModels
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainProfileBinding
 import com.urmyfood.user.di.ServiceLocator
+import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 
 class ProfileFragment : Fragment() {
@@ -86,7 +87,7 @@ class ProfileFragment : Fragment() {
                     binding.layoutContactInfo.visibility = View.VISIBLE
                 }
                 is ProfileUiState.Error -> {
-                    // Fail silently or handle with UI
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
                 is ProfileUiState.Idle -> Unit
             }
@@ -96,10 +97,12 @@ class ProfileFragment : Fragment() {
     private fun setupClickListeners() {
         binding.btnSettings.setOnClickListener { showFeatureInDevelopment() }
 
-        binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuAddress.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
+        // Quick Actions - navigate to sub-screens
+        binding.menuEditProfile.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.profileEditFragment) } }
+        binding.menuAddress.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.addressBookFragment) } }
+        binding.menuOrderHistory.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.orderHistoryFragment) } }
+        binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.vouchersFragment) } }
+        binding.menuFavorite.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.favoritesFragment) } }
 
         binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
         binding.menuSupportCenter.setOnClickListener { showFeatureInDevelopment() }
@@ -107,7 +110,8 @@ class ProfileFragment : Fragment() {
 
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
-            navigateToAuth()
+            Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
+            navigateToChooseRole()
         }
     }
 
@@ -124,19 +128,30 @@ class ProfileFragment : Fragment() {
         dialog.onLoginClick = {
             if (isAdded) {
                 viewModel.logout()
-                navigateToAuth()
+                navigateToLogin()
             }
         }
         dialog.onRegisterClick = {
             if (isAdded) {
                 viewModel.logout()
-                navigateToAuth()
+                navigateToRegister()
             }
         }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
-    private fun navigateToAuth() {
+    private fun navigateToChooseRole() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.chooseRoleFragment)
+        }
+    }
+
+    private fun navigateToLogin() {
         val parentNavController = requireActivity()
             .supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
@@ -144,6 +159,17 @@ class ProfileFragment : Fragment() {
 
         parentNavController?.let {
             it.navigate(R.id.loginFragment)
+        }
+    }
+
+    private fun navigateToRegister() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.signupCustomerFragment)
         }
     }
 

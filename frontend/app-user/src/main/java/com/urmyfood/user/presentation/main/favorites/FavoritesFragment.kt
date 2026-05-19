@@ -7,12 +7,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainFavoritesBinding
+import com.urmyfood.user.presentation.main.home.FoodPostAdapter
+import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 
 /**
  * Favorites screen fragment.
- * Displays the list of user's favorite food items.
+ * Displays the list of user's saved food posts.
  */
 class FavoritesFragment : Fragment() {
 
@@ -22,6 +26,9 @@ class FavoritesFragment : Fragment() {
     private val viewModel: FavoritesViewModel by viewModels {
         com.urmyfood.user.di.ServiceLocator.provideFavoritesViewModelFactory()
     }
+
+    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
+    private val adapter = FoodPostAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,29 +41,54 @@ class FavoritesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        setupRecyclerView()
         setupClickListeners()
     }
 
-    private fun setupClickListeners() {
-        // Food card clicks → feature in development
-        binding.cardFav1.setOnClickListener { showFeatureInDevelopment() }
-        binding.cardFav2.setOnClickListener { showFeatureInDevelopment() }
-        binding.cardFav3.setOnClickListener { showFeatureInDevelopment() }
-        binding.cardFav4.setOnClickListener { showFeatureInDevelopment() }
-
-        // Add to cart buttons → feature in development
-        binding.btnAddFav1.setOnClickListener { showFeatureInDevelopment() }
-        binding.btnAddFav2.setOnClickListener { showFeatureInDevelopment() }
-        binding.btnAddFav3.setOnClickListener { showFeatureInDevelopment() }
-        binding.btnAddFav4.setOnClickListener { showFeatureInDevelopment() }
+    override fun onResume() {
+        super.onResume()
+        loadFavorites()
     }
 
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun setupRecyclerView() {
+        binding.rvFavorites.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvFavorites.adapter = adapter
+
+        adapter.checkIsBookmarked = { post ->
+            favoritesManager.isFavorite(post.postId)
+        }
+
+        adapter.onSaveClick = { post ->
+            val isSaved = favoritesManager.toggleFavorite(post)
+            val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            loadFavorites()
+        }
+
+        adapter.onOrderClick = { post ->
+            val orderSheet = OrderBottomSheetFragment(post)
+            orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+        }
+    }
+
+    private fun setupClickListeners() {
+        binding.btnBack.setOnClickListener {
+            findNavController().popBackStack()
+        }
+    }
+
+    private fun loadFavorites() {
+        val list = favoritesManager.getFavorites()
+        if (list.isEmpty()) {
+            binding.layoutEmptyState.visibility = View.VISIBLE
+            binding.rvFavorites.visibility = View.GONE
+        } else {
+            binding.layoutEmptyState.visibility = View.GONE
+            binding.rvFavorites.visibility = View.VISIBLE
+            adapter.submitList(list)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     override fun onDestroyView() {
