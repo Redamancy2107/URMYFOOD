@@ -87,7 +87,7 @@ class ProfileFragment : Fragment() {
                     binding.layoutContactInfo.visibility = View.VISIBLE
                 }
                 is ProfileUiState.Error -> {
-                    // Fail silently or handle with UI
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
                 is ProfileUiState.Idle -> Unit
             }
@@ -110,6 +110,7 @@ class ProfileFragment : Fragment() {
 
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
+            Toast.makeText(requireContext(), "Đã đăng xuất thành công", Toast.LENGTH_SHORT).show()
             navigateToAuth()
         }
     }
@@ -146,7 +147,7 @@ class ProfileFragment : Fragment() {
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.loginFragment)
+            it.navigate(R.id.splashFragment)
         }
     }
 
