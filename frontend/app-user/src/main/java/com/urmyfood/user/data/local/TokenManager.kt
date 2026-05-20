@@ -35,6 +35,10 @@ class TokenManager(context: Context) {
 
     fun getFullName(): String? = prefs.getString(KEY_USER_NAME, null)
 
+    fun saveFullName(fullName: String) {
+        prefs.edit().putString(KEY_USER_NAME, fullName).apply()
+    }
+
     fun isFirstTime(): Boolean = prefs.getBoolean(KEY_IS_FIRST_TIME, true)
 
     fun setFirstTime(isFirstTime: Boolean) {
