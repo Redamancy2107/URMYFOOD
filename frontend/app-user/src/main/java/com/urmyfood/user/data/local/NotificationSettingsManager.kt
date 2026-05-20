@@ -28,6 +28,9 @@ class NotificationSettingsManager(context: Context) {
     fun isMessagesEnabled(): Boolean = prefs.getBoolean(KEY_MESSAGES, false)
     fun setMessagesEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_MESSAGES, enabled).apply()
 
-    fun isSystemEnabled(): Boolean = prefs.getBoolean(KEY_SYSTEM, true)
+    fun isSystemEnabled(): Boolean = prefs.getBoolean(KEY_SYSTEM, false)
     fun setSystemEnabled(enabled: Boolean) = prefs.edit().putBoolean(KEY_SYSTEM, enabled).apply()
+
+    fun hasRequestedPermission(): Boolean = prefs.getBoolean("has_requested_notification_permission", false)
+    fun setRequestedPermission(requested: Boolean) = prefs.edit().putBoolean("has_requested_notification_permission", requested).apply()
 }
