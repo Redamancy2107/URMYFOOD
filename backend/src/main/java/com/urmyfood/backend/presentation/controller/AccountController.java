@@ -39,7 +39,36 @@ public class AccountController {
                 .email(account.getEmail())
                 .phone(account.getPhone())
                 .role(account.getRole())
+                .avatarUrl(account.getAvatarUrl())
                 .build();
         return ResponseEntity.ok(ApiResponse.success("Lấy thông tin tài khoản thành công", dto));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<AccountProfileDto>> updateMyProfile(
+            Authentication authentication,
+            @RequestBody com.urmyfood.backend.application.dto.UpdateProfileRequest request
+    ) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        Account updatedAccount = accountService.updateProfile(details.getAccount().getId(), request);
+        AccountProfileDto dto = AccountProfileDto.builder()
+                .id(updatedAccount.getId())
+                .fullName(updatedAccount.getFullName())
+                .email(updatedAccount.getEmail())
+                .phone(updatedAccount.getPhone())
+                .role(updatedAccount.getRole())
+                .avatarUrl(updatedAccount.getAvatarUrl())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin tài khoản thành công", dto));
+    }
+
+    @PutMapping("/me/change-password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            Authentication authentication,
+            @RequestBody com.urmyfood.backend.application.dto.ChangePasswordRequest request
+    ) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        accountService.changePassword(details.getAccount().getId(), request);
+        return ResponseEntity.ok(ApiResponse.success("Đổi mật khẩu thành công", null));
     }
 }
