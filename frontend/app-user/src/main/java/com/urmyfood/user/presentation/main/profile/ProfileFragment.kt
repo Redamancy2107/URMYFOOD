@@ -35,6 +35,7 @@ class ProfileFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         observeViewModel()
         setupClickListeners()
+        binding.switchNotifications.isChecked = ServiceLocator.notificationSettingsManager.isSystemEnabled()
         viewModel.loadProfile()
     }
 
@@ -104,7 +105,18 @@ class ProfileFragment : Fragment() {
         binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.vouchersFragment) } }
         binding.menuFavorite.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.favoritesFragment) } }
 
-        binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.notificationSettingsFragment) } }
+        binding.menuNotificationSettings.setOnClickListener {
+            showGuestDialogOrRun {
+                val nextState = !binding.switchNotifications.isChecked
+                binding.switchNotifications.isChecked = nextState
+                ServiceLocator.notificationSettingsManager.setSystemEnabled(nextState)
+                Toast.makeText(
+                    requireContext(),
+                    if (nextState) "Đã bật thông báo" else "Đã tắt nhận thông báo",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
         binding.menuTermsPolicies.setOnClickListener { findNavController().navigate(R.id.termsPoliciesFragment) }
 
         binding.btnLogout.setOnClickListener {

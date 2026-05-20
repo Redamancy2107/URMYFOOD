@@ -25,7 +25,6 @@ import com.urmyfood.user.presentation.auth.register.RegisterViewModel
 import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
-import com.urmyfood.user.presentation.main.profile.NotificationSettingsViewModel
 import com.urmyfood.user.presentation.main.profile.ProfileViewModel
 import com.urmyfood.user.presentation.main.profile.TermsPoliciesViewModel
 
@@ -148,10 +147,6 @@ object ServiceLocator {
             guestSessionManager,
             getUserProfileUseCase
         )
-    }
-
-    fun provideNotificationSettingsViewModelFactory(): NotificationSettingsViewModel.Factory {
-        return NotificationSettingsViewModel.Factory(notificationSettingsManager)
     }
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {
