@@ -26,6 +26,8 @@ import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
 import com.urmyfood.user.presentation.main.profile.ProfileViewModel
+import com.urmyfood.user.presentation.main.profile.ProfileEditViewModel
+import com.urmyfood.user.presentation.main.profile.ChangePasswordViewModel
 import com.urmyfood.user.presentation.main.profile.TermsPoliciesViewModel
 
 /**
@@ -97,6 +99,8 @@ object ServiceLocator {
     val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
+    val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
+    val changePasswordUseCase: ChangePasswordUseCase by lazy { ChangePasswordUseCase(userRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -112,7 +116,11 @@ object ServiceLocator {
     }
 
     fun provideChooseRoleViewModelFactory(): ChooseRoleViewModel.Factory {
-        return ChooseRoleViewModel.Factory(loginAsGuestUseCase)
+        return ChooseRoleViewModel.Factory(
+            loginAsGuestUseCase,
+            loginWithGoogleUseCase,
+            tokenManager
+        )
     }
 
     fun provideRegisterViewModelFactory(): RegisterViewModel.Factory {
@@ -147,6 +155,17 @@ object ServiceLocator {
             guestSessionManager,
             getUserProfileUseCase
         )
+    }
+
+    fun provideProfileEditViewModelFactory(): ProfileEditViewModel.Factory {
+        return ProfileEditViewModel.Factory(
+            getUserProfileUseCase,
+            updateUserProfileUseCase
+        )
+    }
+
+    fun provideChangePasswordViewModelFactory(): ChangePasswordViewModel.Factory {
+        return ChangePasswordViewModel.Factory(changePasswordUseCase)
     }
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {
