@@ -24,7 +24,35 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
+    var onLikeClick: ((FoodPost) -> Unit)? = null
     var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
+
+    companion object {
+        val likedPosts = mutableSetOf<String>()
+        val likeCounts = mutableMapOf<String, Int>()
+        val commentCounts = mutableMapOf<String, Int>()
+
+        fun toggleLike(postId: String, initialCount: Int): Boolean {
+            val isLiked = likedPosts.contains(postId)
+            val currentCount = likeCounts[postId] ?: initialCount
+            if (isLiked) {
+                likedPosts.remove(postId)
+                likeCounts[postId] = (currentCount - 1).coerceAtLeast(0)
+            } else {
+                likedPosts.add(postId)
+                likeCounts[postId] = currentCount + 1
+            }
+            return !isLiked
+        }
+
+        fun getLikeCount(postId: String, defaultCount: Int): Int {
+            return likeCounts.getOrPut(postId) { defaultCount }
+        }
+
+        fun isLiked(postId: String): Boolean {
+            return likedPosts.contains(postId)
+        }
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -101,9 +129,16 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .into(ivShopAvatar)
 
                 // --- Action buttons logic ---
-                // Mock data
-                tvLikeCount.text = "${(50..200).random()}"
-                tvCommentCount.text = "${(2..30).random()}"
+                // Retrieve or generate mock counts
+                val initialLikeCount = getLikeCount(post.postId, (50..200).random())
+                val commentCount = commentCounts.getOrPut(post.postId) { (2..30).random() }
+
+                tvCommentCount.text = "$commentCount"
+
+                // Like status
+                val isLiked = isLiked(post.postId)
+                btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                tvLikeCount.text = "$initialLikeCount"
 
                 // Follow toggle
                 var isFollowing = false
@@ -119,10 +154,8 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 // Like toggle
-                var isLiked = false
                 btnLike.setOnClickListener {
-                    isLiked = !isLiked
-                    btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                    onLikeClick?.invoke(post)
                 }
 
                 // Bookmark toggle
