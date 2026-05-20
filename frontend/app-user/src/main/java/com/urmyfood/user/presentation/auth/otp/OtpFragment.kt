@@ -159,6 +159,7 @@ class OtpFragment : Fragment() {
                 }
                 is OtpUiState.Success -> {
                     setLoading(false)
+                    viewModel.resetOtpState()
                     findNavController().navigate(R.id.action_otpFragment_to_resetPasswordFragment)
                 }
                 is OtpUiState.Error -> {
