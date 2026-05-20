@@ -78,5 +78,17 @@
         android:label="Đơn hàng của tôi"
         tools:layout="@layout/fragment_order_history" />
 
+    <fragment
+        android:id="@+id/termsPoliciesFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.TermsPoliciesFragment"
+        android:label="Điều khoản &amp; Chính sách"
+        tools:layout="@layout/fragment_terms_policies" />
+
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.NotificationSettingsFragment"
+        android:label="Cài đặt thông báo"
+        tools:layout="@layout/fragment_notification_settings" />
+
 </navigation>
 

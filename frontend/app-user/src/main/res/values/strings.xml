@@ -223,4 +223,33 @@
     <!-- Auth Choices -->
     <string name="choose_role_guest">Tiếp tục với tư cách khách</string>
     <string name="profile_no_phone">Chưa cập nhật số điện thoại</string>
+
+    <!-- Terms & Policies Screen -->
+    <string name="terms_policies_title">Điều khoản &amp; Chính sách</string>
+    <string name="terms_policies_subtitle">Cam kết minh bạch</string>
+    <string name="terms_policies_description">Chúng tôi luôn nỗ lực bảo vệ quyền lợi và thông tin cá nhân của bạn thông qua các quy chuẩn nghiêm ngặt.</string>
+    <string name="terms_usage_title">Điều khoản sử dụng</string>
+    <string name="terms_usage_date">Cập nhật: 12/05/2024</string>
+    <string name="terms_privacy_title">Chính sách bảo mật</string>
+    <string name="terms_privacy_date">Cập nhật: 10/05/2024</string>
+    <string name="terms_refund_title">Chính sách hoàn tiền</string>
+    <string name="terms_refund_date">Cập nhật: 01/04/2024</string>
+    <string name="terms_regulations_title">Quy chế hoạt động</string>
+    <string name="terms_regulations_date">Cập nhật: 15/03/2024</string>
+    <string name="terms_contact_title">Bạn có thắc mắc khác?</string>
+    <string name="terms_contact_description">Liên hệ với đội ngũ pháp lý của URMYFOOD để được giải đáp chi tiết.</string>
+    <string name="terms_contact_btn">Gửi yêu cầu hỗ trợ</string>
+
+    <!-- Notification Settings Screen -->
+    <string name="notification_settings_title">Cài đặt thông báo</string>
+    <string name="notification_settings_heading">Tùy chỉnh nhận tin</string>
+    <string name="notification_settings_description">Chọn các loại thông báo bạn muốn nhận để cập nhật hành trình ẩm thực của mình.</string>
+    <string name="notification_orders_title">Đơn hàng</string>
+    <string name="notification_orders_desc">Trạng thái chuẩn bị &amp; giao hàng</string>
+    <string name="notification_promotions_title">Khuyến mãi</string>
+    <string name="notification_promotions_desc">Ưu đãi độc quyền &amp; mã giảm giá</string>
+    <string name="notification_messages_title">Tin nhắn</string>
+    <string name="notification_messages_desc">Trao đổi với Shipper &amp; Cửa hàng</string>
+    <string name="notification_system_title">Cập nhật hệ thống</string>
+    <string name="notification_system_desc">Thông báo quan trọng về ứng dụng</string>
 </resources>

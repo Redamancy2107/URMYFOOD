@@ -104,9 +104,8 @@ class ProfileFragment : Fragment() {
         binding.menuCoupons.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.vouchersFragment) } }
         binding.menuFavorite.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.favoritesFragment) } }
 
-        binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { showFeatureInDevelopment() } }
-        binding.menuSupportCenter.setOnClickListener { showFeatureInDevelopment() }
-        binding.menuTermsPolicies.setOnClickListener { showFeatureInDevelopment() }
+        binding.menuNotificationSettings.setOnClickListener { showGuestDialogOrRun { findNavController().navigate(R.id.notificationSettingsFragment) } }
+        binding.menuTermsPolicies.setOnClickListener { findNavController().navigate(R.id.termsPoliciesFragment) }
 
         binding.btnLogout.setOnClickListener {
             viewModel.logout()
