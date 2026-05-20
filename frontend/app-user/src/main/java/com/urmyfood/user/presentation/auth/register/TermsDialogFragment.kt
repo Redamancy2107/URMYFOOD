@@ -43,8 +43,11 @@ class TermsDialogFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Combine all terms messages into one text block
-        val termsContent = listOf(
+        val title = arguments?.getString(ARG_TITLE) ?: getString(R.string.terms_dialog_title)
+        binding.tvTermsTitle.text = title
+
+        // Combine all terms messages into one text block if content is not passed
+        val termsContent = arguments?.getString(ARG_CONTENT) ?: listOf(
             getString(R.string.terms_msg_1),
             getString(R.string.terms_msg_2),
             getString(R.string.terms_msg_3),
@@ -76,5 +79,17 @@ class TermsDialogFragment : DialogFragment() {
 
     companion object {
         const val TAG = "TermsDialogFragment"
+        private const val ARG_TITLE = "arg_title"
+        private const val ARG_CONTENT = "arg_content"
+
+        fun newInstance(title: String, content: String): TermsDialogFragment {
+            val fragment = TermsDialogFragment()
+            val args = Bundle().apply {
+                putString(ARG_TITLE, title)
+                putString(ARG_CONTENT, content)
+            }
+            fragment.arguments = args
+            return fragment
+        }
     }
 }

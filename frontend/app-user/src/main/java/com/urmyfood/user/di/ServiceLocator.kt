@@ -2,6 +2,7 @@ package com.urmyfood.user.di
 
 import android.content.Context
 import com.urmyfood.user.data.local.GuestSessionManager
+import com.urmyfood.user.data.local.NotificationSettingsManager
 import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
@@ -25,6 +26,7 @@ import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
 import com.urmyfood.user.presentation.main.profile.ProfileViewModel
+import com.urmyfood.user.presentation.main.profile.TermsPoliciesViewModel
 
 /**
  * Manual Dependency Injection container (Service Locator pattern).
@@ -54,6 +56,10 @@ object ServiceLocator {
 
     val favoritesManager: com.urmyfood.user.data.local.FavoritesManager by lazy {
         com.urmyfood.user.data.local.FavoritesManager(applicationContext)
+    }
+
+    val notificationSettingsManager: NotificationSettingsManager by lazy {
+        NotificationSettingsManager(applicationContext)
     }
 
     private val postApiService by lazy {
@@ -141,5 +147,9 @@ object ServiceLocator {
             guestSessionManager,
             getUserProfileUseCase
         )
+    }
+
+    fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {
+        return TermsPoliciesViewModel.Factory()
     }
 }
