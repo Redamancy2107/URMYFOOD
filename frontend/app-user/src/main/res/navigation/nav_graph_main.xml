@@ -85,10 +85,10 @@
         tools:layout="@layout/fragment_terms_policies" />
 
     <fragment
-        android:id="@+id/notificationSettingsFragment"
-        android:name="com.urmyfood.user.presentation.main.profile.NotificationSettingsFragment"
-        android:label="Cài đặt thông báo"
-        tools:layout="@layout/fragment_notification_settings" />
+        android:id="@+id/addressEditFragment"
+        android:name="com.urmyfood.user.presentation.main.profile.AddressEditFragment"
+        android:label="Thêm/Sửa địa chỉ"
+        tools:layout="@layout/fragment_address_edit" />
 
 </navigation>
 

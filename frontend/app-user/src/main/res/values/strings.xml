@@ -180,6 +180,25 @@
     <string name="address_book_delete_confirm">Bạn có chắc muốn xóa địa chỉ này?</string>
     <string name="address_book_deleted">Đã xóa địa chỉ</string>
 
+    <!-- Address Edit Screen -->
+    <string name="address_edit_title_add">Thêm địa chỉ mới</string>
+    <string name="address_edit_title_edit">Chỉnh sửa địa chỉ</string>
+    <string name="address_edit_recipient_label">Họ và tên người nhận</string>
+    <string name="address_edit_recipient_hint">Nhập họ tên</string>
+    <string name="address_edit_phone_label">Số điện thoại</string>
+    <string name="address_edit_phone_hint">Nhập số điện thoại</string>
+    <string name="address_edit_detail_label">Địa chỉ chi tiết (Số nhà, đường...)</string>
+    <string name="address_edit_detail_hint">Nhập số nhà, tên đường, phường...</string>
+    <string name="address_edit_type_label">Loại địa chỉ</string>
+    <string name="address_edit_default_label">Đặt làm mặc định</string>
+    <string name="address_edit_default_desc">Dùng làm địa chỉ giao nhận mặc định</string>
+    <string name="address_edit_btn_save">Hoàn thành</string>
+    <string name="address_edit_error_name">Vui lòng nhập họ và tên người nhận</string>
+    <string name="address_edit_error_phone">Vui lòng nhập số điện thoại</string>
+    <string name="address_edit_error_detail">Vui lòng nhập địa chỉ chi tiết</string>
+    <string name="address_edit_success_add">Thêm địa chỉ mới thành công</string>
+    <string name="address_edit_success_update">Cập nhật địa chỉ thành công</string>
+
     <!-- Vouchers Screen -->
     <string name="vouchers_title">Voucher của tôi</string>
     <string name="voucher_use_now">Dùng ngay</string>

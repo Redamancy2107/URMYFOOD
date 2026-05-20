@@ -26,12 +26,26 @@ class AddressBookFragment : Fragment() {
     private var _binding: FragmentAddressBookBinding? = null
     private val binding get() = _binding!!
 
-    data class Address(val label: String, val name: String, val phone: String, val detail: String, var isDefault: Boolean)
+    data class Address(var label: String, var name: String, var phone: String, var detail: String, var isDefault: Boolean)
 
-    private val addresses = mutableListOf(
-        Address("Nhà riêng", "Nguyễn Lê Vân Anh", "0912 345 678", "123 Nguyễn Văn Linh, Quận 7, TP.HCM", true),
-        Address("Công ty", "Nguyễn Lê Vân Anh", "0912 345 678", "Tòa nhà Bitexco, 2 Hải Triều, Quận 1, TP.HCM", false)
-    )
+    companion object {
+        val addresses = mutableListOf(
+            Address(
+                label = "Nhà riêng",
+                name = "Nguyễn Lê Vân Anh",
+                phone = "0912 345 678",
+                detail = "123 Nguyễn Văn Linh, Quận 7, TP.HCM",
+                isDefault = true
+            ),
+            Address(
+                label = "Công ty",
+                name = "Nguyễn Lê Vân Anh",
+                phone = "0912 345 678",
+                detail = "Tòa nhà Bitexco, 2 Hải Triều, Quận 1, TP.HCM",
+                isDefault = false
+            )
+        )
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAddressBookBinding.inflate(inflater, container, false)
@@ -42,7 +56,10 @@ class AddressBookFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
         binding.btnAddAddress.setOnClickListener {
-            Toast.makeText(requireContext(), getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+            val bundle = Bundle().apply {
+                putInt("address_index", -1)
+            }
+            findNavController().navigate(R.id.addressEditFragment, bundle)
         }
         renderAddresses()
     }
@@ -83,13 +100,12 @@ class AddressBookFragment : Fragment() {
         }
 
         // Label badge
-        val isHome = addr.label == ctx.getString(R.string.address_book_label_home)
         val badge = TextView(ctx).apply {
             text = addr.label
             textSize = 12f
-            setTextColor(if (isHome) ctx.getColor(R.color.primary) else Color.WHITE)
+            setTextColor(if (addr.isDefault) ctx.getColor(R.color.primary) else Color.WHITE)
             setPadding(dp(12), dp(4), dp(12), dp(4))
-            background = ctx.getDrawable(if (isHome) R.drawable.bg_badge_red else R.drawable.bg_badge_solid_red)
+            background = ctx.getDrawable(if (addr.isDefault) R.drawable.bg_badge_red else R.drawable.bg_badge_solid_red)
         }
         topRow.addView(badge)
 
@@ -115,7 +131,10 @@ class AddressBookFragment : Fragment() {
             setColorFilter(ctx.getColor(R.color.text_secondary))
             setBackgroundResource(android.R.color.transparent)
             setOnClickListener {
-                Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                val bundle = Bundle().apply {
+                    putInt("address_index", index)
+                }
+                findNavController().navigate(R.id.addressEditFragment, bundle)
             }
         }
         topRow.addView(btnEdit)
