@@ -79,7 +79,13 @@ class ProfileFragment : Fragment() {
         observeViewModel()
         setupClickListeners()
         syncNotificationSwitchState()
-        viewModel.loadProfile()
+
+        val savedStateHandle = findNavController().currentBackStackEntry?.savedStateHandle
+        val shouldRefresh = savedStateHandle?.get<Boolean>("refresh_profile") ?: false
+        if (shouldRefresh) {
+            savedStateHandle.remove<Boolean>("refresh_profile")
+        }
+        viewModel.loadProfile(force = shouldRefresh)
     }
 
     override fun onResume() {
