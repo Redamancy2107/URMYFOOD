@@ -1,11 +1,43 @@
 package com.urmyfood.user.data.remote
 
 import com.urmyfood.user.data.model.ApiResponse
+import com.urmyfood.user.data.model.CommentResponse
+import com.urmyfood.user.data.model.CreateCommentRequest
+import com.urmyfood.user.data.model.LikeToggleResult
 import com.urmyfood.user.data.model.PostResponse
 import retrofit2.Response
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface PostApiService {
     @GET("api/v1/posts")
-    suspend fun getPosts(): Response<ApiResponse<List<PostResponse>>>
+    suspend fun getPosts(
+        @Header("Authorization") token: String?
+    ): Response<ApiResponse<List<PostResponse>>>
+
+    @POST("api/v1/posts/{postId}/like")
+    suspend fun likePost(
+        @Path("postId") postId: String,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<LikeToggleResult>>
+
+    @DELETE("api/v1/posts/{postId}/like")
+    suspend fun unlikePost(
+        @Path("postId") postId: String,
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<LikeToggleResult>>
+
+    @GET("api/v1/posts/{postId}/comments")
+    suspend fun getComments(@Path("postId") postId: String): Response<ApiResponse<List<CommentResponse>>>
+
+    @POST("api/v1/posts/{postId}/comments")
+    suspend fun postComment(
+        @Path("postId") postId: String,
+        @Header("Authorization") token: String,
+        @Body body: CreateCommentRequest
+    ): Response<ApiResponse<CommentResponse>>
 }
