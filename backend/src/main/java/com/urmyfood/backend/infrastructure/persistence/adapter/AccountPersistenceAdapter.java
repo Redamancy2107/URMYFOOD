@@ -45,6 +45,7 @@ public class AccountPersistenceAdapter implements AccountRepository {
                 .phone(account.getPhone())
                 .password(account.getPassword())
                 .role(account.getRole())
+                .avatarUrl(account.getAvatarUrl())
                 .build();
     }
 
@@ -56,6 +57,7 @@ public class AccountPersistenceAdapter implements AccountRepository {
                 .phone(entity.getPhone())
                 .password(entity.getPassword())
                 .role(entity.getRole())
+                .avatarUrl(entity.getAvatarUrl())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

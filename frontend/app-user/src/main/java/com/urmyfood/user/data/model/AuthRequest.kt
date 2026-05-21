@@ -55,3 +55,19 @@ data class ResetPasswordRequest(
     @SerializedName("new_password")
     val newPassword: String
 )
+
+data class UpdateProfileRequest(
+    @SerializedName("fullName")
+    val fullName: String?,
+    @SerializedName("phone")
+    val phone: String?,
+    @SerializedName("avatarUrl")
+    val avatarUrl: String?
+)
+
+data class ChangePasswordRequest(
+    @SerializedName("currentPassword")
+    val currentPassword: String,
+    @SerializedName("newPassword")
+    val newPassword: String
+)

@@ -10,9 +10,11 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentChangePasswordBinding
+import com.urmyfood.user.di.ServiceLocator
 
 /**
  * Màn hình Đổi mật khẩu.
@@ -22,6 +24,10 @@ class ChangePasswordFragment : Fragment() {
 
     private var _binding: FragmentChangePasswordBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: ChangePasswordViewModel by viewModels {
+        ServiceLocator.provideChangePasswordViewModelFactory()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChangePasswordBinding.inflate(inflater, container, false)
@@ -47,6 +53,31 @@ class ChangePasswordFragment : Fragment() {
         }
 
         binding.btnConfirm.setOnClickListener { validateAndSubmit() }
+
+        observeViewModel()
+    }
+
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ChangePasswordUiState.Loading -> {
+                    binding.btnConfirm.isEnabled = false
+                    binding.btnConfirm.text = "Đang xử lý..."
+                }
+                is ChangePasswordUiState.Success -> {
+                    binding.btnConfirm.isEnabled = true
+                    binding.btnConfirm.text = getString(R.string.change_password_btn)
+                    toast(R.string.change_password_success)
+                    findNavController().popBackStack()
+                }
+                is ChangePasswordUiState.Error -> {
+                    binding.btnConfirm.isEnabled = true
+                    binding.btnConfirm.text = getString(R.string.change_password_btn)
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                is ChangePasswordUiState.Idle -> Unit
+            }
+        }
     }
 
     private fun setupToggle(editText: EditText, toggleBtn: ImageButton) {
@@ -72,8 +103,7 @@ class ChangePasswordFragment : Fragment() {
             newPass != confirm ->
                 toast(R.string.change_password_mismatch)
             else -> {
-                toast(R.string.change_password_success)
-                findNavController().popBackStack()
+                viewModel.changePassword(current, newPass)
             }
         }
     }

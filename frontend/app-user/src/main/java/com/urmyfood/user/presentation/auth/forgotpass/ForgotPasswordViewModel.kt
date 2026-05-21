@@ -102,6 +102,18 @@ class ForgotPasswordViewModel(
         }
     }
 
+    fun resetForgotPasswordState() {
+        _forgotPasswordState.value = ForgotPasswordUiState.Idle
+    }
+
+    fun resetOtpState() {
+        _otpState.value = OtpUiState.Idle
+    }
+
+    fun resetResetPasswordState() {
+        _resetPasswordState.value = ResetPasswordUiState.Idle
+    }
+
     /**
      * Factory for creating ForgotPasswordViewModel with dependencies.
      */

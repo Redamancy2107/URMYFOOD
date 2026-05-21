@@ -13,7 +13,9 @@ data class AccountProfileResponse(
     @SerializedName("phone")
     val phone: String?,
     @SerializedName("role")
-    val role: String
+    val role: String,
+    @SerializedName("avatarUrl")
+    val avatarUrl: String?
 )
 
 fun AccountProfileResponse.toDomain() = UserProfile(
@@ -21,5 +23,6 @@ fun AccountProfileResponse.toDomain() = UserProfile(
     fullName = fullName,
     email = email,
     phone = phone,
-    role = role
+    role = role,
+    avatarUrl = avatarUrl
 )
