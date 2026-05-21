@@ -85,12 +85,19 @@ class AddressEditFragment : Fragment() {
                     binding.btnSave.text = getString(R.string.address_edit_btn_save)
                     Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
-                is AddressEditUiState.Idle -> {
-                    // Set default toggle for new address
-                    if (addressId == null && viewModel.isFirstAddress) {
+                is AddressEditUiState.NewAddressInit -> {
+                    binding.btnSave.isEnabled = true
+                    binding.btnSave.text = getString(R.string.address_edit_btn_save)
+                    if (state.isFirst) {
                         binding.switchDefault.isChecked = true
                         binding.switchDefault.isEnabled = false
+                    } else {
+                        binding.switchDefault.isChecked = false
+                        binding.switchDefault.isEnabled = true
                     }
+                    updateLabelUI()
+                }
+                is AddressEditUiState.Idle -> {
                     updateLabelUI()
                 }
             }
