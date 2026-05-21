@@ -190,7 +190,11 @@ class HomeFragment : Fragment() {
             }
         }
         adapter.checkIsBookmarked = { post ->
-            favoritesManager.isFavorite(post.postId)
+            if (viewModel.isGuest) {
+                false
+            } else {
+                favoritesManager.isFavorite(post.postId)
+            }
         }
         adapter.onSaveClick = { post ->
             showGuestDialogOrRun {

@@ -32,4 +32,7 @@ public class AccountEntity extends BaseEntity {
 
     @Column(nullable = false)
     private String role;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 }

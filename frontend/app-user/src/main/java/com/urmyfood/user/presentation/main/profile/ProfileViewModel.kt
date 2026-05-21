@@ -44,8 +44,11 @@ class ProfileViewModel(
         }
     }
 
-    fun loadProfile() {
+    fun loadProfile(force: Boolean = false) {
         if (guestRepository.isGuest()) return
+        if (!force && _profileState.value is ProfileUiState.Success) {
+            return
+        }
         _profileState.value = ProfileUiState.Loading
         viewModelScope.launch {
             when (val result = getUserProfileUseCase()) {

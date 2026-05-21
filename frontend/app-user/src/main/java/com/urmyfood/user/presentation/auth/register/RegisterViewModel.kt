@@ -27,6 +27,10 @@ class RegisterViewModel(
     private val _sendOtpState = MutableLiveData<Result<Unit>>(null)
     val sendOtpState: LiveData<Result<Unit>> = _sendOtpState
 
+    fun resetSendOtpState() {
+        _sendOtpState.value = null
+    }
+
     fun sendOtp(email: String, phone: String) {
         viewModelScope.launch {
             _sendOtpState.value = com.urmyfood.user.di.ServiceLocator.sendLoginOtpUseCase(email, phone)

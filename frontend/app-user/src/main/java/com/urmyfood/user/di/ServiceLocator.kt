@@ -2,17 +2,24 @@ package com.urmyfood.user.di
 
 import android.content.Context
 import com.urmyfood.user.data.local.GuestSessionManager
+import com.urmyfood.user.data.local.NotificationSettingsManager
 import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
 import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.remote.UserApiService
+import com.urmyfood.user.data.remote.AddressApiService
+import com.urmyfood.user.data.remote.VoucherApiService
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.data.repository.PostRepositoryImpl
 import com.urmyfood.user.data.repository.UserRepositoryImpl
+import com.urmyfood.user.data.repository.AddressRepositoryImpl
+import com.urmyfood.user.data.repository.VoucherRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.repository.PostRepository
 import com.urmyfood.user.domain.repository.UserRepository
+import com.urmyfood.user.domain.repository.AddressRepository
+import com.urmyfood.user.domain.repository.VoucherRepository
 import com.urmyfood.user.domain.usecase.*
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
 import com.urmyfood.user.domain.usecase.GetUserProfileUseCase
@@ -26,6 +33,12 @@ import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
 import com.urmyfood.user.presentation.main.profile.ProfileViewModel
+import com.urmyfood.user.presentation.main.profile.ProfileEditViewModel
+import com.urmyfood.user.presentation.main.profile.ChangePasswordViewModel
+import com.urmyfood.user.presentation.main.profile.AddressBookViewModel
+import com.urmyfood.user.presentation.main.profile.AddressEditViewModel
+import com.urmyfood.user.presentation.main.profile.VouchersViewModel
+import com.urmyfood.user.presentation.main.profile.TermsPoliciesViewModel
 
 /**
  * Manual Dependency Injection container (Service Locator pattern).
@@ -57,12 +70,24 @@ object ServiceLocator {
         com.urmyfood.user.data.local.FavoritesManager(applicationContext)
     }
 
+    val notificationSettingsManager: NotificationSettingsManager by lazy {
+        NotificationSettingsManager(applicationContext)
+    }
+
     private val postApiService by lazy {
         RetrofitClient.postApiService
     }
 
     private val userApiService: UserApiService by lazy {
         RetrofitClient.userApiService
+    }
+
+    private val addressApiService: AddressApiService by lazy {
+        RetrofitClient.addressApiService
+    }
+
+    private val voucherApiService: VoucherApiService by lazy {
+        RetrofitClient.voucherApiService
     }
 
     // ==================== DOMAIN LAYER ====================
@@ -77,6 +102,14 @@ object ServiceLocator {
 
     private val userRepository: UserRepository by lazy {
         UserRepositoryImpl(userApiService)
+    }
+
+    private val addressRepository: AddressRepository by lazy {
+        AddressRepositoryImpl(addressApiService)
+    }
+
+    private val voucherRepository: VoucherRepository by lazy {
+        VoucherRepositoryImpl(voucherApiService)
     }
 
     // ==================== USE CASES ====================
@@ -95,6 +128,18 @@ object ServiceLocator {
     val postCommentUseCase: PostCommentUseCase by lazy { PostCommentUseCase(postRepository, tokenManager) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
+    val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
+    val changePasswordUseCase: ChangePasswordUseCase by lazy { ChangePasswordUseCase(userRepository, tokenManager) }
+
+    // Address use cases
+    val getAddressesUseCase: GetAddressesUseCase by lazy { GetAddressesUseCase(addressRepository, tokenManager) }
+    val createAddressUseCase: CreateAddressUseCase by lazy { CreateAddressUseCase(addressRepository, tokenManager) }
+    val updateAddressUseCase: UpdateAddressUseCase by lazy { UpdateAddressUseCase(addressRepository, tokenManager) }
+    val deleteAddressUseCase: DeleteAddressUseCase by lazy { DeleteAddressUseCase(addressRepository, tokenManager) }
+    val setDefaultAddressUseCase: SetDefaultAddressUseCase by lazy { SetDefaultAddressUseCase(addressRepository, tokenManager) }
+
+    // Voucher use cases
+    val getVouchersUseCase: GetVouchersUseCase by lazy { GetVouchersUseCase(voucherRepository) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -110,7 +155,11 @@ object ServiceLocator {
     }
 
     fun provideChooseRoleViewModelFactory(): ChooseRoleViewModel.Factory {
-        return ChooseRoleViewModel.Factory(loginAsGuestUseCase)
+        return ChooseRoleViewModel.Factory(
+            loginAsGuestUseCase,
+            loginWithGoogleUseCase,
+            tokenManager
+        )
     }
 
     fun provideRegisterViewModelFactory(): RegisterViewModel.Factory {
@@ -149,5 +198,40 @@ object ServiceLocator {
             guestSessionManager,
             getUserProfileUseCase
         )
+    }
+
+    fun provideProfileEditViewModelFactory(): ProfileEditViewModel.Factory {
+        return ProfileEditViewModel.Factory(
+            getUserProfileUseCase,
+            updateUserProfileUseCase
+        )
+    }
+
+    fun provideChangePasswordViewModelFactory(): ChangePasswordViewModel.Factory {
+        return ChangePasswordViewModel.Factory(changePasswordUseCase)
+    }
+
+    fun provideAddressBookViewModelFactory(): AddressBookViewModel.Factory {
+        return AddressBookViewModel.Factory(
+            getAddressesUseCase,
+            deleteAddressUseCase,
+            setDefaultAddressUseCase
+        )
+    }
+
+    fun provideAddressEditViewModelFactory(): AddressEditViewModel.Factory {
+        return AddressEditViewModel.Factory(
+            getAddressesUseCase,
+            createAddressUseCase,
+            updateAddressUseCase
+        )
+    }
+
+    fun provideVouchersViewModelFactory(): VouchersViewModel.Factory {
+        return VouchersViewModel.Factory(getVouchersUseCase)
+    }
+
+    fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {
+        return TermsPoliciesViewModel.Factory()
     }
 }

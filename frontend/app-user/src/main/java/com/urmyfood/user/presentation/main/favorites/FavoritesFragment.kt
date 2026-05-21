@@ -7,12 +7,17 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainFavoritesBinding
+import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
+import com.urmyfood.user.presentation.main.home.QuickCommentFragment
+import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
+import kotlinx.coroutines.launch
 
 /**
  * Favorites screen fragment.
@@ -59,6 +64,12 @@ class FavoritesFragment : Fragment() {
             favoritesManager.isFavorite(post.postId)
         }
 
+        adapter.onLikeClick = { postId, isCurrentlyLiked ->
+            viewLifecycleOwner.lifecycleScope.launch {
+                ServiceLocator.toggleLikeUseCase(postId, isCurrentlyLiked)
+            }
+        }
+
         adapter.onSaveClick = { post ->
             val isSaved = favoritesManager.toggleFavorite(post)
             val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
@@ -69,6 +80,16 @@ class FavoritesFragment : Fragment() {
         adapter.onOrderClick = { post ->
             val orderSheet = OrderBottomSheetFragment(post)
             orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+        }
+
+        adapter.onCommentClick = { postId ->
+            val commentSheet = QuickCommentFragment.newInstance(postId)
+            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+        }
+
+        adapter.onShareClick = {
+            val shareSheet = ShareBottomSheetFragment()
+            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
     }
 

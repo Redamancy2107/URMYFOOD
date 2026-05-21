@@ -45,9 +45,6 @@ class LoginFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
 
         binding.btnLogin.setOnClickListener {
             val emailOrPhone = binding.etEmail.text.toString().trim()
