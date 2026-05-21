@@ -12,27 +12,27 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
+import com.urmyfood.user.data.model.VoucherResponse
 import com.urmyfood.user.databinding.FragmentVouchersBinding
+import com.urmyfood.user.di.ServiceLocator
+import java.text.NumberFormat
+import java.util.Locale
 
 /**
  * Màn hình Voucher của tôi.
- * Hiển thị danh sách voucher khuyến mãi dạng thẻ bo góc.
+ * Hiển thị danh sách voucher khả dụng từ API.
  */
 class VouchersFragment : Fragment() {
 
     private var _binding: FragmentVouchersBinding? = null
     private val binding get() = _binding!!
 
-    data class Voucher(val code: String, val title: String, val discount: String, val expiry: String, val color: Int)
-
-    private val vouchers = listOf(
-        Voucher("FREESHIP50", "Miễn phí vận chuyển", "Giảm 50K phí ship", "HSD: 30/06/2026", R.color.primary),
-        Voucher("FOOD30", "Giảm 30% đơn hàng", "Tối đa 100K", "HSD: 15/06/2026", R.color.primary),
-        Voucher("NEWUSER", "Ưu đãi khách mới", "Giảm 25K cho đơn đầu tiên", "HSD: 31/07/2026", R.color.primary),
-        Voucher("COMBO20", "Combo tiết kiệm", "Giảm 20K cho combo 2 món", "HSD: 20/06/2026", R.color.primary)
-    )
+    private val viewModel: VouchersViewModel by viewModels {
+        ServiceLocator.provideVouchersViewModelFactory()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentVouchersBinding.inflate(inflater, container, false)
@@ -42,19 +42,49 @@ class VouchersFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
-        renderVouchers()
+        observeViewModel()
+        viewModel.loadVouchers()
     }
 
-    private fun renderVouchers() {
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is VouchersUiState.Loading -> { /* Could show shimmer */ }
+                is VouchersUiState.Success -> renderVouchers(state.vouchers)
+                is VouchersUiState.Error -> {
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                is VouchersUiState.Idle -> Unit
+            }
+        }
+    }
+
+    private fun renderVouchers(vouchers: List<VoucherResponse>) {
+        binding.voucherContainer.removeAllViews()
         val ctx = requireContext()
+
+        if (vouchers.isEmpty()) {
+            val emptyText = TextView(ctx).apply {
+                text = "Hiện tại chưa có voucher nào khả dụng"
+                textSize = 15f
+                setTextColor(ctx.getColor(R.color.text_secondary))
+                gravity = Gravity.CENTER
+                setPadding(0, (48 * ctx.resources.displayMetrics.density).toInt(), 0, 0)
+            }
+            binding.voucherContainer.addView(emptyText)
+            return
+        }
+
         val dp = { v: Int -> (v * ctx.resources.displayMetrics.density).toInt() }
+        val primaryColor = ctx.getColor(R.color.primary)
+        val currencyFormat = NumberFormat.getInstance(Locale("vi", "VN"))
 
         vouchers.forEach { v ->
-            val resolvedColor = ctx.getColor(v.color)
             val card = CardView(ctx).apply {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    bottomMargin = dp(12)
-                }
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(12) }
                 radius = dp(16).toFloat()
                 cardElevation = dp(4).toFloat()
                 setCardBackgroundColor(Color.WHITE)
@@ -66,11 +96,10 @@ class VouchersFragment : Fragment() {
             }
 
             // Color accent bar
-            val accent = View(ctx).apply {
+            row.addView(View(ctx).apply {
                 layoutParams = LinearLayout.LayoutParams(dp(6), LinearLayout.LayoutParams.MATCH_PARENT)
-                setBackgroundColor(resolvedColor)
-            }
-            row.addView(accent)
+                setBackgroundColor(primaryColor)
+            })
 
             // Info column
             val info = LinearLayout(ctx).apply {
@@ -81,7 +110,7 @@ class VouchersFragment : Fragment() {
             info.addView(TextView(ctx).apply {
                 text = v.code
                 textSize = 14f
-                setTextColor(resolvedColor)
+                setTextColor(primaryColor)
                 setTypeface(typeface, Typeface.BOLD)
                 letterSpacing = 0.05f
             })
@@ -93,13 +122,13 @@ class VouchersFragment : Fragment() {
                 setPadding(0, dp(4), 0, 0)
             })
             info.addView(TextView(ctx).apply {
-                text = v.discount
+                text = v.description ?: "Giảm ${currencyFormat.format(v.discountValue.toLong())}đ"
                 textSize = 13f
                 setTextColor(ctx.getColor(R.color.text_secondary))
                 setPadding(0, dp(2), 0, 0)
             })
             info.addView(TextView(ctx).apply {
-                text = v.expiry
+                text = "HSD: ${v.expiryDate}"
                 textSize = 12f
                 setTextColor(ctx.getColor(R.color.text_hint))
                 setPadding(0, dp(8), 0, 0)
@@ -107,21 +136,23 @@ class VouchersFragment : Fragment() {
             row.addView(info)
 
             // Use button
-            val btn = TextView(ctx).apply {
+            row.addView(TextView(ctx).apply {
                 text = ctx.getString(R.string.voucher_use_now)
                 textSize = 13f
                 setTextColor(Color.WHITE)
                 setTypeface(typeface, Typeface.BOLD)
                 setPadding(dp(16), dp(8), dp(16), dp(8))
                 setBackgroundResource(R.drawable.bg_btn_primary)
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    marginEnd = dp(16)
-                }
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { marginEnd = dp(16) }
                 setOnClickListener {
-                    Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, "Đã sao chép mã: ${v.code}", Toast.LENGTH_SHORT).show()
+                    val clipboard = ctx.getSystemService(android.content.ClipboardManager::class.java)
+                    clipboard?.setPrimaryClip(android.content.ClipData.newPlainText("voucher_code", v.code))
                 }
-            }
-            row.addView(btn)
+            })
 
             card.addView(row)
             binding.voucherContainer.addView(card)
