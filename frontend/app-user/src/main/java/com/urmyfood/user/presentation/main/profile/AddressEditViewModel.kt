@@ -13,6 +13,7 @@ sealed class AddressEditUiState {
     object Loading : AddressEditUiState()
     object SaveSuccess : AddressEditUiState()
     data class Loaded(val address: AddressResponse) : AddressEditUiState()
+    data class NewAddressInit(val isFirst: Boolean) : AddressEditUiState()
     data class Error(val message: String) : AddressEditUiState()
 }
 
@@ -47,10 +48,14 @@ class AddressEditViewModel(
     }
 
     fun loadAddressCount() {
+        _uiState.value = AddressEditUiState.Loading
         viewModelScope.launch {
             when (val result = getAddressesUseCase()) {
-                is Result.Success -> _addressCount = result.data.size
-                is Result.Error -> { /* ignore */ }
+                is Result.Success -> {
+                    _addressCount = result.data.size
+                    _uiState.value = AddressEditUiState.NewAddressInit(_addressCount == 0)
+                }
+                is Result.Error -> _uiState.value = AddressEditUiState.Error(result.message)
             }
         }
     }
