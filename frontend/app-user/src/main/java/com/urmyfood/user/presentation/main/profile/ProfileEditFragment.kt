@@ -95,6 +95,7 @@ class ProfileEditFragment : Fragment() {
                 }
                 is ProfileEditUiState.Success -> {
                     Toast.makeText(requireContext(), getString(R.string.profile_edit_save_success), Toast.LENGTH_SHORT).show()
+                    findNavController().previousBackStackEntry?.savedStateHandle?.set("refresh_profile", true)
                     findNavController().popBackStack()
                 }
                 is ProfileEditUiState.Error -> {
