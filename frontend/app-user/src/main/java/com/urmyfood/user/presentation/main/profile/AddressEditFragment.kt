@@ -7,23 +7,29 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentAddressEditBinding
+import com.urmyfood.user.di.ServiceLocator
 
+/**
+ * Màn hình Thêm / Sửa địa chỉ.
+ * Kết nối API backend để persist dữ liệu.
+ */
 class AddressEditFragment : Fragment() {
 
     private var _binding: FragmentAddressEditBinding? = null
     private val binding get() = _binding!!
 
-    private var selectedLabel = "Nhà riêng"
-    private var addressIndex = -1
+    private val viewModel: AddressEditViewModel by viewModels {
+        ServiceLocator.provideAddressEditViewModelFactory()
+    }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    private var selectedLabel = "Nhà riêng"
+    private var addressId: Long? = null
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAddressEditBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -31,64 +37,71 @@ class AddressEditFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        addressIndex = arguments?.getInt("address_index", -1) ?: -1
+        val argId = arguments?.getLong("address_id", -1L) ?: -1L
+        addressId = if (argId > 0) argId else null
 
-        setupUI()
         setupListeners()
-    }
+        observeViewModel()
 
-    private fun setupUI() {
-        val hasNoAddress = AddressBookFragment.addresses.isEmpty()
-
-        if (addressIndex != -1) {
+        if (addressId != null) {
             binding.tvTitle.text = getString(R.string.address_edit_title_edit)
-            if (addressIndex in AddressBookFragment.addresses.indices) {
-                val address = AddressBookFragment.addresses[addressIndex]
-                binding.etFullName.setText(address.name)
-                binding.etPhone.setText(address.phone)
-                binding.etDetail.setText(address.detail)
-                selectedLabel = address.label
-                binding.switchDefault.isChecked = address.isDefault
-                
-                // If it is the default address, we should not allow unchecking it 
-                // because there must always be a default address.
-                if (address.isDefault) {
-                    binding.switchDefault.isEnabled = false
-                }
-            }
+            viewModel.loadAddressForEdit(addressId!!)
         } else {
             binding.tvTitle.text = getString(R.string.address_edit_title_add)
-            // If it's the first address, make it default automatically and lock it.
-            if (hasNoAddress) {
-                binding.switchDefault.isChecked = true
-                binding.switchDefault.isEnabled = false
-            } else {
-                binding.switchDefault.isChecked = false
-                binding.switchDefault.isEnabled = true
+            viewModel.loadAddressCount()
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is AddressEditUiState.Loading -> {
+                    binding.btnSave.isEnabled = false
+                    binding.btnSave.text = "Đang lưu..."
+                }
+                is AddressEditUiState.Loaded -> {
+                    binding.btnSave.isEnabled = true
+                    binding.btnSave.text = getString(R.string.address_edit_btn_save)
+                    val addr = state.address
+                    binding.etFullName.setText(addr.name)
+                    binding.etPhone.setText(addr.phone)
+                    binding.etDetail.setText(addr.detail)
+                    selectedLabel = addr.label
+                    binding.switchDefault.isChecked = addr.isDefault
+                    if (addr.isDefault) binding.switchDefault.isEnabled = false
+                    updateLabelUI()
+                }
+                is AddressEditUiState.SaveSuccess -> {
+                    Toast.makeText(
+                        requireContext(),
+                        if (addressId != null) getString(R.string.address_edit_success_update)
+                        else getString(R.string.address_edit_success_add),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    findNavController().popBackStack()
+                }
+                is AddressEditUiState.Error -> {
+                    binding.btnSave.isEnabled = true
+                    binding.btnSave.text = getString(R.string.address_edit_btn_save)
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                is AddressEditUiState.Idle -> {
+                    // Set default toggle for new address
+                    if (addressId == null && viewModel.isFirstAddress) {
+                        binding.switchDefault.isChecked = true
+                        binding.switchDefault.isEnabled = false
+                    }
+                    updateLabelUI()
+                }
             }
         }
-
-        updateLabelUI()
     }
 
     private fun setupListeners() {
-        binding.btnBack.setOnClickListener {
-            findNavController().popBackStack()
-        }
-
-        binding.btnHome.setOnClickListener {
-            selectedLabel = "Nhà riêng"
-            updateLabelUI()
-        }
-
-        binding.btnWork.setOnClickListener {
-            selectedLabel = "Công ty"
-            updateLabelUI()
-        }
-
-        binding.btnSave.setOnClickListener {
-            saveAddress()
-        }
+        binding.btnBack.setOnClickListener { findNavController().popBackStack() }
+        binding.btnHome.setOnClickListener { selectedLabel = "Nhà riêng"; updateLabelUI() }
+        binding.btnWork.setOnClickListener { selectedLabel = "Công ty"; updateLabelUI() }
+        binding.btnSave.setOnClickListener { saveAddress() }
     }
 
     private fun updateLabelUI() {
@@ -96,13 +109,11 @@ class AddressEditFragment : Fragment() {
         if (selectedLabel == "Nhà riêng") {
             binding.btnHome.background = ContextCompat.getDrawable(ctx, R.drawable.bg_badge_solid_red)
             binding.btnHome.setTextColor(ContextCompat.getColor(ctx, R.color.white))
-            
             binding.btnWork.background = ContextCompat.getDrawable(ctx, R.drawable.bg_badge_light)
             binding.btnWork.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
         } else {
             binding.btnHome.background = ContextCompat.getDrawable(ctx, R.drawable.bg_badge_light)
             binding.btnHome.setTextColor(ContextCompat.getColor(ctx, R.color.text_primary))
-            
             binding.btnWork.background = ContextCompat.getDrawable(ctx, R.drawable.bg_badge_solid_red)
             binding.btnWork.setTextColor(ContextCompat.getColor(ctx, R.color.white))
         }
@@ -118,55 +129,16 @@ class AddressEditFragment : Fragment() {
             Toast.makeText(requireContext(), getString(R.string.address_edit_error_name), Toast.LENGTH_SHORT).show()
             return
         }
-
         if (phone.isEmpty()) {
             Toast.makeText(requireContext(), getString(R.string.address_edit_error_phone), Toast.LENGTH_SHORT).show()
             return
         }
-
         if (detail.isEmpty()) {
             Toast.makeText(requireContext(), getString(R.string.address_edit_error_detail), Toast.LENGTH_SHORT).show()
             return
         }
 
-        // If setting this address as default, unset others first.
-        if (isDefault) {
-            AddressBookFragment.addresses.forEach { it.isDefault = false }
-        }
-
-        if (addressIndex == -1) {
-            // Add new address
-            val newAddress = AddressBookFragment.Address(
-                label = selectedLabel,
-                name = name,
-                phone = phone,
-                detail = detail,
-                isDefault = isDefault
-            )
-            AddressBookFragment.addresses.add(newAddress)
-            Toast.makeText(requireContext(), getString(R.string.address_edit_success_add), Toast.LENGTH_SHORT).show()
-        } else {
-            // Update existing address
-            if (addressIndex in AddressBookFragment.addresses.indices) {
-                val address = AddressBookFragment.addresses[addressIndex]
-                address.name = name
-                address.phone = phone
-                address.detail = detail
-                address.label = selectedLabel
-                address.isDefault = isDefault
-                Toast.makeText(requireContext(), getString(R.string.address_edit_success_update), Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        // Guarantee there is at least one default address if the list is not empty
-        if (AddressBookFragment.addresses.isNotEmpty()) {
-            val defaultExists = AddressBookFragment.addresses.any { it.isDefault }
-            if (!defaultExists) {
-                AddressBookFragment.addresses[0].isDefault = true
-            }
-        }
-
-        findNavController().popBackStack()
+        viewModel.saveAddress(addressId, selectedLabel, name, phone, detail, isDefault)
     }
 
     override fun onDestroyView() {
