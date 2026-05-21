@@ -176,7 +176,12 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        adapter.onCommentClick = { showCommentSheet() }
+        adapter.onLikeClick = { postId, isLiked ->
+            showGuestDialogOrRun { viewModel.toggleLike(postId, isLiked) }
+        }
+        adapter.onCommentClick = { postId ->
+            showGuestDialogOrRun { showCommentSheet(postId) }
+        }
         adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
             showGuestDialogOrRun {
@@ -204,11 +209,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showCommentSheet() {
-        showGuestDialogOrRun {
-            val commentSheet = QuickCommentFragment()
-            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
-        }
+    private fun showCommentSheet(postId: String) {
+        val commentSheet = QuickCommentFragment.newInstance(postId)
+        commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
     }
 
     private fun showGuestDialogOrRun(action: () -> Unit) {

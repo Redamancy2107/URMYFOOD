@@ -4,7 +4,6 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +19,8 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
     
-    var onCommentClick: (() -> Unit)? = null
+    var onCommentClick: ((postId: String) -> Unit)? = null
+    var onLikeClick: ((postId: String, isCurrentlyLiked: Boolean) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
@@ -100,10 +100,9 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .circleCrop()
                     .into(ivShopAvatar)
 
-                // --- Action buttons logic ---
-                // Mock data
-                tvLikeCount.text = "${(50..200).random()}"
-                tvCommentCount.text = "${(2..30).random()}"
+                // Action buttons
+                tvLikeCount.text = post.likeCount.toString()
+                tvCommentCount.text = post.commentCount.toString()
 
                 // Follow toggle
                 var isFollowing = false
@@ -118,12 +117,8 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     }
                 }
 
-                // Like toggle
-                var isLiked = false
-                btnLike.setOnClickListener {
-                    isLiked = !isLiked
-                    btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
-                }
+                btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                btnLike.setOnClickListener { onLikeClick?.invoke(post.postId, post.isLiked) }
 
                 // Bookmark toggle
                 val isBookmarked = checkIsBookmarked?.invoke(post) ?: false
@@ -133,7 +128,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 btnComment.setOnClickListener {
-                    onCommentClick?.invoke()
+                    onCommentClick?.invoke(post.postId)
                 }
                 btnShare.setOnClickListener {
                     onShareClick?.invoke()
