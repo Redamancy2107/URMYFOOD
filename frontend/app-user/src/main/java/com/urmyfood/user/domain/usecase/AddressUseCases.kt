@@ -1,13 +1,13 @@
 package com.urmyfood.user.domain.usecase
 
-import com.urmyfood.user.data.local.TokenManager
+import com.urmyfood.user.domain.model.TokenProvider
 import com.urmyfood.user.data.model.AddressResponse
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.AddressRepository
 
 class GetAddressesUseCase(
     private val addressRepository: AddressRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenProvider
 ) {
     suspend operator fun invoke(): Result<List<AddressResponse>> {
         val token = tokenManager.getAccessToken()
@@ -18,7 +18,7 @@ class GetAddressesUseCase(
 
 class CreateAddressUseCase(
     private val addressRepository: AddressRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenProvider
 ) {
     suspend operator fun invoke(
         label: String, name: String, phone: String, detail: String, isDefault: Boolean
@@ -31,7 +31,7 @@ class CreateAddressUseCase(
 
 class UpdateAddressUseCase(
     private val addressRepository: AddressRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenProvider
 ) {
     suspend operator fun invoke(
         id: Long, label: String, name: String, phone: String, detail: String, isDefault: Boolean
@@ -44,7 +44,7 @@ class UpdateAddressUseCase(
 
 class DeleteAddressUseCase(
     private val addressRepository: AddressRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenProvider
 ) {
     suspend operator fun invoke(id: Long): Result<Unit> {
         val token = tokenManager.getAccessToken()
@@ -55,7 +55,7 @@ class DeleteAddressUseCase(
 
 class SetDefaultAddressUseCase(
     private val addressRepository: AddressRepository,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenProvider
 ) {
     suspend operator fun invoke(id: Long): Result<AddressResponse> {
         val token = tokenManager.getAccessToken()
