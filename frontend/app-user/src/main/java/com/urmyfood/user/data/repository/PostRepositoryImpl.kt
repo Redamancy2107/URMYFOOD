@@ -6,6 +6,7 @@ import com.urmyfood.user.data.remote.PostApiService
 import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.LikeToggleResult
+import com.urmyfood.user.domain.model.PageResult
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.PostRepository
 import kotlinx.coroutines.CancellationException
@@ -62,13 +63,20 @@ class PostRepositoryImpl(
         }
     }
 
-    override suspend fun getComments(postId: String): Result<List<Comment>> {
+    override suspend fun getComments(postId: String, page: Int, size: Int): Result<PageResult<Comment>> {
         return try {
-            val response = postApiService.getComments(postId)
+            val response = postApiService.getComments(postId, page, size)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
-                    Result.Success(body.data.map { it.toDomain() })
+                    val pageData = body.data
+                    Result.Success(
+                        PageResult(
+                            items = pageData.content.map { it.toDomain() },
+                            page = pageData.page,
+                            hasNext = pageData.hasNext
+                        )
+                    )
                 } else {
                     Result.Error(body?.message ?: "Không thể tải bình luận")
                 }

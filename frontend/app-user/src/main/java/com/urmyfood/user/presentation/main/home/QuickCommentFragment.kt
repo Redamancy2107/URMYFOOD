@@ -8,6 +8,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -26,6 +27,8 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
     }
 
     private val commentAdapter = CommentAdapter()
+
+    private var scrollToTopOnNextUpdate = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,6 +73,19 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
         binding.rvComments.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = commentAdapter
+            addOnScrollListener(loadMoreScrollListener)
+        }
+    }
+
+    private val loadMoreScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            if (dy <= 0) return
+            val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
+            val totalItemCount = layoutManager.itemCount
+            val lastVisible = layoutManager.findLastVisibleItemPosition()
+            if (lastVisible >= totalItemCount - LOAD_MORE_THRESHOLD) {
+                viewModel.loadMore()
+            }
         }
     }
 
@@ -78,15 +94,20 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
             when (state) {
                 is CommentViewModel.UiState.Loading -> Unit
                 is CommentViewModel.UiState.Success -> {
-                    commentAdapter.submitList(state.comments)
-                    if (state.comments.isNotEmpty()) {
-                        binding.rvComments.scrollToPosition(state.comments.size - 1)
+                    commentAdapter.submitList(state.comments) {
+                        if (scrollToTopOnNextUpdate) {
+                            _binding?.rvComments?.scrollToPosition(0)
+                            scrollToTopOnNextUpdate = false
+                        }
                     }
                 }
                 is CommentViewModel.UiState.Error -> {
                     Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+        viewModel.isLoadingMore.observe(viewLifecycleOwner) { loading ->
+            binding.progressLoadMore.visibility = if (loading) View.VISIBLE else View.GONE
         }
         viewModel.sendError.observe(viewLifecycleOwner) { error ->
             if (error != null) {
@@ -99,6 +120,7 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
         binding.btnSend.setOnClickListener {
             val text = binding.etComment.text.toString().trim()
             if (text.isNotBlank()) {
+                scrollToTopOnNextUpdate = true
                 viewModel.sendComment(postId, text, "Bạn")
                 binding.etComment.text.clear()
             }
@@ -107,12 +129,14 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.rvComments.removeOnScrollListener(loadMoreScrollListener)
         _binding = null
     }
 
     companion object {
         const val TAG = "QuickCommentFragment"
         private const val ARG_POST_ID = "post_id"
+        private const val LOAD_MORE_THRESHOLD = 3
 
         fun newInstance(postId: String): QuickCommentFragment {
             return QuickCommentFragment().apply {

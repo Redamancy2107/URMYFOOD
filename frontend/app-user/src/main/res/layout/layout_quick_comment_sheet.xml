@@ -46,6 +46,15 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_comment" />
 
+    <!-- Load-more spinner shown while fetching the next page -->
+    <ProgressBar
+        android:id="@+id/progressLoadMore"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="8dp"
+        android:visibility="gone" />
+
     <!-- Bottom Input Area (Fixed at bottom) -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/inputLayout"

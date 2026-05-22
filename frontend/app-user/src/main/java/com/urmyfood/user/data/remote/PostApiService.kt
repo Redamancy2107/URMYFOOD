@@ -4,6 +4,7 @@ import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CommentResponse
 import com.urmyfood.user.data.model.CreateCommentRequest
 import com.urmyfood.user.data.model.LikeToggleResult
+import com.urmyfood.user.data.model.PageResponse
 import com.urmyfood.user.data.model.PostResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -12,6 +13,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface PostApiService {
     @GET("api/v1/posts")
@@ -32,7 +34,11 @@ interface PostApiService {
     ): Response<ApiResponse<LikeToggleResult>>
 
     @GET("api/v1/posts/{postId}/comments")
-    suspend fun getComments(@Path("postId") postId: String): Response<ApiResponse<List<CommentResponse>>>
+    suspend fun getComments(
+        @Path("postId") postId: String,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<ApiResponse<PageResponse<CommentResponse>>>
 
     @POST("api/v1/posts/{postId}/comments")
     suspend fun postComment(
