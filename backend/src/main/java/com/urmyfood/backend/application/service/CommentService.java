@@ -2,6 +2,7 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.application.dto.CommentResponse;
 import com.urmyfood.backend.application.dto.CreateCommentRequest;
+import com.urmyfood.backend.application.dto.PageResponse;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.Comment;
 import com.urmyfood.backend.domain.model.Post;
@@ -27,13 +28,15 @@ public class CommentService {
     private final AccountRepository accountRepository;
 
     @Transactional(readOnly = true)
-    public List<CommentResponse> getComments(UUID postId) {
+    public PageResponse<CommentResponse> getComments(UUID postId, int page, int size) {
         postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
-        return commentRepository.findByPostId(postId)
+        List<CommentResponse> content = commentRepository.findByPostId(postId, page, size)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+        long total = commentRepository.countByPostId(postId);
+        return PageResponse.of(content, page, size, total);
     }
 
     public CommentResponse addComment(UUID postId, CreateCommentRequest request) {
@@ -59,7 +62,7 @@ public class CommentService {
         return CommentResponse.builder()
                 .commentId(comment.getCommentId())
                 .authorName(comment.getAccount().getFullName())
-                .authorAvatarUrl(null)
+                .authorAvatarUrl(comment.getAccount().getAvatarUrl())
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .build();

@@ -9,6 +9,8 @@ import com.urmyfood.backend.infrastructure.persistence.repository.JpaAccountRepo
 import com.urmyfood.backend.infrastructure.persistence.repository.JpaCommentRepository;
 import com.urmyfood.backend.infrastructure.persistence.repository.JpaPostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -39,8 +41,9 @@ public class CommentPersistenceAdapter implements CommentRepository {
     }
 
     @Override
-    public List<Comment> findByPostId(UUID postId) {
-        return jpaCommentRepository.findByPost_PostIdOrderByCreatedAtAsc(postId)
+    public List<Comment> findByPostId(UUID postId, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return jpaCommentRepository.findByPost_PostId(postId, pageRequest)
                 .stream()
                 .map(this::toDomain)
                 .toList();
