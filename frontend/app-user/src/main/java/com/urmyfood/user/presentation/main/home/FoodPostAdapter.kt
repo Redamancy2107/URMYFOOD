@@ -26,6 +26,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     var onSaveClick: ((FoodPost) -> Unit)? = null
     var onLikeClick: ((FoodPost) -> Unit)? = null
     var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
+    var onShopClick: ((FoodPost) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -138,6 +139,12 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
                 btnOrder.setOnClickListener {
                     onOrderClick?.invoke(post)
+                }
+                ivShopAvatar.setOnClickListener {
+                    onShopClick?.invoke(post)
+                }
+                tvShopName.setOnClickListener {
+                    onShopClick?.invoke(post)
                 }
             }
         }

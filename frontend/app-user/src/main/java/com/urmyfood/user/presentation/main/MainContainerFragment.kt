@@ -98,7 +98,7 @@ class MainContainerFragment : Fragment() {
     private fun observeDestinationChanges() {
         innerNavController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.chatDetailFragment -> {
+                R.id.chatDetailFragment, R.id.shopProfileFragment -> {
                     binding.bottomNavigation.visibility = View.GONE
                 }
                 else -> {
@@ -107,6 +107,7 @@ class MainContainerFragment : Fragment() {
             }
         }
     }
+
 
     /**
      * Back press logic:
