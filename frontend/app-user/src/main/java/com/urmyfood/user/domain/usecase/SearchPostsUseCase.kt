@@ -6,13 +6,13 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.TokenProvider
 import com.urmyfood.user.domain.repository.PostRepository
 
-class GetPostsUseCase(
+class SearchPostsUseCase(
     private val repository: PostRepository,
     private val tokenProvider: TokenProvider
 ) {
-    suspend operator fun invoke(page: Int, size: Int = PAGE_SIZE): Result<PageResult<FoodPost>> {
+    suspend operator fun invoke(query: String, page: Int, size: Int = PAGE_SIZE): Result<PageResult<FoodPost>> {
         val token = tokenProvider.getAccessToken()?.let { "Bearer $it" }
-        return repository.getPosts(token, page, size)
+        return repository.searchPosts(token, query, page, size)
     }
 
     companion object {

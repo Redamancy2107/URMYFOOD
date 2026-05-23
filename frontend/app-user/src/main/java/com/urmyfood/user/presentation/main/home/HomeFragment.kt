@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.ListPopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.NestedScrollView
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -49,73 +50,17 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupCategories()
         setupSwipeRefresh()
+        setupScrollListener()
         setupClickListeners()
         observeUiState()
+        observeLoadingMore()
+        observeLikeError()
     }
 
     private fun setupRecyclerView() {
         binding.rvPosts.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPosts.adapter = adapter
         binding.rvPosts.isNestedScrollingEnabled = false
-
-        // Load mock data immediately for FE preview (no backend needed)
-        loadMockPosts()
-    }
-
-    private fun loadMockPosts() {
-        val mockPosts = listOf(
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "1",
-                dishName = "Trà sữa trân châu đường đen",
-                price = 25000.0,
-                originalPrice = 35000.0,
-                maxQuantity = 100,
-                remainingQuantity = 89,
-                endTime = "14:00",
-                isFlashSale = true,
-                status = "ACTIVE",
-                content = "Siêu béo, topping ngập tràn, free size L",
-                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
-                shopName = "Tiệm Trà Sữa Mây",
-                shopAvatarUrl = null
-            ),
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "2",
-                dishName = "Cơm tấm sườn bì chả",
-                price = 35000.0,
-                originalPrice = 45000.0,
-                maxQuantity = 50,
-                remainingQuantity = 38,
-                endTime = null,
-                isFlashSale = false,
-                status = "ACTIVE",
-                content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
-                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
-                shopName = "Cơm Tấm Bụi",
-                shopAvatarUrl = null
-            ),
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "3",
-                dishName = "Bún bò Huế đặc biệt",
-                price = 40000.0,
-                originalPrice = 40000.0,
-                maxQuantity = 30,
-                remainingQuantity = 15,
-                endTime = null,
-                isFlashSale = false,
-                status = "ACTIVE",
-                content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
-                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
-                shopName = "Quán Bà Chiểu",
-                shopAvatarUrl = null
-            )
-        )
-
-        // Show posts immediately, skip shimmer
-        binding.shimmerLayout.stopShimmer()
-        binding.shimmerLayout.visibility = View.GONE
-        binding.rvPosts.visibility = View.VISIBLE
-        adapter.submitList(mockPosts)
     }
 
     private fun setupCategories() {
@@ -133,6 +78,36 @@ class HomeFragment : Fragment() {
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.loadPosts()
+        }
+    }
+
+    private fun setupScrollListener() {
+        val nestedScroll = binding.root.parent?.let {
+            generateSequence(binding.root as View) { it.parent as? View }
+                .filterIsInstance<NestedScrollView>()
+                .firstOrNull()
+        }
+        (binding.root as? NestedScrollView
+            ?: binding.swipeRefresh.getChildAt(0) as? NestedScrollView)
+            ?.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                val threshold = 200
+                if (scrollY >= v.getChildAt(0).measuredHeight - v.measuredHeight - threshold) {
+                    viewModel.loadMore()
+                }
+            })
+    }
+
+    private fun observeLoadingMore() {
+        viewModel.isLoadingMore.observe(viewLifecycleOwner) { loading ->
+            binding.pbLoadingMore.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun observeLikeError() {
+        viewModel.likeError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearLikeError()
         }
     }
 
@@ -161,8 +136,10 @@ class HomeFragment : Fragment() {
                     binding.swipeRefresh.isRefreshing = false
                     binding.shimmerLayout.stopShimmer()
                     binding.shimmerLayout.visibility = View.GONE
-                    // Fallback to mock data on error for demo purposes
-                    if (adapter.currentList.isEmpty()) loadMockPosts()
+                    if (adapter.currentList.isEmpty()) {
+                        binding.tvError.text = state.message
+                        binding.tvError.visibility = View.VISIBLE
+                    }
                 }
             }
         }
@@ -176,7 +153,7 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        adapter.onCommentClick = { showCommentSheet() }
+        adapter.onCommentClick = { postId -> showCommentSheet(postId) }
         adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
             showGuestDialogOrRun {
@@ -186,9 +163,7 @@ class HomeFragment : Fragment() {
         }
         adapter.onLikeClick = { post ->
             showGuestDialogOrRun {
-                val count = FoodPostAdapter.getLikeCount(post.postId, 50)
-                FoodPostAdapter.toggleLike(post.postId, count)
-                adapter.notifyDataSetChanged()
+                viewModel.toggleLike(post.postId, post.isLiked)
             }
         }
         adapter.checkIsBookmarked = { post ->
@@ -215,9 +190,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showCommentSheet() {
+    private fun showCommentSheet(postId: String) {
         showGuestDialogOrRun {
-            val commentSheet = QuickCommentFragment()
+            val commentSheet = QuickCommentFragment.newInstance(postId)
             commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
         }
     }

@@ -61,4 +61,13 @@ class FavoritesManager(context: Context) {
         saveFavorites(favorites)
         return isAdded
     }
+
+    fun updateFavorite(post: FoodPost) {
+        val favorites = getFavorites().toMutableList()
+        val index = favorites.indexOfFirst { it.postId == post.postId }
+        if (index != -1) {
+            favorites[index] = post
+            saveFavorites(favorites)
+        }
+    }
 }
