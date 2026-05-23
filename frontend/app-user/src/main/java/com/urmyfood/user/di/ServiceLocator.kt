@@ -28,6 +28,7 @@ import com.urmyfood.user.presentation.auth.chooserole.ChooseRoleViewModel
 import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.user.presentation.auth.login.LoginViewModel
 import com.urmyfood.user.presentation.auth.register.RegisterViewModel
+import com.urmyfood.user.presentation.main.home.CommentViewModel
 import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
@@ -121,7 +122,10 @@ object ServiceLocator {
     val forgotPasswordUseCase: ForgotPasswordUseCase by lazy { ForgotPasswordUseCase(authRepository) }
     val verifyOtpUseCase: VerifyOtpUseCase by lazy { VerifyOtpUseCase(authRepository) }
     val resetPasswordUseCase: ResetPasswordUseCase by lazy { ResetPasswordUseCase(authRepository) }
-    val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository) }
+    val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository, tokenManager) }
+    val toggleLikeUseCase: ToggleLikeUseCase by lazy { ToggleLikeUseCase(postRepository, tokenManager) }
+    val getCommentsUseCase: GetCommentsUseCase by lazy { GetCommentsUseCase(postRepository) }
+    val postCommentUseCase: PostCommentUseCase by lazy { PostCommentUseCase(postRepository, tokenManager) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
     val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
@@ -173,7 +177,11 @@ object ServiceLocator {
     }
 
     fun provideHomeViewModelFactory(): HomeViewModel.Factory {
-        return HomeViewModel.Factory(getPostsUseCase)
+        return HomeViewModel.Factory(getPostsUseCase, toggleLikeUseCase)
+    }
+
+    fun provideCommentViewModelFactory(): CommentViewModel.Factory {
+        return CommentViewModel.Factory(getCommentsUseCase, postCommentUseCase)
     }
 
     fun provideSearchViewModelFactory(): SearchViewModel.Factory {

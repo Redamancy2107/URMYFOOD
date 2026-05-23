@@ -13,5 +13,8 @@ data class FoodPost(
     val content: String?,
     val imageUrl: String?,
     val shopName: String,
-    val shopAvatarUrl: String?
+    val shopAvatarUrl: String?,
+    val likeCount: Int = 0,
+    val isLiked: Boolean = false,
+    val commentCount: Int = 0
 )

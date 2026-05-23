@@ -2,6 +2,8 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.repository.AccountRepository;
+import com.urmyfood.backend.application.dto.ChangePasswordRequest;
+import com.urmyfood.backend.application.dto.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,7 +17,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public void changePassword(Long id, com.urmyfood.backend.application.dto.ChangePasswordRequest request) {
+    public void changePassword(Long id, ChangePasswordRequest request) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản"));
 
@@ -35,7 +37,7 @@ public class AccountService {
         return accountRepository.findById(id);
     }
 
-    public Account updateProfile(Long id, com.urmyfood.backend.application.dto.UpdateProfileRequest request) {
+    public Account updateProfile(Long id, UpdateProfileRequest request) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản"));
         

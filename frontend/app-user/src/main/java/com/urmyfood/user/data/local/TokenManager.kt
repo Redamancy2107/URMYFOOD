@@ -2,12 +2,9 @@ package com.urmyfood.user.data.local
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.urmyfood.user.domain.model.TokenProvider
 
-/**
- * Manages local storage of authentication tokens.
- * Uses SharedPreferences for simplicity.
- */
-class TokenManager(context: Context) {
+class TokenManager(context: Context) : TokenProvider {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
     companion object {
@@ -29,7 +26,7 @@ class TokenManager(context: Context) {
         }
     }
 
-    fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
+    override fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
 
     fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
 

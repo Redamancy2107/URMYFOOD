@@ -1,6 +1,10 @@
 package com.urmyfood.user.data.repository
 
 import com.urmyfood.user.data.model.ApiResponse
+import com.urmyfood.user.data.model.CommentResponse
+import com.urmyfood.user.data.model.CreateCommentRequest
+import com.urmyfood.user.data.model.LikeToggleResult
+import com.urmyfood.user.data.model.PageResponse
 import com.urmyfood.user.data.model.PostResponse
 import com.urmyfood.user.data.remote.PostApiService
 import com.urmyfood.user.domain.model.Result
@@ -9,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.Response
@@ -17,9 +22,7 @@ import java.io.IOException
 @OptIn(ExperimentalCoroutinesApi::class)
 class PostRepositoryImplTest {
 
-    // ---------------------------------------------------------------------------
     // Helpers
-    // ---------------------------------------------------------------------------
 
     private fun fakePostResponse(id: String = "1") = PostResponse(
         postId = id,
@@ -39,17 +42,34 @@ class PostRepositoryImplTest {
     )
 
     private fun fakeApiService(
-        block: suspend () -> Response<ApiResponse<List<PostResponse>>>
+        getPostsBlock: suspend (String?) -> Response<ApiResponse<List<PostResponse>>> = {
+            throw UnsupportedOperationException("not stubbed")
+        }
     ): PostApiService = object : PostApiService {
-        override suspend fun getPosts(): Response<ApiResponse<List<PostResponse>>> = block()
+        override suspend fun getPosts(token: String?): Response<ApiResponse<List<PostResponse>>> =
+            getPostsBlock(token)
+
+        override suspend fun likePost(postId: String, token: String): Response<ApiResponse<LikeToggleResult>> =
+            throw UnsupportedOperationException("not stubbed")
+
+        override suspend fun unlikePost(postId: String, token: String): Response<ApiResponse<LikeToggleResult>> =
+            throw UnsupportedOperationException("not stubbed")
+
+        override suspend fun getComments(
+            postId: String, page: Int, size: Int
+        ): Response<ApiResponse<PageResponse<CommentResponse>>> =
+            throw UnsupportedOperationException("not stubbed")
+
+        override suspend fun postComment(
+            postId: String, token: String, body: CreateCommentRequest
+        ): Response<ApiResponse<CommentResponse>> =
+            throw UnsupportedOperationException("not stubbed")
     }
 
     private fun errorResponseBody() =
         "{}".toResponseBody("application/json".toMediaTypeOrNull())
 
-    // ---------------------------------------------------------------------------
     // Success path
-    // ---------------------------------------------------------------------------
 
     @Test
     fun `getPosts returns Success with mapped domain models when API returns successful response`() =
@@ -60,7 +80,7 @@ class PostRepositoryImplTest {
             }
             val repository = PostRepositoryImpl(apiService)
 
-            val result = repository.getPosts()
+            val result = repository.getPosts(null)
 
             assertTrue("Expected Result.Success but got $result", result is Result.Success)
             val posts = (result as Result.Success).data
@@ -78,15 +98,13 @@ class PostRepositoryImplTest {
         }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Success)
         assertTrue((result as Result.Success).data.isEmpty())
     }
 
-    // ---------------------------------------------------------------------------
-    // API-level error paths (HTTP 2xx but business logic failure)
-    // ---------------------------------------------------------------------------
+    // API-level error paths
 
     @Test
     fun `getPosts returns Error when API body reports success=false`() = runTest {
@@ -96,7 +114,7 @@ class PostRepositoryImplTest {
         }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue("Expected Result.Error but got $result", result is Result.Error)
         assertEquals(errorMsg, (result as Result.Error).message)
@@ -110,7 +128,7 @@ class PostRepositoryImplTest {
             }
             val repository = PostRepositoryImpl(apiService)
 
-            val result = repository.getPosts()
+            val result = repository.getPosts(null)
 
             assertTrue(result is Result.Error)
             assertEquals("Không thể tải danh sách bài viết", (result as Result.Error).message)
@@ -123,23 +141,19 @@ class PostRepositoryImplTest {
         }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Error)
     }
 
-    // ---------------------------------------------------------------------------
     // HTTP error paths
-    // ---------------------------------------------------------------------------
 
     @Test
     fun `getPosts returns Error with server code when API returns HTTP 404`() = runTest {
-        val apiService = fakeApiService {
-            Response.error(404, errorResponseBody())
-        }
+        val apiService = fakeApiService { Response.error(404, errorResponseBody()) }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue("Expected Result.Error but got $result", result is Result.Error)
         assertEquals("Lỗi server: 404", (result as Result.Error).message)
@@ -147,12 +161,10 @@ class PostRepositoryImplTest {
 
     @Test
     fun `getPosts returns Error with server code when API returns HTTP 500`() = runTest {
-        val apiService = fakeApiService {
-            Response.error(500, errorResponseBody())
-        }
+        val apiService = fakeApiService { Response.error(500, errorResponseBody()) }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Error)
         assertEquals("Lỗi server: 500", (result as Result.Error).message)
@@ -160,29 +172,23 @@ class PostRepositoryImplTest {
 
     @Test
     fun `getPosts returns Error with server code when API returns HTTP 401`() = runTest {
-        val apiService = fakeApiService {
-            Response.error(401, errorResponseBody())
-        }
+        val apiService = fakeApiService { Response.error(401, errorResponseBody()) }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Error)
         assertEquals("Lỗi server: 401", (result as Result.Error).message)
     }
 
-    // ---------------------------------------------------------------------------
     // Network / exception paths
-    // ---------------------------------------------------------------------------
 
     @Test
     fun `getPosts returns Error when network throws IOException`() = runTest {
-        val apiService = fakeApiService {
-            throw IOException("Network unreachable")
-        }
+        val apiService = fakeApiService { throw IOException("Network unreachable") }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue("Expected Result.Error but got $result", result is Result.Error)
         assertEquals("Network unreachable", (result as Result.Error).message)
@@ -190,12 +196,10 @@ class PostRepositoryImplTest {
 
     @Test
     fun `getPosts returns fallback Error message when IOException has null message`() = runTest {
-        val apiService = fakeApiService {
-            throw IOException()   // message == null
-        }
+        val apiService = fakeApiService { throw IOException() }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Error)
         assertEquals("Không thể kết nối đến server", (result as Result.Error).message)
@@ -203,14 +207,122 @@ class PostRepositoryImplTest {
 
     @Test
     fun `getPosts returns Error when unexpected RuntimeException is thrown`() = runTest {
-        val apiService = fakeApiService {
-            throw RuntimeException("Unexpected failure")
-        }
+        val apiService = fakeApiService { throw RuntimeException("Unexpected failure") }
         val repository = PostRepositoryImpl(apiService)
 
-        val result = repository.getPosts()
+        val result = repository.getPosts(null)
 
         assertTrue(result is Result.Error)
         assertEquals("Unexpected failure", (result as Result.Error).message)
+    }
+
+    // getComments — pagination
+
+    private fun fakeCommentResponse(id: String = "c1") = CommentResponse(
+        commentId = id,
+        authorName = "Nguyễn A",
+        authorAvatarUrl = null,
+        content = "Ngon lắm",
+        createdAt = "2024-01-01T00:00:00Z"
+    )
+
+    private fun fakePageResponse(
+        content: List<CommentResponse>,
+        page: Int = 0,
+        size: Int = 20,
+        totalElements: Long = content.size.toLong(),
+        hasNext: Boolean = false
+    ) = PageResponse(
+        content = content,
+        page = page,
+        size = size,
+        totalElements = totalElements,
+        totalPages = 1,
+        hasNext = hasNext
+    )
+
+    private fun fakeApiServiceWithComments(
+        block: suspend (String, Int, Int) -> Response<ApiResponse<PageResponse<CommentResponse>>>
+    ): PostApiService = object : PostApiService {
+        override suspend fun getPosts(token: String?): Response<ApiResponse<List<PostResponse>>> =
+            throw UnsupportedOperationException()
+        override suspend fun likePost(postId: String, token: String): Response<ApiResponse<LikeToggleResult>> =
+            throw UnsupportedOperationException()
+        override suspend fun unlikePost(postId: String, token: String): Response<ApiResponse<LikeToggleResult>> =
+            throw UnsupportedOperationException()
+        override suspend fun getComments(postId: String, page: Int, size: Int) = block(postId, page, size)
+        override suspend fun postComment(postId: String, token: String, body: CreateCommentRequest): Response<ApiResponse<CommentResponse>> =
+            throw UnsupportedOperationException()
+    }
+
+    @Test
+    fun `getComments returns PageResult with mapped comments on success`() = runTest {
+        val comments = listOf(fakeCommentResponse("c1"), fakeCommentResponse("c2"))
+        val apiService = fakeApiServiceWithComments { _, _, _ ->
+            Response.success(ApiResponse(true, "OK", fakePageResponse(comments, page = 0, hasNext = true)))
+        }
+        val repository = PostRepositoryImpl(apiService)
+
+        val result = repository.getComments("post1", 0, 20)
+
+        assertTrue("Expected Result.Success but got $result", result is Result.Success)
+        val pageResult = (result as Result.Success).data
+        assertEquals(2, pageResult.items.size)
+        assertEquals("c1", pageResult.items[0].commentId)
+        assertEquals("c2", pageResult.items[1].commentId)
+        assertEquals(0, pageResult.page)
+        assertTrue(pageResult.hasNext)
+    }
+
+    @Test
+    fun `getComments returns hasNext=false on last page`() = runTest {
+        val apiService = fakeApiServiceWithComments { _, _, _ ->
+            Response.success(ApiResponse(true, "OK", fakePageResponse(listOf(fakeCommentResponse()), hasNext = false)))
+        }
+        val repository = PostRepositoryImpl(apiService)
+
+        val result = repository.getComments("post1", 1, 20)
+
+        assertTrue(result is Result.Success)
+        assertFalse((result as Result.Success).data.hasNext)
+    }
+
+    @Test
+    fun `getComments returns Error when API reports success=false`() = runTest {
+        val apiService = fakeApiServiceWithComments { _, _, _ ->
+            Response.success(ApiResponse<PageResponse<CommentResponse>>(false, "Không tìm thấy bài viết", null))
+        }
+        val repository = PostRepositoryImpl(apiService)
+
+        val result = repository.getComments("post1", 0, 20)
+
+        assertTrue(result is Result.Error)
+        assertEquals("Không tìm thấy bài viết", (result as Result.Error).message)
+    }
+
+    @Test
+    fun `getComments returns Error on HTTP 404`() = runTest {
+        val apiService = fakeApiServiceWithComments { _, _, _ ->
+            Response.error(404, errorResponseBody())
+        }
+        val repository = PostRepositoryImpl(apiService)
+
+        val result = repository.getComments("post1", 0, 20)
+
+        assertTrue(result is Result.Error)
+        assertEquals("Lỗi server: 404", (result as Result.Error).message)
+    }
+
+    @Test
+    fun `getComments returns Error on IOException`() = runTest {
+        val apiService = fakeApiServiceWithComments { _, _, _ ->
+            throw IOException("timeout")
+        }
+        val repository = PostRepositoryImpl(apiService)
+
+        val result = repository.getComments("post1", 0, 20)
+
+        assertTrue(result is Result.Error)
+        assertEquals("timeout", (result as Result.Error).message)
     }
 }

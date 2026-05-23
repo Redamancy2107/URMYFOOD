@@ -4,7 +4,6 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -20,39 +19,12 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
     
-    var onCommentClick: (() -> Unit)? = null
+    var onCommentClick: ((postId: String) -> Unit)? = null
+    var onLikeClick: ((postId: String, isCurrentlyLiked: Boolean) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
-    var onLikeClick: ((FoodPost) -> Unit)? = null
     var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
-
-    companion object {
-        val likedPosts = mutableSetOf<String>()
-        val likeCounts = mutableMapOf<String, Int>()
-        val commentCounts = mutableMapOf<String, Int>()
-
-        fun toggleLike(postId: String, initialCount: Int): Boolean {
-            val isLiked = likedPosts.contains(postId)
-            val currentCount = likeCounts[postId] ?: initialCount
-            if (isLiked) {
-                likedPosts.remove(postId)
-                likeCounts[postId] = (currentCount - 1).coerceAtLeast(0)
-            } else {
-                likedPosts.add(postId)
-                likeCounts[postId] = currentCount + 1
-            }
-            return !isLiked
-        }
-
-        fun getLikeCount(postId: String, defaultCount: Int): Int {
-            return likeCounts.getOrPut(postId) { defaultCount }
-        }
-
-        fun isLiked(postId: String): Boolean {
-            return likedPosts.contains(postId)
-        }
-    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -128,17 +100,9 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .circleCrop()
                     .into(ivShopAvatar)
 
-                // --- Action buttons logic ---
-                // Retrieve or generate mock counts
-                val initialLikeCount = getLikeCount(post.postId, (50..200).random())
-                val commentCount = commentCounts.getOrPut(post.postId) { (2..30).random() }
-
-                tvCommentCount.text = "$commentCount"
-
-                // Like status
-                val isLiked = isLiked(post.postId)
-                btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
-                tvLikeCount.text = "$initialLikeCount"
+                // Action buttons
+                tvLikeCount.text = post.likeCount.toString()
+                tvCommentCount.text = post.commentCount.toString()
 
                 // Follow toggle
                 var isFollowing = false
@@ -153,10 +117,8 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     }
                 }
 
-                // Like toggle
-                btnLike.setOnClickListener {
-                    onLikeClick?.invoke(post)
-                }
+                btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                btnLike.setOnClickListener { onLikeClick?.invoke(post.postId, post.isLiked) }
 
                 // Bookmark toggle
                 val isBookmarked = checkIsBookmarked?.invoke(post) ?: false
@@ -166,7 +128,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 btnComment.setOnClickListener {
-                    onCommentClick?.invoke()
+                    onCommentClick?.invoke(post.postId)
                 }
                 btnShare.setOnClickListener {
                     onShareClick?.invoke()

@@ -6,6 +6,8 @@ import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.Post;
 import com.urmyfood.backend.domain.model.PostStatus;
 import com.urmyfood.backend.domain.repository.AccountRepository;
+import com.urmyfood.backend.domain.repository.CommentRepository;
+import com.urmyfood.backend.domain.repository.LikeRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,11 +26,19 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final AccountRepository accountRepository;
+    private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
 
     public List<PostResponse> getNewsfeed() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Optional<Account> viewer = Optional.empty();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+            viewer = accountRepository.findByEmail(auth.getName());
+        }
+        final Optional<Account> finalViewer = viewer;
         return postRepository.findAllOrderedByCreatedAt()
                 .stream()
-                .map(this::toResponse)
+                .map(post -> toResponse(post, finalViewer))
                 .toList();
     }
 
@@ -54,10 +65,16 @@ public class PostService {
                 .author(author)
                 .build();
 
-        return toResponse(postRepository.save(post));
+        return toResponse(postRepository.save(post), Optional.empty());
     }
 
-    private PostResponse toResponse(Post post) {
+    private PostResponse toResponse(Post post, Optional<Account> viewer) {
+        long likeCount = likeRepository.countByPostId(post.getPostId());
+        long commentCount = commentRepository.countByPostId(post.getPostId());
+        boolean isLiked = viewer
+                .map(acc -> likeRepository.existsByPostIdAndAccountId(post.getPostId(), acc.getId()))
+                .orElse(false);
+
         return PostResponse.builder()
                 .postId(post.getPostId())
                 .dishName(post.getDishName())
@@ -73,6 +90,9 @@ public class PostService {
                 .shopName(post.getAuthor().getFullName())
                 .shopAvatarUrl(null)
                 .createdAt(post.getCreatedAt())
+                .likeCount(likeCount)
+                .isLiked(isLiked)
+                .commentCount(commentCount)
                 .build();
     }
 }

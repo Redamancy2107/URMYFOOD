@@ -20,8 +20,6 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 
 import java.util.Collections;
-import java.util.Optional;
-
 
 @Service
 @RequiredArgsConstructor
