@@ -8,6 +8,11 @@ import com.urmyfood.user.domain.model.PageResult
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.TokenProvider
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.SearchHistoryRepository
+import com.urmyfood.user.domain.usecase.AddSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.ClearSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.GetSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.RemoveSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.SearchPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +52,32 @@ class SearchViewModelTest {
         override fun getAccessToken() = "tok"
     }
 
+    private class FakeSearchHistoryRepository(initial: List<String> = emptyList()) : SearchHistoryRepository {
+        private val items = initial.toMutableList()
+
+        override fun getHistory(): List<String> = items.toList()
+
+        override fun addQuery(query: String): List<String> {
+            val normalized = query.trim().replace(Regex("\\s+"), " ")
+            if (normalized.isBlank()) return getHistory()
+            items.removeAll { it.equals(normalized, ignoreCase = true) }
+            items.add(0, normalized)
+            while (items.size > 10) {
+                items.removeAt(items.lastIndex)
+            }
+            return getHistory()
+        }
+
+        override fun removeQuery(query: String): List<String> {
+            items.removeAll { it.equals(query, ignoreCase = true) }
+            return getHistory()
+        }
+
+        override fun clearHistory() {
+            items.clear()
+        }
+    }
+
     private fun makeRepo(searchResult: (String, Int) -> Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
             override suspend fun getPosts(token: String?, page: Int, size: Int) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
@@ -56,8 +87,18 @@ class SearchViewModelTest {
             override suspend fun postComment(postId: String, content: String, token: String) = Result.Success(Comment("", "", null, "", ""))
         }
 
-    private fun makeViewModel(repo: PostRepository): SearchViewModel =
-        SearchViewModel(SearchPostsUseCase(repo, fakeToken), ToggleLikeUseCase(repo, fakeToken))
+    private fun makeViewModel(
+        repo: PostRepository,
+        historyRepository: SearchHistoryRepository = FakeSearchHistoryRepository()
+    ): SearchViewModel =
+        SearchViewModel(
+            SearchPostsUseCase(repo, fakeToken),
+            ToggleLikeUseCase(repo, fakeToken),
+            GetSearchHistoryUseCase(historyRepository),
+            AddSearchHistoryUseCase(historyRepository),
+            RemoveSearchHistoryUseCase(historyRepository),
+            ClearSearchHistoryUseCase(historyRepository)
+        )
 
     @Test
     fun `initial state is Idle`() {
@@ -66,23 +107,36 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search with empty query resets to Idle`() = runTest(testDispatcher) {
-        val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(emptyList(), 0, false)) })
-        vm.search("pho")
+    fun `typing query does not search before submit`() = runTest(testDispatcher) {
+        var callCount = 0
+        val vm = makeViewModel(makeRepo { _, _ ->
+            callCount++
+            Result.Success(PageResult(emptyList(), 0, false))
+        })
+
+        vm.onQueryChanged("pho")
         testDispatcher.scheduler.advanceUntilIdle()
 
-        vm.search("")
+        assertEquals(0, callCount)
+        assertTrue(vm.uiState.value is SearchViewModel.UiState.Idle)
+    }
+
+    @Test
+    fun `submit with empty query resets to Idle`() = runTest(testDispatcher) {
+        val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(emptyList(), 0, false)) })
+
+        vm.submitSearch("")
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertTrue(vm.uiState.value is SearchViewModel.UiState.Idle)
     }
 
     @Test
-    fun `search returns Success when repository returns posts`() = runTest(testDispatcher) {
+    fun `submit returns Success when repository returns posts`() = runTest(testDispatcher) {
         val posts = listOf(fakePost("1"), fakePost("2"))
         val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(posts, 0, false)) })
 
-        vm.search("pho")
+        vm.submitSearch("pho")
         testDispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -91,15 +145,53 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search returns Error when repository returns Error`() = runTest(testDispatcher) {
+    fun `submit returns Error when repository returns Error`() = runTest(testDispatcher) {
         val vm = makeViewModel(makeRepo { _, _ -> Result.Error("Server error") })
 
-        vm.search("xyz")
+        vm.submitSearch("xyz")
         testDispatcher.scheduler.advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is SearchViewModel.UiState.Error)
         assertEquals("Server error", (state as SearchViewModel.UiState.Error).message)
+    }
+
+    @Test
+    fun `submit stores recent search newest first`() = runTest(testDispatcher) {
+        val history = FakeSearchHistoryRepository(listOf("bun"))
+        val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(emptyList(), 0, false)) }, history)
+
+        vm.submitSearch("pho")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(listOf("pho", "bun"), vm.recentSearches.value)
+    }
+
+    @Test
+    fun `select recent search updates query and submits`() = runTest(testDispatcher) {
+        var receivedQuery = ""
+        val vm = makeViewModel(makeRepo { query, _ ->
+            receivedQuery = query
+            Result.Success(PageResult(emptyList(), 0, false))
+        })
+
+        vm.selectRecentSearch("bun bo")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("bun bo", vm.query.value)
+        assertEquals("bun bo", receivedQuery)
+    }
+
+    @Test
+    fun `remove and clear recent searches update state`() {
+        val history = FakeSearchHistoryRepository(listOf("pho", "bun"))
+        val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(emptyList(), 0, false)) }, history)
+
+        vm.removeRecentSearch("pho")
+        assertEquals(listOf("bun"), vm.recentSearches.value)
+
+        vm.clearRecentSearches()
+        assertTrue(vm.recentSearches.value!!.isEmpty())
     }
 
     @Test
@@ -111,7 +203,7 @@ class SearchViewModelTest {
             else Result.Success(PageResult(page1, 1, hasNext = false))
         })
 
-        vm.search("test")
+        vm.submitSearch("test")
         testDispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -122,26 +214,43 @@ class SearchViewModelTest {
     }
 
     @Test
-    fun `search same query twice does not fire second request`() = runTest(testDispatcher) {
+    fun `submit same query twice does not fire second request`() = runTest(testDispatcher) {
         var callCount = 0
         val vm = makeViewModel(makeRepo { _, _ ->
             callCount++
             Result.Success(PageResult(emptyList(), 0, false))
         })
 
-        vm.search("pho")
+        vm.submitSearch("pho")
         testDispatcher.scheduler.advanceUntilIdle()
-        vm.search("pho")
+        vm.submitSearch("pho")
         testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(1, callCount)
     }
 
     @Test
+    fun `editing after success returns to Idle without searching`() = runTest(testDispatcher) {
+        var callCount = 0
+        val vm = makeViewModel(makeRepo { _, _ ->
+            callCount++
+            Result.Success(PageResult(listOf(fakePost("1")), 0, false))
+        })
+
+        vm.submitSearch("pho")
+        testDispatcher.scheduler.advanceUntilIdle()
+        vm.onQueryChanged("pho bo")
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(1, callCount)
+        assertTrue(vm.uiState.value is SearchViewModel.UiState.Idle)
+    }
+
+    @Test
     fun `toggleLike updates result optimistically`() = runTest(testDispatcher) {
         val posts = listOf(FoodPost("p1", "Post", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "Shop", null, likeCount = 3))
         val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(posts, 0, false)) })
-        vm.search("pho")
+        vm.submitSearch("pho")
         testDispatcher.scheduler.advanceUntilIdle()
 
         vm.toggleLike("p1", false)
