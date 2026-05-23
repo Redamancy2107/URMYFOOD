@@ -54,4 +54,13 @@ public class PostResponse {
 
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
+
+    @JsonProperty("like_count")
+    private long likeCount;
+
+    @JsonProperty("is_liked")
+    private boolean isLiked;
+
+    @JsonProperty("comment_count")
+    private long commentCount;
 }
