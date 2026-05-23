@@ -17,14 +17,29 @@ import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.Normalizer;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
 public class PostPersistenceAdapter implements PostRepository {
+
+    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
+            "toi", "minh", "muon", "an", "mon", "tim", "kiem", "cho",
+            "can", "cai", "mot", "va", "la", "co", "gi", "hom", "nay"
+    );
+
+    private static final String SEARCH_DOCUMENT = "unaccent(lower(concat_ws(' ', p.dish_name, p.content, a.full_name)))";
+    private static final String SEARCH_DISH = "unaccent(lower(p.dish_name))";
+    private static final String SEARCH_SHOP = "unaccent(lower(a.full_name))";
 
     private static final String SELECT_FRAGMENT = """
             SELECT p.post_id, p.dish_name, p.price, p.original_price, p.max_quantity,
@@ -100,35 +115,55 @@ public class PostPersistenceAdapter implements PostRepository {
 
     @Override
     public List<PostRanked> searchByKeyword(String keyword, Long viewerAccountId, int page, int size) {
+        SearchTerms terms = searchTerms(keyword);
+        if (terms.query().isBlank()) {
+            return List.of();
+        }
+
         String sql = SELECT_FRAGMENT + """
                 WHERE p.status = 'ACTIVE'
-                    AND (unaccent(lower(p.dish_name)) LIKE '%' || unaccent(lower(:keyword)) || '%'
-                         OR unaccent(lower(a.full_name)) LIKE '%' || unaccent(lower(:keyword)) || '%')
+                    AND (
+                """ + searchPredicate(terms) + """
+                    )
                 GROUP BY p.post_id, a.full_name, a.avatar_url
-                ORDER BY p.created_at DESC
+                ORDER BY
+                """ + relevanceExpression(terms) + """
+                    DESC,
+                    COALESCE(COUNT(DISTINCT l.like_id), 0) DESC,
+                    COALESCE(COUNT(DISTINCT c.comment_id), 0) DESC,
+                    p.created_at DESC
                 LIMIT :size OFFSET :offset
                 """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
-                .addValue("keyword", keyword)
+                .addValue("query", terms.query())
                 .addValue("size", size)
                 .addValue("offset", (long) page * size);
+        addSearchParams(params, terms);
 
         return jdbc.query(sql, params, this::mapRow);
     }
 
     @Override
     public long countByKeyword(String keyword) {
+        SearchTerms terms = searchTerms(keyword);
+        if (terms.query().isBlank()) {
+            return 0L;
+        }
+
         String sql = """
                 SELECT COUNT(DISTINCT p.post_id)
                 FROM posts p
                 JOIN accounts a ON a.id = p.author_id
                 WHERE p.status = 'ACTIVE'
-                    AND (unaccent(lower(p.dish_name)) LIKE '%' || unaccent(lower(:keyword)) || '%'
-                         OR unaccent(lower(a.full_name)) LIKE '%' || unaccent(lower(:keyword)) || '%')
+                    AND (
+                """ + searchPredicate(terms) + """
+                    )
                 """;
-        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("keyword", keyword), Long.class);
+        MapSqlParameterSource params = new MapSqlParameterSource("query", terms.query());
+        addSearchParams(params, terms);
+        Long count = jdbc.queryForObject(sql, params, Long.class);
         return count != null ? count : 0L;
     }
 
@@ -204,6 +239,99 @@ public class PostPersistenceAdapter implements PostRepository {
         String sql = "SELECT COUNT(*) FROM likes WHERE post_id = :postId";
         Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("postId", postId), Long.class);
         return count != null ? count : 0L;
+    }
+
+    static SearchTerms searchTerms(String keyword) {
+        String normalized = normalizeSearch(keyword);
+        List<String> tokens = Arrays.stream(normalized.split(" "))
+                .filter(token -> !token.isBlank())
+                .filter(token -> !SEARCH_STOP_WORDS.contains(token))
+                .distinct()
+                .toList();
+        String query = tokens.isEmpty() ? normalized : String.join(" ", tokens);
+        List<String> regexes = tokens.stream()
+                .map(PostPersistenceAdapter::subsequenceRegex)
+                .toList();
+        return new SearchTerms(query, tokens, regexes);
+    }
+
+    private static String normalizeSearch(String keyword) {
+        if (keyword == null) {
+            return "";
+        }
+        String withoutMarks = Normalizer.normalize(keyword, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "");
+        return withoutMarks.toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9\\s]+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private static String subsequenceRegex(String token) {
+        return token.chars()
+                .mapToObj(ch -> Character.toString((char) ch))
+                .collect(Collectors.joining(".*")) + ".*";
+    }
+
+    private String searchPredicate(SearchTerms terms) {
+        String basePredicate = """
+                    %s LIKE '%%' || :query || '%%'
+                    OR %s LIKE '%%' || :query || '%%'
+                    OR similarity(%s, :query) > 0.12
+                    OR similarity(%s, :query) > 0.18
+                    OR word_similarity(:query, %s) > 0.35
+                """.formatted(SEARCH_DOCUMENT, SEARCH_SHOP, SEARCH_DOCUMENT, SEARCH_DISH, SEARCH_DOCUMENT);
+        String tokenPredicate = tokenPredicates(terms, " OR ");
+        return tokenPredicate.isBlank() ? basePredicate : basePredicate + " OR " + tokenPredicate;
+    }
+
+    private String relevanceExpression(SearchTerms terms) {
+        String tokenScore = IntStream.range(0, terms.tokens().size())
+                .mapToObj(i -> """
+                        CASE
+                            WHEN %s LIKE '%%' || :token%d || '%%' THEN 30
+                            WHEN length(:token%d) <= 3 AND %s ~ :tokenRegex%d THEN 18
+                            WHEN word_similarity(:token%d, %s) > 0.45 THEN 16
+                            WHEN similarity(%s, :token%d) > 0.12 THEN 12
+                            ELSE 0
+                        END
+                        """.formatted(SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, SEARCH_DOCUMENT, i))
+                .collect(Collectors.joining(" + "));
+        String tokenPart = tokenScore.isBlank() ? "0" : tokenScore;
+        return """
+                    (
+                        CASE WHEN %s = :query THEN 100 ELSE 0 END +
+                        CASE WHEN %s LIKE :query || '%%' THEN 60 ELSE 0 END +
+                        CASE WHEN %s LIKE '%%' || :query || '%%' THEN 45 ELSE 0 END +
+                        CASE WHEN %s LIKE '%%' || :query || '%%' THEN 25 ELSE 0 END +
+                        GREATEST(similarity(%s, :query), word_similarity(:query, %s)) * 40 +
+                        %s +
+                        COALESCE(COUNT(DISTINCT l.like_id), 0) * 0.6 +
+                        COALESCE(COUNT(DISTINCT c.comment_id), 0) * 0.4 +
+                        8.0 / (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0 + 1.0)
+                    )
+                """.formatted(SEARCH_DISH, SEARCH_DISH, SEARCH_DOCUMENT, SEARCH_SHOP, SEARCH_DOCUMENT, SEARCH_DOCUMENT, tokenPart);
+    }
+
+    private String tokenPredicates(SearchTerms terms, String delimiter) {
+        return IntStream.range(0, terms.tokens().size())
+                .mapToObj(i -> """
+                        %s LIKE '%%' || :token%d || '%%'
+                        OR word_similarity(:token%d, %s) > 0.45
+                        OR similarity(%s, :token%d) > 0.12
+                        OR (length(:token%d) <= 3 AND %s ~ :tokenRegex%d)
+                        """.formatted(SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, i))
+                .collect(Collectors.joining(delimiter));
+    }
+
+    private void addSearchParams(MapSqlParameterSource params, SearchTerms terms) {
+        for (int i = 0; i < terms.tokens().size(); i++) {
+            params.addValue("token" + i, terms.tokens().get(i));
+            params.addValue("tokenRegex" + i, terms.tokenRegexes().get(i));
+        }
+    }
+
+    record SearchTerms(String query, List<String> tokens, List<String> tokenRegexes) {
     }
 
     private PostRanked mapRow(ResultSet rs, int rowNum) throws SQLException {
