@@ -67,15 +67,15 @@ public class OrderEntity {
     private BigDecimal finalAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "order_status", nullable = false, columnDefinition = "order_status")
+    @Column(name = "order_status", nullable = false, length = 30)
     private OrderStatus orderStatus;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", nullable = false, columnDefinition = "payment_method")
+    @Column(name = "payment_method", nullable = false, length = 30)
     private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false, columnDefinition = "payment_status")
+    @Column(name = "payment_status", nullable = false, length = 30)
     private PaymentStatus paymentStatus;
 
     @Column(name = "delivery_address", nullable = false, columnDefinition = "TEXT")

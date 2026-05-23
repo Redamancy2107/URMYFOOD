@@ -5,15 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.urmyfood.user.R
-import com.urmyfood.user.data.local.CartManager
 import com.urmyfood.user.databinding.LayoutOrderBottomSheetBinding
-import com.urmyfood.user.domain.model.CartItem
+import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.FoodPost
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -113,34 +115,23 @@ class OrderBottomSheetFragment(private val post: FoodPost) : BottomSheetDialogFr
         }
 
         binding.btnAddToCart.setOnClickListener {
-            // Mock option selection - remove when BE ready
-            val selectedOption = when (binding.cgSpicyOptions.checkedChipId) {
-                R.id.chipSpicyMedium -> "Vị: Cay vừa"
-                R.id.chipSpicyHigh -> "Vị: Cay nhiều"
-                else -> "Vị: Không cay"
+            binding.btnAddToCart.isEnabled = false
+            lifecycleScope.launch {
+                when (val result = ServiceLocator.addToCartUseCase(post.postId, quantity)) {
+                    is Result.Success -> {
+                        Toast.makeText(
+                            requireContext(),
+                            "Đã thêm $quantity x ${post.dishName} vào giỏ hàng thành công!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        dismiss()
+                    }
+                    is Result.Error -> {
+                        binding.btnAddToCart.isEnabled = true
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-
-            // Create CartItem with named parameters
-            val cartItem = CartItem(
-                postId = post.postId,
-                dishName = post.dishName,
-                price = post.price,
-                imageUrl = post.imageUrl,
-                shopName = post.shopName,
-                quantity = quantity,
-                selectedOption = selectedOption
-            )
-
-            // Save via CartManager
-            CartManager(requireContext()).addCartItem(cartItem)
-
-            Toast.makeText(
-                requireContext(),
-                "Đã thêm $quantity x ${post.dishName} vào giỏ hàng thành công!",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            dismiss()
         }
     }
 

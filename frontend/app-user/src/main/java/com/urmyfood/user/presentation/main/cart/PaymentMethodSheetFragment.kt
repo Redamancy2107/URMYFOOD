@@ -5,18 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.urmyfood.user.R
-import com.urmyfood.user.data.local.CartManager
 import com.urmyfood.user.databinding.LayoutPaymentMethodSheetBinding
-import com.urmyfood.user.presentation.main.profile.OrderHistoryFragment.Order
-import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.urmyfood.user.di.ServiceLocator
 
 /**
  * Bottom Sheet cho phép chọn Phương thức thanh toán (Tiền mặt / Thẻ).
@@ -27,8 +23,9 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
     private var _binding: LayoutPaymentMethodSheetBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var cartManager: CartManager
-    private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
+    private val viewModel: CheckoutViewModel by viewModels {
+        ServiceLocator.provideCheckoutViewModelFactory()
+    }
     private var isPayCardSelected = false
 
     override fun onCreateView(
@@ -43,10 +40,10 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        cartManager = CartManager(requireContext())
         setupBottomSheetBehavior()
         setupSelectionLogic()
         setupClickListeners()
+        observeCheckout()
     }
 
     private fun setupBottomSheetBehavior() {
@@ -102,44 +99,22 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
 
     private fun setupClickListeners() {
         binding.btnConfirmPayment.setOnClickListener {
-            val cartItems = cartManager.getCartItems()
-            if (cartItems.isEmpty()) {
-                Toast.makeText(requireContext(), "Giỏ hàng của bạn đang trống!", Toast.LENGTH_SHORT).show()
-                dismiss()
-                return@setOnClickListener
+            val paymentMethod = if (isPayCardSelected) "MOMO" else "COD"
+            viewModel.checkout(paymentMethod)
+        }
+    }
+
+    private fun observeCheckout() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            binding.btnConfirmPayment.isEnabled = !state.isLoading
+            state.message?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                if (state.isSuccess) {
+                    (parentFragment as? CartFragment)?.loadCartItems()
+                    dismiss()
+                }
+                viewModel.clearMessage()
             }
-
-            // Get current timestamp formatted nicely (e.g. 18/05/2026 20:30)
-            val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-            val currentDateStr = sdf.format(Date())
-
-            // Loop and add to Lịch sử đơn hàng dynamically
-            cartItems.forEach { item ->
-                // Create new Order with status = 0 (Processing)
-                val order = Order(
-                    shop = item.shopName,
-                    desc = "${item.dishName} x${item.quantity}",
-                    price = "${currencyFormat.format(item.price * item.quantity)}đ",
-                    date = currentDateStr,
-                    status = 0, // Đang xử lý
-                    imageUrl = item.imageUrl
-                )
-                cartManager.addOrder(order)
-            }
-
-            // Clear Cart
-            cartManager.clearCart()
-
-            // Trigger parent CartFragment to refresh its state if visible
-            (parentFragment as? CartFragment)?.loadCartItems()
-
-            Toast.makeText(
-                requireContext(),
-                "Đặt hàng thành công!",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            dismiss()
         }
     }
 

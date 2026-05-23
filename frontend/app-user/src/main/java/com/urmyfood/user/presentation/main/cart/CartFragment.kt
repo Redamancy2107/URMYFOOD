@@ -5,10 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
-import com.urmyfood.user.data.local.CartManager
 import com.urmyfood.user.databinding.FragmentMainCartBinding
+import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.presentation.main.cart.adapter.CartAdapter
 import java.text.NumberFormat
 import java.util.Locale
@@ -23,7 +24,9 @@ class CartFragment : Fragment() {
     private var _binding: FragmentMainCartBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var cartManager: CartManager
+    private val viewModel: CartViewModel by viewModels {
+        ServiceLocator.provideCartViewModelFactory()
+    }
     private val cartAdapter = CartAdapter()
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
 
@@ -39,9 +42,9 @@ class CartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        cartManager = CartManager(requireContext())
         setupRecyclerView()
         setupClickListeners()
+        observeCart()
         loadCartItems()
     }
 
@@ -49,13 +52,11 @@ class CartFragment : Fragment() {
         binding.rvCartItems.adapter = cartAdapter
 
         cartAdapter.onQuantityChanged = { item, newQty ->
-            cartManager.updateCartItemQuantity(item.postId, item.selectedOption, newQty)
-            loadCartItems()
+            viewModel.updateQuantity(item, newQty)
         }
 
         cartAdapter.onDeleteClicked = { item ->
-            cartManager.removeCartItem(item.postId, item.selectedOption)
-            loadCartItems()
+            viewModel.deleteItem(item)
         }
     }
 
@@ -71,11 +72,22 @@ class CartFragment : Fragment() {
         }
     }
 
-    /**
-     * Tải danh sách sản phẩm từ CartManager và cập nhật UI.
-     */
+    private fun observeCart() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            state.message?.let {
+                android.widget.Toast.makeText(requireContext(), it, android.widget.Toast.LENGTH_SHORT).show()
+                viewModel.clearMessage()
+            }
+            renderCart(state)
+        }
+    }
+
     fun loadCartItems() {
-        val items = cartManager.getCartItems()
+        viewModel.loadCart()
+    }
+
+    private fun renderCart(state: CartUiState) {
+        val items = state.items
         if (items.isEmpty()) {
             binding.rvCartItems.visibility = View.GONE
             binding.layoutEmptyCart.visibility = View.VISIBLE
@@ -91,9 +103,7 @@ class CartFragment : Fragment() {
             // Submit list to Adapter
             cartAdapter.submitList(items)
 
-            // Calculate total sum
-            val total = items.sumOf { it.price * it.quantity }
-            binding.tvTotalPayment.text = "${currencyFormat.format(total)}đ"
+            binding.tvTotalPayment.text = "${currencyFormat.format(state.totalAmount)}đ"
         }
     }
 
