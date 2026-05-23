@@ -7,16 +7,23 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.Result
+import com.urmyfood.user.domain.usecase.AddSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.ClearSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.GetSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.RemoveSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.SearchPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val searchPostsUseCase: SearchPostsUseCase,
-    private val toggleLikeUseCase: ToggleLikeUseCase
+    private val toggleLikeUseCase: ToggleLikeUseCase,
+    private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
+    private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
+    private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
+    private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase
 ) : ViewModel() {
 
     sealed class UiState {
@@ -35,28 +42,58 @@ class SearchViewModel(
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
 
+    private val _query = MutableLiveData("")
+    val query: LiveData<String> = _query
+
+    private val _recentSearches = MutableLiveData<List<String>>(getSearchHistoryUseCase())
+    val recentSearches: LiveData<List<String>> = _recentSearches
+
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentQuery = ""
+    private var typedQuery = ""
     private var hasNextPage = false
     private var isLoading = false
-    private var debounceJob: Job? = null
+    private var searchJob: Job? = null
 
-    fun search(query: String) {
+    fun onQueryChanged(query: String) {
         val trimmed = query.trim()
-        if (trimmed == currentQuery) return
-        currentQuery = trimmed
+        if (query == typedQuery) return
+        typedQuery = query
+        _query.value = query
 
-        debounceJob?.cancel()
-        isLoading = false
         if (trimmed.isEmpty()) {
-            loadedPosts.clear()
-            hasNextPage = false
-            _uiState.value = UiState.Idle
+            resetSearch()
+            currentQuery = ""
             return
         }
 
-        debounceJob = viewModelScope.launch {
-            delay(300)
+        if (trimmed != currentQuery) {
+            resetSearch()
+        }
+    }
+
+    fun submitSearch(query: String = typedQuery) {
+        val trimmed = query.trim().replace(Regex("\\s+"), " ")
+        if (trimmed.isEmpty()) {
+            resetSearch()
+            currentQuery = ""
+            return
+        }
+
+        val alreadyLoaded = trimmed == currentQuery && _uiState.value is UiState.Success
+        val alreadyLoading = trimmed == currentQuery && isLoading
+        currentQuery = trimmed
+        typedQuery = trimmed
+        if (_query.value != trimmed) {
+            _query.value = trimmed
+        }
+        _recentSearches.value = addSearchHistoryUseCase(trimmed)
+        if (alreadyLoaded || alreadyLoading) {
+            return
+        }
+
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
             isLoading = true
             loadedPosts.clear()
             hasNextPage = false
@@ -65,16 +102,39 @@ class SearchViewModel(
             try {
                 when (val result = searchPostsUseCase(trimmed, page = 0)) {
                     is Result.Success -> {
-                        loadedPosts.addAll(result.data.items)
-                        hasNextPage = result.data.hasNext
-                        _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, 0)
+                        if (currentQuery == trimmed) {
+                            loadedPosts.addAll(result.data.items)
+                            hasNextPage = result.data.hasNext
+                            _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, 0)
+                        }
                     }
-                    is Result.Error -> _uiState.value = UiState.Error(result.message)
+                    is Result.Error -> {
+                        if (currentQuery == trimmed) {
+                            _uiState.value = UiState.Error(result.message)
+                        }
+                    }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } finally {
-                isLoading = false
+                if (currentQuery == trimmed) {
+                    isLoading = false
+                }
             }
         }
+    }
+
+    fun selectRecentSearch(query: String) {
+        submitSearch(query)
+    }
+
+    fun removeRecentSearch(query: String) {
+        _recentSearches.value = removeSearchHistoryUseCase(query)
+    }
+
+    fun clearRecentSearches() {
+        clearSearchHistoryUseCase()
+        _recentSearches.value = emptyList()
     }
 
     fun loadMore() {
@@ -93,7 +153,7 @@ class SearchViewModel(
                     hasNextPage = result.data.hasNext
                     _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, currentPageNum + 1)
                 }
-                is Result.Error -> { /* silently ignore */ }
+                is Result.Error -> Unit
             }
             isLoading = false
             _isLoadingMore.value = false
@@ -133,14 +193,34 @@ class SearchViewModel(
         }
     }
 
+    private fun resetSearch() {
+        searchJob?.cancel()
+        loadedPosts.clear()
+        hasNextPage = false
+        isLoading = false
+        _isLoadingMore.value = false
+        _uiState.value = UiState.Idle
+    }
+
     class Factory(
         private val searchPostsUseCase: SearchPostsUseCase,
-        private val toggleLikeUseCase: ToggleLikeUseCase
+        private val toggleLikeUseCase: ToggleLikeUseCase,
+        private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
+        private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
+        private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
+        private val clearSearchHistoryUseCase: ClearSearchHistoryUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(SearchViewModel::class.java)) {
-                return SearchViewModel(searchPostsUseCase, toggleLikeUseCase) as T
+                return SearchViewModel(
+                    searchPostsUseCase,
+                    toggleLikeUseCase,
+                    getSearchHistoryUseCase,
+                    addSearchHistoryUseCase,
+                    removeSearchHistoryUseCase,
+                    clearSearchHistoryUseCase
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

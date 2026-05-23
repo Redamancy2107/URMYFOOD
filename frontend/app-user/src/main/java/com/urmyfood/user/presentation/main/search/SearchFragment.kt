@@ -6,8 +6,8 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.Toast
-import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +28,7 @@ class SearchFragment : Fragment() {
     }
 
     private val searchAdapter = FoodPostAdapter()
+    private val recentSearchAdapter = RecentSearchAdapter()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,12 +42,26 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupResultsRecyclerView()
+        setupRecentRecyclerView()
         setupSearchInput()
         setupScrollListener()
         setupClickListeners()
         observeUiState()
+        observeQuery()
+        observeRecentSearches()
         observeLoadingMore()
         observeLikeError()
+    }
+
+    private fun setupRecentRecyclerView() {
+        binding.rvRecentSearches.layoutManager = LinearLayoutManager(requireContext())
+        binding.rvRecentSearches.adapter = recentSearchAdapter
+        recentSearchAdapter.onQueryClick = { query ->
+            viewModel.selectRecentSearch(query)
+        }
+        recentSearchAdapter.onRemoveClick = { query ->
+            viewModel.removeRecentSearch(query)
+        }
     }
 
     private fun setupResultsRecyclerView() {
@@ -76,13 +91,17 @@ class SearchFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
-                viewModel.search(s?.toString() ?: "")
+                viewModel.onQueryChanged(s?.toString() ?: "")
             }
         })
 
-        binding.etSearch.setOnEditorActionListener { _, _, _ ->
-            viewModel.search(binding.etSearch.text?.toString() ?: "")
-            true
+        binding.etSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                viewModel.submitSearch(binding.etSearch.text?.toString() ?: "")
+                true
+            } else {
+                false
+            }
         }
     }
 
@@ -118,12 +137,17 @@ class SearchFragment : Fragment() {
                     binding.layoutSearchResults.visibility = View.VISIBLE
                     binding.pbSearchLoading.visibility = View.GONE
                     if (state.posts.isEmpty()) {
+                        binding.tvNoResults.setText(R.string.search_no_results)
                         binding.tvNoResults.visibility = View.VISIBLE
                         binding.rvSearchResults.visibility = View.GONE
                     } else {
                         binding.tvNoResults.visibility = View.GONE
                         binding.rvSearchResults.visibility = View.VISIBLE
-                        searchAdapter.submitList(state.posts)
+                        searchAdapter.submitList(state.posts) {
+                            if (state.page == 0) {
+                                binding.rvSearchResults.scrollToPosition(0)
+                            }
+                        }
                     }
                 }
                 is SearchViewModel.UiState.Error -> {
@@ -135,6 +159,24 @@ class SearchFragment : Fragment() {
                     binding.rvSearchResults.visibility = View.GONE
                 }
             }
+        }
+    }
+
+    private fun observeQuery() {
+        viewModel.query.observe(viewLifecycleOwner) { query ->
+            if (binding.etSearch.text?.toString() != query) {
+                binding.etSearch.setText(query)
+                binding.etSearch.setSelection(query.length)
+            }
+        }
+    }
+
+    private fun observeRecentSearches() {
+        viewModel.recentSearches.observe(viewLifecycleOwner) { searches ->
+            recentSearchAdapter.submitList(searches)
+            binding.tvClearAll.visibility = if (searches.isEmpty()) View.GONE else View.VISIBLE
+            binding.rvRecentSearches.visibility = if (searches.isEmpty()) View.GONE else View.VISIBLE
+            binding.tvNoRecentSearches.visibility = if (searches.isEmpty()) View.VISIBLE else View.GONE
         }
     }
 
@@ -154,11 +196,7 @@ class SearchFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
-        binding.tvClearAll.setOnClickListener { showFeatureInDevelopment() }
-        binding.catSeafood.setOnClickListener { showFeatureInDevelopment() }
-        binding.catSnacks.setOnClickListener { showFeatureInDevelopment() }
-        binding.catEatclean.setOnClickListener { showFeatureInDevelopment() }
-        binding.catDrinks.setOnClickListener { showFeatureInDevelopment() }
+        binding.tvClearAll.setOnClickListener { viewModel.clearRecentSearches() }
     }
 
     private fun showFeatureInDevelopment() {

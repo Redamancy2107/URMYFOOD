@@ -3,6 +3,7 @@ package com.urmyfood.user.di
 import android.content.Context
 import com.urmyfood.user.data.local.GuestSessionManager
 import com.urmyfood.user.data.local.NotificationSettingsManager
+import com.urmyfood.user.data.local.SearchHistoryManager
 import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
@@ -17,6 +18,7 @@ import com.urmyfood.user.data.repository.AddressRepositoryImpl
 import com.urmyfood.user.data.repository.VoucherRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.SearchHistoryRepository
 import com.urmyfood.user.domain.repository.UserRepository
 import com.urmyfood.user.domain.repository.AddressRepository
 import com.urmyfood.user.domain.repository.VoucherRepository
@@ -78,6 +80,10 @@ object ServiceLocator {
         NotificationSettingsManager(applicationContext)
     }
 
+    private val searchHistoryRepository: SearchHistoryRepository by lazy {
+        SearchHistoryManager(applicationContext)
+    }
+
     private val postApiService by lazy {
         RetrofitClient.postApiService
     }
@@ -131,6 +137,10 @@ object ServiceLocator {
     val getCommentsUseCase: GetCommentsUseCase by lazy { GetCommentsUseCase(postRepository, tokenManager) }
     val postCommentUseCase: PostCommentUseCase by lazy { PostCommentUseCase(postRepository, tokenManager) }
     val searchPostsUseCase: SearchPostsUseCase by lazy { SearchPostsUseCase(postRepository, tokenManager) }
+    val getSearchHistoryUseCase: GetSearchHistoryUseCase by lazy { GetSearchHistoryUseCase(searchHistoryRepository) }
+    val addSearchHistoryUseCase: AddSearchHistoryUseCase by lazy { AddSearchHistoryUseCase(searchHistoryRepository) }
+    val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase by lazy { RemoveSearchHistoryUseCase(searchHistoryRepository) }
+    val clearSearchHistoryUseCase: ClearSearchHistoryUseCase by lazy { ClearSearchHistoryUseCase(searchHistoryRepository) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
     val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
@@ -186,7 +196,14 @@ object ServiceLocator {
     }
 
     fun provideSearchViewModelFactory(): SearchViewModel.Factory {
-        return SearchViewModel.Factory(searchPostsUseCase, toggleLikeUseCase)
+        return SearchViewModel.Factory(
+            searchPostsUseCase,
+            toggleLikeUseCase,
+            getSearchHistoryUseCase,
+            addSearchHistoryUseCase,
+            removeSearchHistoryUseCase,
+            clearSearchHistoryUseCase
+        )
     }
 
     fun provideCommentViewModelFactory(): CommentViewModel.Factory {
