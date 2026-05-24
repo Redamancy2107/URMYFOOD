@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,7 +24,12 @@ public class VoucherPersistenceAdapter implements VoucherRepository {
                 .stream().map(this::toDomain).toList();
     }
 
-    private Voucher toDomain(VoucherEntity e) {
+    @Override
+    public Optional<Voucher> findById(Long id) {
+        return jpaVoucherRepository.findById(id).map(this::toDomain);
+    }
+
+    Voucher toDomain(VoucherEntity e) {
         return Voucher.builder()
                 .id(e.getId())
                 .code(e.getCode())

@@ -1,0 +1,3 @@
+ALTER TABLE posts
+    ALTER COLUMN status TYPE VARCHAR(30) USING status::text,
+    ALTER COLUMN status SET DEFAULT 'ACTIVE';

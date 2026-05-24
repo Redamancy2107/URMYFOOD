@@ -63,6 +63,62 @@ class HomeFragment : Fragment() {
         binding.rvPosts.isNestedScrollingEnabled = false
     }
 
+    private fun loadMockPosts() {
+        val mockPosts = listOf(
+            com.urmyfood.user.domain.model.FoodPost(
+                postId = "1",
+                dishName = "Trà sữa trân châu đường đen",
+                price = 25000.0,
+                originalPrice = 35000.0,
+                maxQuantity = 100,
+                remainingQuantity = 89,
+                endTime = "14:00",
+                isFlashSale = true,
+                status = "ACTIVE",
+                content = "Siêu béo, topping ngập tràn, free size L",
+                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
+                shopName = "Tiệm Trà Sữa Mây",
+                shopAvatarUrl = null
+            ),
+            com.urmyfood.user.domain.model.FoodPost(
+                postId = "2",
+                dishName = "Cơm tấm sườn bì chả",
+                price = 35000.0,
+                originalPrice = 45000.0,
+                maxQuantity = 50,
+                remainingQuantity = 38,
+                endTime = null,
+                isFlashSale = false,
+                status = "ACTIVE",
+                content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
+                shopName = "Cơm Tấm Bụi",
+                shopAvatarUrl = null
+            ),
+            com.urmyfood.user.domain.model.FoodPost(
+                postId = "3",
+                dishName = "Bún bò Huế đặc biệt",
+                price = 40000.0,
+                originalPrice = 40000.0,
+                maxQuantity = 30,
+                remainingQuantity = 15,
+                endTime = null,
+                isFlashSale = false,
+                status = "ACTIVE",
+                content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
+                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
+                shopName = "Quán Bà Chiểu",
+                shopAvatarUrl = null
+            )
+        )
+
+        // Show posts immediately, skip shimmer
+        binding.shimmerLayout.stopShimmer()
+        binding.shimmerLayout.visibility = View.GONE
+        binding.rvPosts.visibility = View.VISIBLE
+        adapter.submitList(mockPosts)
+    }
+
     private fun setupCategories() {
         val categories = listOf(
             com.urmyfood.user.presentation.model.Category(1, "Cơm", "🍜"),
@@ -139,6 +195,10 @@ class HomeFragment : Fragment() {
                     if (adapter.currentList.isEmpty()) {
                         binding.tvError.text = state.message
                         binding.tvError.visibility = View.VISIBLE
+                    binding.tvError.visibility = View.VISIBLE
+                    binding.tvError.text = state.message
+                    if (adapter.currentList.isEmpty()) {
+                        binding.rvPosts.visibility = View.GONE
                     }
                 }
             }

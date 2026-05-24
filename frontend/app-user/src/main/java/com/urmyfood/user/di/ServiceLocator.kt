@@ -11,12 +11,18 @@ import com.urmyfood.user.data.remote.RetrofitClient
 import com.urmyfood.user.data.remote.UserApiService
 import com.urmyfood.user.data.remote.AddressApiService
 import com.urmyfood.user.data.remote.VoucherApiService
+import com.urmyfood.user.data.remote.CartApiService
+import com.urmyfood.user.data.remote.OrderApiService
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
+import com.urmyfood.user.data.repository.CartRepositoryImpl
+import com.urmyfood.user.data.repository.OrderRepositoryImpl
 import com.urmyfood.user.data.repository.PostRepositoryImpl
 import com.urmyfood.user.data.repository.UserRepositoryImpl
 import com.urmyfood.user.data.repository.AddressRepositoryImpl
 import com.urmyfood.user.data.repository.VoucherRepositoryImpl
 import com.urmyfood.user.domain.repository.AuthRepository
+import com.urmyfood.user.domain.repository.CartRepository
+import com.urmyfood.user.domain.repository.OrderRepository
 import com.urmyfood.user.domain.repository.PostRepository
 import com.urmyfood.user.domain.repository.SearchHistoryRepository
 import com.urmyfood.user.domain.repository.UserRepository
@@ -36,6 +42,8 @@ import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.user.presentation.auth.login.LoginViewModel
 import com.urmyfood.user.presentation.auth.register.RegisterViewModel
 import com.urmyfood.user.presentation.main.home.HomeViewModel
+import com.urmyfood.user.presentation.main.cart.CartViewModel
+import com.urmyfood.user.presentation.main.cart.CheckoutViewModel
 import com.urmyfood.user.presentation.main.search.SearchViewModel
 import com.urmyfood.user.presentation.main.favorites.FavoritesViewModel
 import com.urmyfood.user.presentation.main.profile.ProfileViewModel
@@ -45,6 +53,7 @@ import com.urmyfood.user.presentation.main.profile.AddressBookViewModel
 import com.urmyfood.user.presentation.main.profile.AddressEditViewModel
 import com.urmyfood.user.presentation.main.profile.VouchersViewModel
 import com.urmyfood.user.presentation.main.profile.TermsPoliciesViewModel
+import com.urmyfood.user.presentation.main.profile.OrderHistoryViewModel
 
 /**
  * Manual Dependency Injection container (Service Locator pattern).
@@ -100,6 +109,14 @@ object ServiceLocator {
         RetrofitClient.voucherApiService
     }
 
+    private val cartApiService: CartApiService by lazy {
+        RetrofitClient.cartApiService
+    }
+
+    private val orderApiService: OrderApiService by lazy {
+        RetrofitClient.orderApiService
+    }
+
     // ==================== DOMAIN LAYER ====================
 
     private val authRepository: AuthRepository by lazy {
@@ -120,6 +137,14 @@ object ServiceLocator {
 
     private val voucherRepository: VoucherRepository by lazy {
         VoucherRepositoryImpl(voucherApiService)
+    }
+
+    private val cartRepository: CartRepository by lazy {
+        CartRepositoryImpl(cartApiService)
+    }
+
+    private val orderRepository: OrderRepository by lazy {
+        OrderRepositoryImpl(orderApiService)
     }
 
     // ==================== USE CASES ====================
@@ -155,6 +180,13 @@ object ServiceLocator {
 
     // Voucher use cases
     val getVouchersUseCase: GetVouchersUseCase by lazy { GetVouchersUseCase(voucherRepository) }
+    val getCartUseCase: GetCartUseCase by lazy { GetCartUseCase(cartRepository, tokenManager) }
+    val addToCartUseCase: AddToCartUseCase by lazy { AddToCartUseCase(cartRepository, tokenManager) }
+    val updateCartItemUseCase: UpdateCartItemUseCase by lazy { UpdateCartItemUseCase(cartRepository, tokenManager) }
+    val deleteCartItemUseCase: DeleteCartItemUseCase by lazy { DeleteCartItemUseCase(cartRepository, tokenManager) }
+    val checkoutUseCase: CheckoutUseCase by lazy { CheckoutUseCase(orderRepository, tokenManager) }
+    val getOrdersUseCase: GetOrdersUseCase by lazy { GetOrdersUseCase(orderRepository, tokenManager) }
+    val cancelOrderUseCase: CancelOrderUseCase by lazy { CancelOrderUseCase(orderRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -208,6 +240,16 @@ object ServiceLocator {
 
     fun provideCommentViewModelFactory(): CommentViewModel.Factory {
         return CommentViewModel.Factory(getCommentsUseCase, postCommentUseCase)
+    fun provideCartViewModelFactory(): CartViewModel.Factory {
+        return CartViewModel.Factory(getCartUseCase, updateCartItemUseCase, deleteCartItemUseCase)
+    }
+
+    fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
+        return CheckoutViewModel.Factory(checkoutUseCase)
+    }
+
+    fun provideSearchViewModelFactory(): SearchViewModel.Factory {
+        return SearchViewModel.Factory()
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {
@@ -251,6 +293,10 @@ object ServiceLocator {
 
     fun provideVouchersViewModelFactory(): VouchersViewModel.Factory {
         return VouchersViewModel.Factory(getVouchersUseCase)
+    }
+
+    fun provideOrderHistoryViewModelFactory(): OrderHistoryViewModel.Factory {
+        return OrderHistoryViewModel.Factory(getOrdersUseCase)
     }
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {

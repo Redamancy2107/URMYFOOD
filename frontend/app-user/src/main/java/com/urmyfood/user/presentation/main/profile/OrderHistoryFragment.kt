@@ -12,9 +12,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentOrderHistoryBinding
+import com.urmyfood.user.di.ServiceLocator
 
 /**
  * Màn hình Đơn hàng của tôi.
@@ -25,6 +27,10 @@ class OrderHistoryFragment : Fragment() {
     private var _binding: FragmentOrderHistoryBinding? = null
     private val binding get() = _binding!!
     private var selectedTab = 0
+    private val viewModel: OrderHistoryViewModel by viewModels {
+        ServiceLocator.provideOrderHistoryViewModelFactory()
+    }
+    private var orders: List<Order> = emptyList()
 
     data class Order(
         val shop: String,
@@ -35,7 +41,7 @@ class OrderHistoryFragment : Fragment() {
         val imageUrl: String? = null
     )
 
-    // Orders list is now loaded dynamically from CartManager below
+    // Orders list is loaded from the backend through OrderHistoryViewModel.
 
     private val tabTitles by lazy {
         listOf(
@@ -55,7 +61,8 @@ class OrderHistoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
         buildTabs()
-        renderOrders()
+        observeOrders()
+        viewModel.loadOrders()
     }
 
     private fun buildTabs() {
@@ -95,8 +102,7 @@ class OrderHistoryFragment : Fragment() {
         val dp = { v: Int -> (v * ctx.resources.displayMetrics.density).toInt() }
         binding.orderContainer.removeAllViews()
 
-        val dynamicOrders = com.urmyfood.user.data.local.CartManager(ctx).getOrders()
-        val filtered = dynamicOrders.filter { it.status == selectedTab }
+        val filtered = orders.filter { it.status == selectedTab }
         if (filtered.isEmpty()) {
             binding.orderContainer.addView(TextView(ctx).apply {
                 text = "Không có đơn hàng nào"
@@ -243,6 +249,16 @@ class OrderHistoryFragment : Fragment() {
 
             card.addView(content)
             binding.orderContainer.addView(card)
+        }
+    }
+
+    private fun observeOrders() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            state.message?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
+            orders = state.orders
+            renderOrders()
         }
     }
 
