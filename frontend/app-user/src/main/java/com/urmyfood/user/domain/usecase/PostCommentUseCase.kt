@@ -7,11 +7,10 @@ import com.urmyfood.user.domain.repository.PostRepository
 
 class PostCommentUseCase(
     private val repository: PostRepository,
-    private val tokenManager: TokenProvider
+    private val tokenProvider: TokenProvider
 ) {
     suspend operator fun invoke(postId: String, content: String): Result<Comment> {
-        val token = tokenManager.getAccessToken()
-            ?: return Result.Error("Vui lòng đăng nhập")
+        val token = tokenProvider.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập")
         return repository.postComment(postId, content, "Bearer $token")
     }
 }

@@ -3,6 +3,7 @@ package com.urmyfood.user.di
 import android.content.Context
 import com.urmyfood.user.data.local.GuestSessionManager
 import com.urmyfood.user.data.local.NotificationSettingsManager
+import com.urmyfood.user.data.local.SearchHistoryManager
 import com.urmyfood.user.data.local.TokenManager
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.data.remote.AuthApiService
@@ -23,18 +24,23 @@ import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.repository.CartRepository
 import com.urmyfood.user.domain.repository.OrderRepository
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.SearchHistoryRepository
 import com.urmyfood.user.domain.repository.UserRepository
 import com.urmyfood.user.domain.repository.AddressRepository
 import com.urmyfood.user.domain.repository.VoucherRepository
 import com.urmyfood.user.domain.usecase.*
+import com.urmyfood.user.domain.usecase.GetCommentsUseCase
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
+import com.urmyfood.user.domain.usecase.PostCommentUseCase
+import com.urmyfood.user.presentation.main.home.CommentViewModel
 import com.urmyfood.user.domain.usecase.GetUserProfileUseCase
 import com.urmyfood.user.domain.usecase.LoginAsGuestUseCase
+import com.urmyfood.user.domain.usecase.SearchPostsUseCase
+import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
 import com.urmyfood.user.presentation.auth.chooserole.ChooseRoleViewModel
 import com.urmyfood.user.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.user.presentation.auth.login.LoginViewModel
 import com.urmyfood.user.presentation.auth.register.RegisterViewModel
-import com.urmyfood.user.presentation.main.home.CommentViewModel
 import com.urmyfood.user.presentation.main.home.HomeViewModel
 import com.urmyfood.user.presentation.main.cart.CartViewModel
 import com.urmyfood.user.presentation.main.cart.CheckoutViewModel
@@ -81,6 +87,10 @@ object ServiceLocator {
 
     val notificationSettingsManager: NotificationSettingsManager by lazy {
         NotificationSettingsManager(applicationContext)
+    }
+
+    private val searchHistoryRepository: SearchHistoryRepository by lazy {
+        SearchHistoryManager(applicationContext)
     }
 
     private val postApiService by lazy {
@@ -149,8 +159,13 @@ object ServiceLocator {
     val resetPasswordUseCase: ResetPasswordUseCase by lazy { ResetPasswordUseCase(authRepository) }
     val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository, tokenManager) }
     val toggleLikeUseCase: ToggleLikeUseCase by lazy { ToggleLikeUseCase(postRepository, tokenManager) }
-    val getCommentsUseCase: GetCommentsUseCase by lazy { GetCommentsUseCase(postRepository) }
+    val getCommentsUseCase: GetCommentsUseCase by lazy { GetCommentsUseCase(postRepository, tokenManager) }
     val postCommentUseCase: PostCommentUseCase by lazy { PostCommentUseCase(postRepository, tokenManager) }
+    val searchPostsUseCase: SearchPostsUseCase by lazy { SearchPostsUseCase(postRepository, tokenManager) }
+    val getSearchHistoryUseCase: GetSearchHistoryUseCase by lazy { GetSearchHistoryUseCase(searchHistoryRepository) }
+    val addSearchHistoryUseCase: AddSearchHistoryUseCase by lazy { AddSearchHistoryUseCase(searchHistoryRepository) }
+    val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase by lazy { RemoveSearchHistoryUseCase(searchHistoryRepository) }
+    val clearSearchHistoryUseCase: ClearSearchHistoryUseCase by lazy { ClearSearchHistoryUseCase(searchHistoryRepository) }
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
     val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
@@ -212,10 +227,19 @@ object ServiceLocator {
         return HomeViewModel.Factory(getPostsUseCase, toggleLikeUseCase)
     }
 
-    fun provideCommentViewModelFactory(): CommentViewModel.Factory {
-        return CommentViewModel.Factory(getCommentsUseCase, postCommentUseCase)
+    fun provideSearchViewModelFactory(): SearchViewModel.Factory {
+        return SearchViewModel.Factory(
+            searchPostsUseCase,
+            toggleLikeUseCase,
+            getSearchHistoryUseCase,
+            addSearchHistoryUseCase,
+            removeSearchHistoryUseCase,
+            clearSearchHistoryUseCase
+        )
     }
 
+    fun provideCommentViewModelFactory(): CommentViewModel.Factory {
+        return CommentViewModel.Factory(getCommentsUseCase, postCommentUseCase)
     fun provideCartViewModelFactory(): CartViewModel.Factory {
         return CartViewModel.Factory(getCartUseCase, updateCartItemUseCase, deleteCartItemUseCase)
     }

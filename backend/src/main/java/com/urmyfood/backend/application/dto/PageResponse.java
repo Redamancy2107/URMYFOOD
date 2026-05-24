@@ -8,10 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-/**
- * Generic pagination wrapper placed inside {@link ApiResponse#getData()}.
- * Keeps a stable JSON contract independent of Spring Data's {@code Page}.
- */
 @Data
 @Builder
 @AllArgsConstructor

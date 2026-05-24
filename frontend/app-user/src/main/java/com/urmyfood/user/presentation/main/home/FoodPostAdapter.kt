@@ -4,6 +4,7 @@ import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -19,11 +20,11 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
     
-    var onCommentClick: ((postId: String) -> Unit)? = null
-    var onLikeClick: ((postId: String, isCurrentlyLiked: Boolean) -> Unit)? = null
+    var onCommentClick: ((String) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
+    var onLikeClick: ((FoodPost) -> Unit)? = null
     var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -68,8 +69,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     tvOriginalPrice.paintFlags = tvOriginalPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                     tvOriginalPrice.text = "${currencyFormat.format(post.originalPrice)}đ"
                 } else {
-                    // Mock "Best Seller" for items with low remaining quantity or randomly
-                    if (post.remainingQuantity < 10 || (0..1).random() == 1) {
+                    if (post.remainingQuantity in 1..9) {
                         tvFlashSaleBadge.visibility = View.VISIBLE
                         tvFlashSaleBadge.text = ctx.getString(R.string.badge_best_seller)
                     } else {
@@ -100,9 +100,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .circleCrop()
                     .into(ivShopAvatar)
 
-                // Action buttons
-                tvLikeCount.text = post.likeCount.toString()
-                tvCommentCount.text = post.commentCount.toString()
+                // --- Action buttons logic ---
+                tvCommentCount.text = "${post.commentCount}"
+                tvLikeCount.text = "${post.likeCount}"
+                btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
 
                 // Follow toggle
                 var isFollowing = false
@@ -117,8 +118,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     }
                 }
 
-                btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
-                btnLike.setOnClickListener { onLikeClick?.invoke(post.postId, post.isLiked) }
+                // Like toggle
+                btnLike.setOnClickListener {
+                    onLikeClick?.invoke(post)
+                }
 
                 // Bookmark toggle
                 val isBookmarked = checkIsBookmarked?.invoke(post) ?: false

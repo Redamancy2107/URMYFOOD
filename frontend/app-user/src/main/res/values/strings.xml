@@ -233,6 +233,8 @@
     <string name="search_hint">Bạn muốn ăn gì hôm nay?</string>
     <string name="search_recent_title">Tìm kiếm gần đây</string>
     <string name="search_recent_clear_all">Xóa tất cả</string>
+    <string name="search_recent_empty">Chưa có tìm kiếm gần đây</string>
+    <string name="search_no_results">Không tìm thấy kết quả</string>
     <string name="search_suggestion_title">Gợi ý cho bạn</string>
     <string name="search_popular_category_title">Danh mục phổ biến</string>
 

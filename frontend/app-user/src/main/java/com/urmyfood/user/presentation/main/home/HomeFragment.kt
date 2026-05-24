@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.ListPopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.NestedScrollView
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -49,8 +50,11 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupCategories()
         setupSwipeRefresh()
+        setupScrollListener()
         setupClickListeners()
         observeUiState()
+        observeLoadingMore()
+        observeLikeError()
     }
 
     private fun setupRecyclerView() {
@@ -133,6 +137,36 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupScrollListener() {
+        val nestedScroll = binding.root.parent?.let {
+            generateSequence(binding.root as View) { it.parent as? View }
+                .filterIsInstance<NestedScrollView>()
+                .firstOrNull()
+        }
+        (binding.root as? NestedScrollView
+            ?: binding.swipeRefresh.getChildAt(0) as? NestedScrollView)
+            ?.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                val threshold = 200
+                if (scrollY >= v.getChildAt(0).measuredHeight - v.measuredHeight - threshold) {
+                    viewModel.loadMore()
+                }
+            })
+    }
+
+    private fun observeLoadingMore() {
+        viewModel.isLoadingMore.observe(viewLifecycleOwner) { loading ->
+            binding.pbLoadingMore.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun observeLikeError() {
+        viewModel.likeError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearLikeError()
+        }
+    }
+
     private fun observeUiState() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -158,6 +192,9 @@ class HomeFragment : Fragment() {
                     binding.swipeRefresh.isRefreshing = false
                     binding.shimmerLayout.stopShimmer()
                     binding.shimmerLayout.visibility = View.GONE
+                    if (adapter.currentList.isEmpty()) {
+                        binding.tvError.text = state.message
+                        binding.tvError.visibility = View.VISIBLE
                     binding.tvError.visibility = View.VISIBLE
                     binding.tvError.text = state.message
                     if (adapter.currentList.isEmpty()) {
@@ -176,17 +213,17 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        adapter.onLikeClick = { postId, isLiked ->
-            showGuestDialogOrRun { viewModel.toggleLike(postId, isLiked) }
-        }
-        adapter.onCommentClick = { postId ->
-            showGuestDialogOrRun { showCommentSheet(postId) }
-        }
+        adapter.onCommentClick = { postId -> showCommentSheet(postId) }
         adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
             showGuestDialogOrRun {
                 val orderSheet = OrderBottomSheetFragment(foodPost)
                 orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+            }
+        }
+        adapter.onLikeClick = { post ->
+            showGuestDialogOrRun {
+                viewModel.toggleLike(post.postId, post.isLiked)
             }
         }
         adapter.checkIsBookmarked = { post ->
@@ -214,8 +251,10 @@ class HomeFragment : Fragment() {
     }
 
     private fun showCommentSheet(postId: String) {
-        val commentSheet = QuickCommentFragment.newInstance(postId)
-        commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+        showGuestDialogOrRun {
+            val commentSheet = QuickCommentFragment.newInstance(postId)
+            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+        }
     }
 
     private fun showGuestDialogOrRun(action: () -> Unit) {

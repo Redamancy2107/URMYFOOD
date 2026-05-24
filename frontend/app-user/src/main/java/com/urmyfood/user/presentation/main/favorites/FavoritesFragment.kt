@@ -12,7 +12,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainFavoritesBinding
-import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
@@ -64,9 +64,30 @@ class FavoritesFragment : Fragment() {
             favoritesManager.isFavorite(post.postId)
         }
 
-        adapter.onLikeClick = { postId, isCurrentlyLiked ->
+        adapter.onLikeClick = { post ->
+            val currentCount = post.likeCount
+            val optimisticCount = if (post.isLiked) (currentCount - 1).coerceAtLeast(0) else currentCount + 1
+            val optimisticPost = post.copy(isLiked = !post.isLiked, likeCount = optimisticCount)
+            favoritesManager.updateFavorite(optimisticPost)
+            loadFavorites()
+
             viewLifecycleOwner.lifecycleScope.launch {
-                ServiceLocator.toggleLikeUseCase(postId, isCurrentlyLiked)
+                when (val result = com.urmyfood.user.di.ServiceLocator.toggleLikeUseCase(post.postId, post.isLiked)) {
+                    is Result.Success -> {
+                        favoritesManager.updateFavorite(
+                            optimisticPost.copy(
+                                isLiked = result.data.isLiked,
+                                likeCount = result.data.likeCount
+                            )
+                        )
+                        loadFavorites()
+                    }
+                    is Result.Error -> {
+                        favoritesManager.updateFavorite(post.copy(isLiked = post.isLiked, likeCount = currentCount))
+                        loadFavorites()
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
 
@@ -83,8 +104,8 @@ class FavoritesFragment : Fragment() {
         }
 
         adapter.onCommentClick = { postId ->
-            val commentSheet = QuickCommentFragment.newInstance(postId)
-            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+            QuickCommentFragment.newInstance(postId)
+                .show(childFragmentManager, QuickCommentFragment.TAG)
         }
 
         adapter.onShareClick = {

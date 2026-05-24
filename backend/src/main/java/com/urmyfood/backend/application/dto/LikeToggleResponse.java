@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class LikeToggleResult {
+public class LikeToggleResponse {
 
     @JsonProperty("like_count")
     private long likeCount;

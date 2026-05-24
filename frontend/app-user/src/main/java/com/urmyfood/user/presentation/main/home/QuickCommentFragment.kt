@@ -7,28 +7,31 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.urmyfood.user.R
+import com.urmyfood.user.databinding.ItemCommentBinding
 import com.urmyfood.user.databinding.LayoutQuickCommentSheetBinding
 import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.domain.model.Comment
 
 class QuickCommentFragment : BottomSheetDialogFragment() {
 
     private var _binding: LayoutQuickCommentSheetBinding? = null
     private val binding get() = _binding!!
 
-    private val postId: String get() = requireArguments().getString(ARG_POST_ID)!!
-
     private val viewModel: CommentViewModel by viewModels {
         ServiceLocator.provideCommentViewModelFactory()
     }
 
-    private val commentAdapter = CommentAdapter()
-
-    private var scrollToTopOnNextUpdate = false
+    private val commentAdapter = CommentListAdapter()
+    private lateinit var postId: String
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,12 +45,15 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        postId = arguments?.getString("POST_ID") ?: ""
+
         dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 
         setupRecyclerView()
         setupClickListeners()
         setupBottomSheetBehavior()
-        observeViewModel()
+        observeUiState()
+        observeSendResult()
 
         viewModel.loadComments(postId)
     }
@@ -73,46 +79,15 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
         binding.rvComments.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = commentAdapter
-            addOnScrollListener(loadMoreScrollListener)
-        }
-    }
-
-    private val loadMoreScrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            if (dy <= 0) return
-            val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
-            val totalItemCount = layoutManager.itemCount
-            val lastVisible = layoutManager.findLastVisibleItemPosition()
-            if (lastVisible >= totalItemCount - LOAD_MORE_THRESHOLD) {
-                viewModel.loadMore()
-            }
-        }
-    }
-
-    private fun observeViewModel() {
-        viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is CommentViewModel.UiState.Loading -> Unit
-                is CommentViewModel.UiState.Success -> {
-                    commentAdapter.submitList(state.comments) {
-                        if (scrollToTopOnNextUpdate) {
-                            _binding?.rvComments?.scrollToPosition(0)
-                            scrollToTopOnNextUpdate = false
-                        }
+            addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
+                    val lm = rv.layoutManager as? LinearLayoutManager ?: return
+                    val lastVisible = lm.findLastVisibleItemPosition()
+                    if (lastVisible >= (rv.adapter?.itemCount ?: 0) - 3) {
+                        viewModel.loadMore(postId)
                     }
                 }
-                is CommentViewModel.UiState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-        viewModel.isLoadingMore.observe(viewLifecycleOwner) { loading ->
-            binding.progressLoadMore.visibility = if (loading) View.VISIBLE else View.GONE
-        }
-        viewModel.sendError.observe(viewLifecycleOwner) { error ->
-            if (error != null) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-            }
+            })
         }
     }
 
@@ -120,30 +95,82 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
         binding.btnSend.setOnClickListener {
             val text = binding.etComment.text.toString().trim()
             if (text.isNotBlank()) {
-                scrollToTopOnNextUpdate = true
-                viewModel.sendComment(postId, text, "Bạn")
-                binding.etComment.text.clear()
+                viewModel.postComment(postId, text)
             }
+        }
+    }
+
+    private fun observeUiState() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is CommentUiState.Loading -> binding.rvComments.visibility = View.GONE
+                is CommentUiState.Success -> {
+                    binding.rvComments.visibility = View.VISIBLE
+                    commentAdapter.submitList(state.comments)
+                }
+                is CommentUiState.Error -> {
+                    binding.rvComments.visibility = View.VISIBLE
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun observeSendResult() {
+        viewModel.sendResult.observe(viewLifecycleOwner) { result ->
+            when {
+                result == null -> binding.etComment.text.clear()
+                result != "CLEARED" -> Toast.makeText(requireContext(), result, Toast.LENGTH_SHORT).show()
+            }
+            if (result != null) viewModel.clearSendResult()
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.rvComments.removeOnScrollListener(loadMoreScrollListener)
         _binding = null
     }
 
     companion object {
         const val TAG = "QuickCommentFragment"
-        private const val ARG_POST_ID = "post_id"
-        private const val LOAD_MORE_THRESHOLD = 3
 
-        fun newInstance(postId: String): QuickCommentFragment {
-            return QuickCommentFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_POST_ID, postId)
-                }
-            }
+        fun newInstance(postId: String) = QuickCommentFragment().apply {
+            arguments = Bundle().apply { putString("POST_ID", postId) }
         }
+    }
+}
+
+private class CommentListAdapter :
+    ListAdapter<Comment, CommentListAdapter.ViewHolder>(DiffCallback()) {
+
+    inner class ViewHolder(private val binding: ItemCommentBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(comment: Comment) {
+            binding.tvUserName.text = comment.authorName
+            binding.tvComment.text = comment.content
+            binding.tvTime.text = comment.createdAt
+            Glide.with(binding.ivAvatar)
+                .load(comment.authorAvatarUrl)
+                .placeholder(R.drawable.ic_person_placeholder)
+                .error(R.drawable.ic_person_placeholder)
+                .circleCrop()
+                .into(binding.ivAvatar)
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = ItemCommentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) = holder.bind(getItem(position))
+
+    private class DiffCallback : DiffUtil.ItemCallback<Comment>() {
+        override fun areItemsTheSame(oldItem: Comment, newItem: Comment) =
+            oldItem.commentId == newItem.commentId
+
+        override fun areContentsTheSame(oldItem: Comment, newItem: Comment) =
+            oldItem == newItem
     }
 }

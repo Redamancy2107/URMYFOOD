@@ -1,25 +1,67 @@
 package com.urmyfood.backend.infrastructure.persistence.adapter;
 
 import com.urmyfood.backend.domain.model.Post;
+import com.urmyfood.backend.domain.model.PostComment;
+import com.urmyfood.backend.domain.model.PostRanked;
+import com.urmyfood.backend.domain.model.PostStatus;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import com.urmyfood.backend.infrastructure.persistence.entity.AccountEntity;
 import com.urmyfood.backend.infrastructure.persistence.entity.PostEntity;
 import com.urmyfood.backend.infrastructure.persistence.repository.JpaAccountRepository;
 import com.urmyfood.backend.infrastructure.persistence.repository.JpaPostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.text.Normalizer;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
 public class PostPersistenceAdapter implements PostRepository {
 
+    private static final Set<String> SEARCH_STOP_WORDS = Set.of(
+            "toi", "minh", "muon", "an", "mon", "tim", "kiem", "cho",
+            "can", "cai", "mot", "va", "la", "co", "gi", "hom", "nay"
+    );
+
+    private static final String SEARCH_DOCUMENT = "unaccent(lower(concat_ws(' ', p.dish_name, p.content, a.full_name)))";
+    private static final String SEARCH_DISH = "unaccent(lower(p.dish_name))";
+    private static final String SEARCH_SHOP = "unaccent(lower(a.full_name))";
+
+    private static final String SELECT_FRAGMENT = """
+            SELECT p.post_id, p.dish_name, p.price, p.original_price, p.max_quantity,
+                   p.remaining_quantity, p.end_time, p.is_flash_sale, p.status::text,
+                   p.content, p.image_url, p.created_at,
+                   a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
+                   COALESCE(COUNT(DISTINCT l.like_id), 0) AS like_count,
+                   COALESCE(COUNT(DISTINCT c.comment_id), 0) AS comment_count,
+                   CASE WHEN :viewerAccountId IS NOT NULL
+                        THEN (SELECT COUNT(*) > 0 FROM likes vl
+                              WHERE vl.post_id = p.post_id AND vl.account_id = :viewerAccountId)
+                        ELSE FALSE END AS is_liked
+            FROM posts p
+            JOIN accounts a ON a.id = p.author_id
+            LEFT JOIN likes l ON l.post_id = p.post_id
+            LEFT JOIN comments c ON c.post_id = p.post_id
+            """;
+
     private final JpaPostRepository jpaPostRepository;
     private final JpaAccountRepository jpaAccountRepository;
     private final AccountPersistenceAdapter accountAdapter;
+    private final NamedParameterJdbcTemplate jdbc;
 
     @Override
     public Post save(Post post) {
@@ -38,6 +80,290 @@ public class PostPersistenceAdapter implements PostRepository {
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size) {
+        String sql = SELECT_FRAGMENT + """
+                WHERE p.status = 'ACTIVE'
+                GROUP BY p.post_id, a.full_name, a.avatar_url
+                ORDER BY (
+                    :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
+                    :w2 * COALESCE(COUNT(DISTINCT c.comment_id), 0) +
+                    :w3 * (1.0 / (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 3600.0 + 1.0))
+                ) DESC
+                LIMIT :size OFFSET :offset
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
+                .addValue("w1", w1)
+                .addValue("w2", w2)
+                .addValue("w3", w3)
+                .addValue("size", size)
+                .addValue("offset", (long) page * size);
+
+        return jdbc.query(sql, params, this::mapRow);
+    }
+
+    @Override
+    public long countActive() {
+        String sql = "SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE'";
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource(), Long.class);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public List<PostRanked> searchByKeyword(String keyword, Long viewerAccountId, int page, int size) {
+        SearchTerms terms = searchTerms(keyword);
+        if (terms.query().isBlank()) {
+            return List.of();
+        }
+
+        String sql = SELECT_FRAGMENT + """
+                WHERE p.status = 'ACTIVE'
+                    AND (
+                """ + searchPredicate(terms) + """
+                    )
+                GROUP BY p.post_id, a.full_name, a.avatar_url
+                ORDER BY
+                """ + relevanceExpression(terms) + """
+                    DESC,
+                    COALESCE(COUNT(DISTINCT l.like_id), 0) DESC,
+                    COALESCE(COUNT(DISTINCT c.comment_id), 0) DESC,
+                    p.created_at DESC
+                LIMIT :size OFFSET :offset
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
+                .addValue("query", terms.query())
+                .addValue("size", size)
+                .addValue("offset", (long) page * size);
+        addSearchParams(params, terms);
+
+        return jdbc.query(sql, params, this::mapRow);
+    }
+
+    @Override
+    public long countByKeyword(String keyword) {
+        SearchTerms terms = searchTerms(keyword);
+        if (terms.query().isBlank()) {
+            return 0L;
+        }
+
+        String sql = """
+                SELECT COUNT(DISTINCT p.post_id)
+                FROM posts p
+                JOIN accounts a ON a.id = p.author_id
+                WHERE p.status = 'ACTIVE'
+                    AND (
+                """ + searchPredicate(terms) + """
+                    )
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource("query", terms.query());
+        addSearchParams(params, terms);
+        Long count = jdbc.queryForObject(sql, params, Long.class);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long likePost(UUID postId, Long accountId) {
+        String sql = """
+                INSERT INTO likes (post_id, account_id)
+                VALUES (:postId, :accountId)
+                ON CONFLICT (post_id, account_id) DO NOTHING
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("accountId", accountId));
+        return countLikes(postId);
+    }
+
+    @Override
+    public long unlikePost(UUID postId, Long accountId) {
+        String sql = """
+                DELETE FROM likes
+                WHERE post_id = :postId AND account_id = :accountId
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("accountId", accountId));
+        return countLikes(postId);
+    }
+
+    @Override
+    public List<PostComment> findComments(UUID postId, int page, int size) {
+        String sql = """
+                SELECT c.comment_id, a.full_name AS author_name, a.avatar_url AS author_avatar_url,
+                       c.content, c.created_at
+                FROM comments c
+                JOIN accounts a ON a.id = c.account_id
+                WHERE c.post_id = :postId
+                ORDER BY c.created_at DESC
+                LIMIT :size OFFSET :offset
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("size", size)
+                .addValue("offset", (long) page * size);
+        return jdbc.query(sql, params, this::mapCommentRow);
+    }
+
+    @Override
+    public long countComments(UUID postId) {
+        String sql = "SELECT COUNT(*) FROM comments WHERE post_id = :postId";
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("postId", postId), Long.class);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public PostComment saveComment(UUID postId, Long accountId, String content) {
+        String sql = """
+                INSERT INTO comments (post_id, account_id, content)
+                VALUES (:postId, :accountId, :content)
+                RETURNING comment_id,
+                          (SELECT full_name FROM accounts WHERE id = :accountId) AS author_name,
+                          (SELECT avatar_url FROM accounts WHERE id = :accountId) AS author_avatar_url,
+                          content,
+                          created_at
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("accountId", accountId)
+                .addValue("content", content);
+        return jdbc.queryForObject(sql, params, this::mapCommentRow);
+    }
+
+    private long countLikes(UUID postId) {
+        String sql = "SELECT COUNT(*) FROM likes WHERE post_id = :postId";
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("postId", postId), Long.class);
+        return count != null ? count : 0L;
+    }
+
+    static SearchTerms searchTerms(String keyword) {
+        String normalized = normalizeSearch(keyword);
+        List<String> tokens = Arrays.stream(normalized.split(" "))
+                .filter(token -> !token.isBlank())
+                .filter(token -> !SEARCH_STOP_WORDS.contains(token))
+                .distinct()
+                .toList();
+        String query = tokens.isEmpty() ? normalized : String.join(" ", tokens);
+        List<String> regexes = tokens.stream()
+                .map(PostPersistenceAdapter::subsequenceRegex)
+                .toList();
+        return new SearchTerms(query, tokens, regexes);
+    }
+
+    private static String normalizeSearch(String keyword) {
+        if (keyword == null) {
+            return "";
+        }
+        String withoutMarks = Normalizer.normalize(keyword, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "");
+        return withoutMarks.toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9\\s]+", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private static String subsequenceRegex(String token) {
+        return token.chars()
+                .mapToObj(ch -> Character.toString((char) ch))
+                .collect(Collectors.joining(".*")) + ".*";
+    }
+
+    private String searchPredicate(SearchTerms terms) {
+        String basePredicate = """
+                    %s LIKE '%%' || :query || '%%'
+                    OR %s LIKE '%%' || :query || '%%'
+                    OR similarity(%s, :query) > 0.12
+                    OR similarity(%s, :query) > 0.18
+                    OR word_similarity(:query, %s) > 0.35
+                """.formatted(SEARCH_DOCUMENT, SEARCH_SHOP, SEARCH_DOCUMENT, SEARCH_DISH, SEARCH_DOCUMENT);
+        String tokenPredicate = tokenPredicates(terms, " OR ");
+        return tokenPredicate.isBlank() ? basePredicate : basePredicate + " OR " + tokenPredicate;
+    }
+
+    private String relevanceExpression(SearchTerms terms) {
+        String tokenScore = IntStream.range(0, terms.tokens().size())
+                .mapToObj(i -> """
+                        CASE
+                            WHEN %s LIKE '%%' || :token%d || '%%' THEN 30
+                            WHEN length(:token%d) <= 3 AND %s ~ :tokenRegex%d THEN 18
+                            WHEN word_similarity(:token%d, %s) > 0.45 THEN 16
+                            WHEN similarity(%s, :token%d) > 0.12 THEN 12
+                            ELSE 0
+                        END
+                        """.formatted(SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, SEARCH_DOCUMENT, i))
+                .collect(Collectors.joining(" + "));
+        String tokenPart = tokenScore.isBlank() ? "0" : tokenScore;
+        return """
+                    (
+                        CASE WHEN %s = :query THEN 100 ELSE 0 END +
+                        CASE WHEN %s LIKE :query || '%%' THEN 60 ELSE 0 END +
+                        CASE WHEN %s LIKE '%%' || :query || '%%' THEN 45 ELSE 0 END +
+                        CASE WHEN %s LIKE '%%' || :query || '%%' THEN 25 ELSE 0 END +
+                        GREATEST(similarity(%s, :query), word_similarity(:query, %s)) * 40 +
+                        %s +
+                        COALESCE(COUNT(DISTINCT l.like_id), 0) * 0.6 +
+                        COALESCE(COUNT(DISTINCT c.comment_id), 0) * 0.4 +
+                        8.0 / (EXTRACT(EPOCH FROM (NOW() - p.created_at)) / 86400.0 + 1.0)
+                    )
+                """.formatted(SEARCH_DISH, SEARCH_DISH, SEARCH_DOCUMENT, SEARCH_SHOP, SEARCH_DOCUMENT, SEARCH_DOCUMENT, tokenPart);
+    }
+
+    private String tokenPredicates(SearchTerms terms, String delimiter) {
+        return IntStream.range(0, terms.tokens().size())
+                .mapToObj(i -> """
+                        %s LIKE '%%' || :token%d || '%%'
+                        OR word_similarity(:token%d, %s) > 0.45
+                        OR similarity(%s, :token%d) > 0.12
+                        OR (length(:token%d) <= 3 AND %s ~ :tokenRegex%d)
+                        """.formatted(SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, SEARCH_DOCUMENT, i, i, SEARCH_DOCUMENT, i))
+                .collect(Collectors.joining(delimiter));
+    }
+
+    private void addSearchParams(MapSqlParameterSource params, SearchTerms terms) {
+        for (int i = 0; i < terms.tokens().size(); i++) {
+            params.addValue("token" + i, terms.tokens().get(i));
+            params.addValue("tokenRegex" + i, terms.tokenRegexes().get(i));
+        }
+    }
+
+    record SearchTerms(String query, List<String> tokens, List<String> tokenRegexes) {
+    }
+
+    private PostRanked mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new PostRanked(
+                rs.getObject("post_id", UUID.class),
+                rs.getString("dish_name"),
+                rs.getBigDecimal("price"),
+                rs.getBigDecimal("original_price"),
+                rs.getInt("max_quantity"),
+                rs.getInt("remaining_quantity"),
+                rs.getObject("end_time", OffsetDateTime.class),
+                rs.getBoolean("is_flash_sale"),
+                PostStatus.valueOf(rs.getString("status")),
+                rs.getString("content"),
+                rs.getString("image_url"),
+                rs.getString("shop_name"),
+                rs.getString("shop_avatar_url"),
+                rs.getLong("like_count"),
+                rs.getLong("comment_count"),
+                rs.getBoolean("is_liked"),
+                rs.getObject("created_at", OffsetDateTime.class)
+        );
+    }
+
+    private PostComment mapCommentRow(ResultSet rs, int rowNum) throws SQLException {
+        return new PostComment(
+                rs.getObject("comment_id", UUID.class),
+                rs.getString("author_name"),
+                rs.getString("author_avatar_url"),
+                rs.getString("content"),
+                rs.getObject("created_at", OffsetDateTime.class)
+        );
     }
 
     Post toDomain(PostEntity entity) {

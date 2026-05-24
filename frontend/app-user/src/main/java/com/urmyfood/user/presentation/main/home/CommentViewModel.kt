@@ -9,116 +9,86 @@ import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.GetCommentsUseCase
 import com.urmyfood.user.domain.usecase.PostCommentUseCase
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import java.time.OffsetDateTime
-import java.util.UUID
+
+sealed class CommentUiState {
+    object Loading : CommentUiState()
+    data class Success(val comments: List<Comment>) : CommentUiState()
+    data class Error(val message: String) : CommentUiState()
+}
 
 class CommentViewModel(
     private val getCommentsUseCase: GetCommentsUseCase,
     private val postCommentUseCase: PostCommentUseCase
 ) : ViewModel() {
 
-    sealed class UiState {
-        object Loading : UiState()
-        data class Success(val comments: List<Comment>) : UiState()
-        data class Error(val message: String) : UiState()
-    }
-
-    private val _uiState = MutableLiveData<UiState>(UiState.Loading)
-    val uiState: LiveData<UiState> = _uiState
+    private val _uiState = MutableLiveData<CommentUiState>(CommentUiState.Loading)
+    val uiState: LiveData<CommentUiState> = _uiState
 
     private val _isLoadingMore = MutableLiveData(false)
     val isLoadingMore: LiveData<Boolean> = _isLoadingMore
 
-    private val _sendError = MutableLiveData<String?>()
-    val sendError: LiveData<String?> = _sendError
+    private val _sendResult = MutableLiveData<String?>()
+    val sendResult: LiveData<String?> = _sendResult
 
     private val loadedComments = mutableListOf<Comment>()
-    private var currentPostId: String? = null
     private var currentPage = 0
     private var hasNextPage = false
     private var isLoading = false
 
     fun loadComments(postId: String) {
         if (isLoading) return
-        currentPostId = postId
         isLoading = true
+        loadedComments.clear()
+        currentPage = 0
+        _uiState.value = CommentUiState.Loading
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
-            try {
-                when (val result = getCommentsUseCase(postId, 0, PAGE_SIZE)) {
-                    is Result.Success -> {
-                        loadedComments.clear()
-                        loadedComments.addAll(result.data.items)
-                        currentPage = result.data.page
-                        hasNextPage = result.data.hasNext
-                        _uiState.value = UiState.Success(loadedComments.toList())
-                    }
-                    is Result.Error -> _uiState.value = UiState.Error(result.message)
+            when (val r = getCommentsUseCase(postId, 0)) {
+                is Result.Success -> {
+                    loadedComments.addAll(r.data.items)
+                    hasNextPage = r.data.hasNext
+                    _uiState.value = CommentUiState.Success(loadedComments.toList())
                 }
-            } finally {
-                isLoading = false
+                is Result.Error -> _uiState.value = CommentUiState.Error(r.message)
             }
+            isLoading = false
         }
     }
 
-    fun loadMore() {
-        val postId = currentPostId ?: return
+    fun loadMore(postId: String) {
         if (!hasNextPage || isLoading) return
         isLoading = true
+        _isLoadingMore.value = true
         viewModelScope.launch {
-            _isLoadingMore.value = true
-            try {
-                when (val result = getCommentsUseCase(postId, currentPage + 1, PAGE_SIZE)) {
-                    is Result.Success -> {
-                        val existingIds = loadedComments.mapTo(HashSet()) { it.commentId }
-                        loadedComments.addAll(result.data.items.filterNot { it.commentId in existingIds })
-                        currentPage = result.data.page
-                        hasNextPage = result.data.hasNext
-                        _uiState.value = UiState.Success(loadedComments.toList())
-                    }
-                    is Result.Error -> _sendError.value = result.message
+            when (val r = getCommentsUseCase(postId, currentPage + 1)) {
+                is Result.Success -> {
+                    loadedComments.addAll(r.data.items)
+                    hasNextPage = r.data.hasNext
+                    currentPage++
+                    _uiState.value = CommentUiState.Success(loadedComments.toList())
                 }
-            } finally {
-                _isLoadingMore.value = false
-                isLoading = false
+                is Result.Error -> {}
+            }
+            isLoading = false
+            _isLoadingMore.value = false
+        }
+    }
+
+    fun postComment(postId: String, content: String) {
+        viewModelScope.launch {
+            when (val r = postCommentUseCase(postId, content)) {
+                is Result.Success -> {
+                    loadedComments.add(0, r.data)
+                    _uiState.value = CommentUiState.Success(loadedComments.toList())
+                    _sendResult.value = null
+                }
+                is Result.Error -> _sendResult.value = r.message
             }
         }
     }
 
-    fun sendComment(postId: String, content: String, optimisticAuthorName: String) {
-        if (content.isBlank()) return
-        val optimistic = Comment(
-            commentId = UUID.randomUUID().toString(),
-            authorName = optimisticAuthorName,
-            authorAvatarUrl = null,
-            content = content,
-            createdAt = OffsetDateTime.now().toString()
-        )
-        loadedComments.add(0, optimistic)
-        _uiState.value = UiState.Success(loadedComments.toList())
-
-        viewModelScope.launch {
-            try {
-                when (val result = postCommentUseCase(postId, content)) {
-                    is Result.Success -> {
-                        val index = loadedComments.indexOfFirst { it.commentId == optimistic.commentId }
-                        if (index >= 0) {
-                            loadedComments[index] = result.data
-                            _uiState.value = UiState.Success(loadedComments.toList())
-                        }
-                    }
-                    is Result.Error -> {
-                        loadedComments.removeAll { it.commentId == optimistic.commentId }
-                        _uiState.value = UiState.Success(loadedComments.toList())
-                        _sendError.value = result.message
-                    }
-                }
-            } catch (e: CancellationException) {
-                throw e
-            }
-        }
+    fun clearSendResult() {
+        _sendResult.value = "CLEARED"
     }
 
     class Factory(
@@ -128,9 +98,5 @@ class CommentViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
             CommentViewModel(getCommentsUseCase, postCommentUseCase) as T
-    }
-
-    companion object {
-        private const val PAGE_SIZE = 20
     }
 }

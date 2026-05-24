@@ -15,15 +15,45 @@ class PostRepositoryImpl(
     private val postApiService: PostApiService
 ) : PostRepository {
 
-    override suspend fun getPosts(token: String?): Result<List<FoodPost>> {
+    override suspend fun getPosts(token: String?, page: Int, size: Int): Result<PageResult<FoodPost>> {
         return try {
-            val response = postApiService.getPosts(token)
+            val response = postApiService.getPosts(token, page, size)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
-                    Result.Success(body.data.map { it.toDomain() })
+                    val pageData = body.data
+                    Result.Success(PageResult(
+                        items = pageData.content.map { it.toDomain() },
+                        page = pageData.page,
+                        hasNext = pageData.hasNext
+                    ))
                 } else {
                     Result.Error(body?.message ?: "Không thể tải danh sách bài viết")
+                }
+            } else {
+                Result.Error("Lỗi server: ${response.code()}")
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Không thể kết nối đến server")
+        }
+    }
+
+    override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int): Result<PageResult<FoodPost>> {
+        return try {
+            val response = postApiService.searchPosts(token, query, page, size)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val pageData = body.data
+                    Result.Success(PageResult(
+                        items = pageData.content.map { it.toDomain() },
+                        page = pageData.page,
+                        hasNext = pageData.hasNext
+                    ))
+                } else {
+                    Result.Error(body?.message ?: "Không thể tìm kiếm bài viết")
                 }
             } else {
                 Result.Error("Lỗi server: ${response.code()}")
@@ -63,20 +93,18 @@ class PostRepositoryImpl(
         }
     }
 
-    override suspend fun getComments(postId: String, page: Int, size: Int): Result<PageResult<Comment>> {
+    override suspend fun getComments(postId: String, token: String, page: Int, size: Int): Result<PageResult<Comment>> {
         return try {
-            val response = postApiService.getComments(postId, page, size)
+            val response = postApiService.getComments(postId, token, page, size)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
                     val pageData = body.data
-                    Result.Success(
-                        PageResult(
-                            items = pageData.content.map { it.toDomain() },
-                            page = pageData.page,
-                            hasNext = pageData.hasNext
-                        )
-                    )
+                    Result.Success(PageResult(
+                        items = pageData.content.map { it.toDomain() },
+                        page = pageData.page,
+                        hasNext = pageData.hasNext
+                    ))
                 } else {
                     Result.Error(body?.message ?: "Không thể tải bình luận")
                 }
