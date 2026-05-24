@@ -60,8 +60,7 @@ public class PostEntity {
     private boolean flashSale;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false,
-            columnDefinition = "post_status")
+    @Column(name = "status", nullable = false, length = 30)
     private PostStatus status;
 
     @Column(name = "content", columnDefinition = "TEXT")

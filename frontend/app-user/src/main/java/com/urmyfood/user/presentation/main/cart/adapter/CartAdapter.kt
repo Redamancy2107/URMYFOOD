@@ -79,7 +79,7 @@ class CartAdapter : ListAdapter<CartItem, CartAdapter.ViewHolder>(DiffCallback()
 
     private class DiffCallback : DiffUtil.ItemCallback<CartItem>() {
         override fun areItemsTheSame(oldItem: CartItem, newItem: CartItem) =
-            oldItem.postId == newItem.postId && oldItem.selectedOption == newItem.selectedOption
+            oldItem.cartItemId == newItem.cartItemId
 
         override fun areContentsTheSame(oldItem: CartItem, newItem: CartItem) =
             oldItem == newItem

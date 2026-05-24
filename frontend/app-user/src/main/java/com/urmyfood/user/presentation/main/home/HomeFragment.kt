@@ -57,9 +57,6 @@ class HomeFragment : Fragment() {
         binding.rvPosts.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPosts.adapter = adapter
         binding.rvPosts.isNestedScrollingEnabled = false
-
-        // Load mock data immediately for FE preview (no backend needed)
-        loadMockPosts()
     }
 
     private fun loadMockPosts() {
@@ -161,8 +158,11 @@ class HomeFragment : Fragment() {
                     binding.swipeRefresh.isRefreshing = false
                     binding.shimmerLayout.stopShimmer()
                     binding.shimmerLayout.visibility = View.GONE
-                    // Fallback to mock data on error for demo purposes
-                    if (adapter.currentList.isEmpty()) loadMockPosts()
+                    binding.tvError.visibility = View.VISIBLE
+                    binding.tvError.text = state.message
+                    if (adapter.currentList.isEmpty()) {
+                        binding.rvPosts.visibility = View.GONE
+                    }
                 }
             }
         }
