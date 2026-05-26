@@ -90,5 +90,21 @@
         android:label="Thêm/Sửa địa chỉ"
         tools:layout="@layout/fragment_address_edit" />
 
+    <fragment
+        android:id="@+id/shopProfileFragment"
+        android:name="com.urmyfood.user.presentation.main.shop.ShopProfileFragment"
+        android:label="Trang chủ Shop"
+        tools:layout="@layout/fragment_shop_profile">
+        <argument
+            android:name="shopName"
+            app:argType="string" />
+        <argument
+            android:name="shopAvatarUrl"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
 </navigation>
+
 

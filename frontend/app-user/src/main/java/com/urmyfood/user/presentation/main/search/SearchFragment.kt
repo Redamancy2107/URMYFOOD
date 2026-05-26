@@ -17,6 +17,7 @@ import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
 import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
+import androidx.navigation.fragment.findNavController
 
 class SearchFragment : Fragment() {
 
@@ -84,6 +85,13 @@ class SearchFragment : Fragment() {
         }
         searchAdapter.onSaveClick = { showFeatureInDevelopment() }
         searchAdapter.checkIsBookmarked = { false }
+        searchAdapter.onShopClick = { post ->
+            val bundle = Bundle().apply {
+                putString("shopName", post.shopName)
+                putString("shopAvatarUrl", post.shopAvatarUrl)
+            }
+            findNavController().navigate(R.id.shopProfileFragment, bundle)
+        }
     }
 
     private fun setupSearchInput() {

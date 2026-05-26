@@ -112,6 +112,14 @@ class FavoritesFragment : Fragment() {
             val shareSheet = ShareBottomSheetFragment()
             shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
+
+        adapter.onShopClick = { post ->
+            val bundle = Bundle().apply {
+                putString("shopName", post.shopName)
+                putString("shopAvatarUrl", post.shopAvatarUrl)
+            }
+            findNavController().navigate(R.id.shopProfileFragment, bundle)
+        }
     }
 
     private fun setupClickListeners() {

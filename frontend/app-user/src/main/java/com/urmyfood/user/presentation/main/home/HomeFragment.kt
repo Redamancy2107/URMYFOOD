@@ -18,6 +18,8 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainHomeBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.util.BrandingHelper
+import androidx.navigation.fragment.findNavController
+
 
 /**
  * Home screen fragment.
@@ -238,6 +240,13 @@ class HomeFragment : Fragment() {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                 adapter.notifyDataSetChanged()
             }
+        }
+        adapter.onShopClick = { post ->
+            val bundle = Bundle().apply {
+                putString("shopName", post.shopName)
+                putString("shopAvatarUrl", post.shopAvatarUrl)
+            }
+            findNavController().navigate(R.id.shopProfileFragment, bundle)
         }
     }
 
