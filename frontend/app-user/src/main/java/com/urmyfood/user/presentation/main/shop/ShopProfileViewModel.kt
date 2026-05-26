@@ -47,9 +47,47 @@ class ShopProfileViewModel : ViewModel() {
     private val _categories = MutableLiveData<List<String>>()
     val categories: LiveData<List<String>> = _categories
 
+    // Shop metadata required by SRS (FR_SHOP_010)
+    private val _address = MutableLiveData<String>()
+    val address: LiveData<String> = _address
+
+    private val _operatingHours = MutableLiveData<String>()
+    val operatingHours: LiveData<String> = _operatingHours
+
+    private val _rating = MutableLiveData<String>()
+    val rating: LiveData<String> = _rating
+
+    // Filter-related states (clean architecture for BE integration)
+    private val _selectedCategory = MutableLiveData<String?>()
+    val selectedCategory: LiveData<String?> = _selectedCategory
+
+    private val allProducts = mutableListOf<FoodPost>()
+
     fun initShop(name: String, avatarUrl: String?) {
         _shopName.value = name
         _shopAvatarUrl.value = avatarUrl
+
+        // Mock shop metadata - remove when BE ready
+        _address.value = when (name) {
+            "Tiệm Trà Sữa Mây" -> "12 Cao Thắng, Phường 5, Quận 3, TP. Hồ Chí Minh"
+            "Cơm Tấm Bụi" -> "378 Lê Văn Sỹ, Phường 14, Quận 3, TP. Hồ Chí Minh"
+            "Quán Bà Chiểu" -> "Bùi Hữu Nghĩa, Phường 1, Quận Bình Thạnh, TP. Hồ Chí Minh"
+            else -> "145 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
+        }
+        
+        _operatingHours.value = when (name) {
+            "Tiệm Trà Sữa Mây" -> "08:00 - 22:00"
+            "Cơm Tấm Bụi" -> "06:30 - 21:00"
+            "Quán Bà Chiểu" -> "07:00 - 22:30"
+            else -> "09:00 - 21:30"
+        }
+
+        _rating.value = when (name) {
+            "Tiệm Trà Sữa Mây" -> "4.7"
+            "Cơm Tấm Bụi" -> "4.5"
+            "Quán Bà Chiểu" -> "4.8"
+            else -> "4.6"
+        }
         
         // Generate mock shop stats based on shop name
         val hash = name.hashCode().let { if (it < 0) -it else it }
@@ -110,8 +148,17 @@ class ShopProfileViewModel : ViewModel() {
         }
         _posts.value = mockPosts
 
-        // Mock products (grid of menu dishes)
-        val mockProducts = mutableListOf<FoodPost>()
+        // Mock categories - remove when BE ready
+        val categoriesList = when (name) {
+            "Tiệm Trà Sữa Mây" -> listOf("Tất cả", "Trà Sữa Truyền Thống", "Trà Trái Cây", "Đồ Uống Đá Xay", "Toppings Thêm")
+            "Cơm Tấm Bụi" -> listOf("Tất cả", "Cơm Tấm Đặc Biệt", "Món Ăn Kèm", "Canh Nóng", "Đồ Uống Giải Khát")
+            "Quán Bà Chiểu" -> listOf("Tất cả", "Bún & Phở Nước", "Món Trộn & Khô", "Mỳ Quảng", "Trà Đá & Khăn Lạnh")
+            else -> listOf("Tất cả", "Cơm Gà Các Loại", "Món Gỏi & Salad", "Canh & Món Thêm", "Giải Khát")
+        }
+        _categories.value = categoriesList
+
+        // Mock products (grid of menu dishes) - remove when BE ready
+        allProducts.clear()
         val dishesList = when (name) {
             "Tiệm Trà Sữa Mây" -> listOf("Hồng trà sữa", "Lục trà nhài", "Trà sữa thái xanh", "Trà sữa khoai môn", "Trà đào cam sả", "Trà dâu tây")
             "Cơm Tấm Bụi" -> listOf("Cơm tấm sườn", "Cơm tấm bì chả", "Cơm tấm đùi gà", "Cơm tấm trứng ốp la", "Cơm tấm xá xíu", "Canh khổ qua nhồi thịt")
@@ -119,7 +166,29 @@ class ShopProfileViewModel : ViewModel() {
             else -> listOf("Cơm gà luộc", "Cơm gà xối mỡ", "Cơm gà nướng mật ong", "Gỏi gà xé phay", "Canh lá giang", "Nước sâm dứa")
         }
         dishesList.forEachIndexed { index, dish ->
-            mockProducts.add(
+            val productCategory = when (dish) {
+                // Tiệm Trà Sữa Mây
+                "Hồng trà sữa", "Trà sữa thái xanh", "Trà sữa khoai môn" -> "Trà Sữa Truyền Thống"
+                "Lục trà nhài", "Trà đào cam sả", "Trà dâu tây" -> "Trà Trái Cây"
+                
+                // Cơm Tấm Bụi
+                "Cơm tấm sườn", "Cơm tấm bì chả", "Cơm tấm đùi gà", "Cơm tấm trứng ốp la", "Cơm tấm xá xíu" -> "Cơm Tấm Đặc Biệt"
+                "Canh khổ qua nhồi thịt" -> "Canh Nóng"
+                
+                // Quán Bà Chiểu
+                "Bún bò tái nạm", "Bún giò heo", "Bún mọc sườn", "Phở bò chín" -> "Bún & Phở Nước"
+                "Bún thịt nướng" -> "Món Trộn & Khô"
+                "Mỳ Quảng tôm thịt" -> "Mỳ Quảng"
+                
+                // Other / Cơm Gà
+                "Cơm gà luộc", "Cơm gà xối mỡ", "Cơm gà nướng mật ong" -> "Cơm Gà Các Loại"
+                "Gỏi gà xé phay" -> "Món Gỏi & Salad"
+                "Canh lá giang" -> "Canh & Món Thêm"
+                "Nước sâm dứa" -> "Giải Khát"
+                
+                else -> categoriesList.getOrNull(1) ?: ""
+            }
+            allProducts.add(
                 FoodPost(
                     postId = "shop_${hash}_prod_$index",
                     dishName = dish,
@@ -138,22 +207,43 @@ class ShopProfileViewModel : ViewModel() {
                         else -> "https://images.unsplash.com/photo-1562967914-608f82629710?w=500"
                     },
                     shopName = name,
-                    shopAvatarUrl = avatarUrl
+                    shopAvatarUrl = avatarUrl,
+                    category = productCategory
                 )
             )
         }
-        _products.value = mockProducts
+        _products.value = allProducts
+    }
 
-        // Mock categories
-        _categories.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> listOf("Trà Sữa Truyền Thống", "Trà Trái Cây", "Đồ Uống Đá Xay", "Toppings Thêm")
-            "Cơm Tấm Bụi" -> listOf("Cơm Tấm Đặc Biệt", "Món Ăn Kèm", "Canh Nóng", "Đồ Uống Giải Khát")
-            "Quán Bà Chiểu" -> listOf("Bún & Phở Nước", "Món Trộn & Khô", "Mỳ Quảng", "Trà Đá & Khăn Lạnh")
-            else -> listOf("Cơm Gà Các Loại", "Món Gỏi & Salad", "Canh & Món Thêm", "Giải Khát")
+    /**
+     * Filter products by category name.
+     * This logic is fully encapsulated in ViewModel to ensure that when Backend APIs are integrated,
+     * developers can easily swap local filtering with network requests without breaking UI components.
+     */
+    fun filterProductsByCategory(categoryName: String?) {
+        _selectedCategory.value = categoryName
+        if (categoryName == null || categoryName == "Tất cả") {
+            _products.value = allProducts
+        } else {
+            _products.value = allProducts.filter { it.category == categoryName }
         }
     }
 
     fun toggleFollow() {
         _isFollowing.value = _isFollowing.value?.not()
+    }
+
+    fun toggleLike(postId: String) {
+        val currentPosts = _posts.value ?: return
+        val updatedPosts = currentPosts.map { post ->
+            if (post.postId == postId) {
+                val newIsLiked = !post.isLiked
+                val newLikeCount = if (newIsLiked) post.likeCount + 1 else (post.likeCount - 1).coerceAtLeast(0)
+                post.copy(isLiked = newIsLiked, likeCount = newLikeCount)
+            } else {
+                post
+            }
+        }
+        _posts.value = updatedPosts
     }
 }

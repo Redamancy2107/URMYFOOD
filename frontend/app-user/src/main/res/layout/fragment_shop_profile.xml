@@ -29,6 +29,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="16dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7">
 
@@ -92,6 +94,91 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
+                <!-- Rating, Hours and Location info (SRS FR_SHOP_010) -->
+                <LinearLayout
+                    android:id="@+id/layoutShopMetadata"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginHorizontal="24dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    app:layout_constraintTop_toBottomOf="@id/tvFollowers"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent">
+
+                    <!-- Rating and Hours row -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <!-- Rating -->
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_star"
+                            app:tint="#F59E0B"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:id="@+id/tvShopRating"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            tools:text="4.7" />
+
+                        <View
+                            android:layout_width="1dp"
+                            android:layout_height="12dp"
+                            android:layout_marginHorizontal="12dp"
+                            android:background="@color/divider" />
+
+                        <!-- Operating Hours -->
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:src="@drawable/ic_clock"
+                            app:tint="@color/text_secondary"
+                            android:contentDescription="@null" />
+
+                        <TextView
+                            android:id="@+id/tvShopHours"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            tools:text="08:00 - 22:00" />
+
+                    </LinearLayout>
+
+                    <!-- Address -->
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvShopAddress"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp"
+                            android:gravity="center"
+                            tools:text="12 Cao Thắng, Phường 5, Quận 3, TP. Hồ Chí Minh" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
                 <!-- Action Buttons: Follow and Chat -->
                 <LinearLayout
                     android:id="@+id/layoutActions"
@@ -100,7 +187,7 @@
                     android:layout_marginTop="16dp"
                     android:layout_marginHorizontal="24dp"
                     android:orientation="horizontal"
-                    app:layout_constraintTop_toBottomOf="@id/tvFollowers">
+                    app:layout_constraintTop_toBottomOf="@id/layoutShopMetadata">
 
                     <Button
                         android:id="@+id/btnFollow"
@@ -360,7 +447,8 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingBottom="24dp">
+            android:paddingBottom="24dp"
+            android:descendantFocusability="blocksDescendants">
 
             <!-- TAB 1: TRANG CHỦ -->
             <LinearLayout

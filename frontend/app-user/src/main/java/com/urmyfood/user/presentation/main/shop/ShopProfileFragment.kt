@@ -128,9 +128,7 @@ class ShopProfileFragment : Fragment() {
             orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
         }
         shopPostsAdapter.onLikeClick = { post ->
-            val count = FoodPostAdapter.getLikeCount(post.postId, 50)
-            FoodPostAdapter.toggleLike(post.postId, count)
-            shopPostsAdapter.notifyDataSetChanged()
+            viewModel.toggleLike(post.postId)
         }
         shopPostsAdapter.onSaveClick = { post ->
             Toast.makeText(requireContext(), "Đã lưu bài viết của shop", Toast.LENGTH_SHORT).show()
@@ -210,6 +208,18 @@ class ShopProfileFragment : Fragment() {
             binding.tvActiveDuration.text = duration
         }
 
+        viewModel.address.observe(viewLifecycleOwner) { address ->
+            binding.tvShopAddress.text = address
+        }
+
+        viewModel.operatingHours.observe(viewLifecycleOwner) { hours ->
+            binding.tvShopHours.text = hours
+        }
+
+        viewModel.rating.observe(viewLifecycleOwner) { rating ->
+            binding.tvShopRating.text = rating
+        }
+
         // Render horizontal vouchers
         viewModel.vouchers.observe(viewLifecycleOwner) { vouchersList ->
             binding.rvVouchers.apply {
@@ -242,7 +252,11 @@ class ShopProfileFragment : Fragment() {
         viewModel.categories.observe(viewLifecycleOwner) { categoriesList ->
             binding.rvShopCategories.apply {
                 layoutManager = LinearLayoutManager(requireContext())
-                adapter = CategoryAdapter(categoriesList)
+                adapter = CategoryAdapter(categoriesList) { category ->
+                    viewModel.filterProductsByCategory(category)
+                    // Automatically switch to Products tab (index 1)
+                    binding.tabLayout.getTabAt(1)?.select()
+                }
             }
         }
     }
@@ -361,19 +375,22 @@ class ShopProfileFragment : Fragment() {
         override fun getItemCount() = products.size
     }
 
-    private class CategoryAdapter(private val categories: List<String>) :
-        RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+    private class CategoryAdapter(
+        private val categories: List<String>,
+        private val onCategoryClick: (String) -> Unit
+    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
         class ViewHolder(private val binding: ItemShopCategoryBinding) :
             RecyclerView.ViewHolder(binding.root) {
-            fun bind(category: String) {
+            fun bind(category: String, onCategoryClick: (String) -> Unit) {
                 binding.tvCategoryName.text = category
                 itemView.setOnClickListener {
                     Toast.makeText(
                         itemView.context,
-                        "Đã lọc theo danh mục: $category",
+                        itemView.context.getString(R.string.toast_filtered_category, category),
                         Toast.LENGTH_SHORT
                     ).show()
+                    onCategoryClick(category)
                 }
             }
         }
@@ -386,7 +403,7 @@ class ShopProfileFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(categories[position])
+            holder.bind(categories[position], onCategoryClick)
         }
 
         override fun getItemCount() = categories.size
