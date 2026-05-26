@@ -1,4 +1,8 @@
-CREATE TYPE post_status AS ENUM ('ACTIVE', 'SOLD_OUT', 'EXPIRED', 'INACTIVE');
+DO $$ BEGIN
+    CREATE TYPE post_status AS ENUM ('ACTIVE', 'SOLD_OUT', 'EXPIRED', 'INACTIVE');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 CREATE TABLE IF NOT EXISTS posts (
     post_id     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -16,6 +20,6 @@ CREATE TABLE IF NOT EXISTS posts (
     created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_posts_author_id ON posts(author_id);
-CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
-CREATE INDEX idx_posts_status ON posts(status);
+CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
