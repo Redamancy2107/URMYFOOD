@@ -192,11 +192,9 @@ class HomeFragment : Fragment() {
                     binding.swipeRefresh.isRefreshing = false
                     binding.shimmerLayout.stopShimmer()
                     binding.shimmerLayout.visibility = View.GONE
-                    if (adapter.currentList.isEmpty()) {
-                        binding.tvError.text = state.message
-                        binding.tvError.visibility = View.VISIBLE
-                    binding.tvError.visibility = View.VISIBLE
                     binding.tvError.text = state.message
+                    binding.tvError.visibility = View.VISIBLE
+
                     if (adapter.currentList.isEmpty()) {
                         binding.rvPosts.visibility = View.GONE
                     }

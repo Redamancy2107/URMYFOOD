@@ -240,16 +240,13 @@ object ServiceLocator {
 
     fun provideCommentViewModelFactory(): CommentViewModel.Factory {
         return CommentViewModel.Factory(getCommentsUseCase, postCommentUseCase)
+    }
     fun provideCartViewModelFactory(): CartViewModel.Factory {
         return CartViewModel.Factory(getCartUseCase, updateCartItemUseCase, deleteCartItemUseCase)
     }
 
     fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
         return CheckoutViewModel.Factory(checkoutUseCase)
-    }
-
-    fun provideSearchViewModelFactory(): SearchViewModel.Factory {
-        return SearchViewModel.Factory()
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {
