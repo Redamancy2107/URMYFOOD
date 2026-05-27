@@ -56,6 +56,39 @@
         android:paddingHorizontal="16dp"
         android:paddingVertical="12dp">
 
+        <!-- Reply Indicator Row -->
+        <LinearLayout
+            android:id="@+id/replyIndicatorLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvReplyingTo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                tools:text="Đang trả lời Nguyễn Văn A..." />
+
+            <ImageView
+                android:id="@+id/btnCancelReply"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_close"
+                app:tint="@color/text_secondary" />
+
+        </LinearLayout>
+
         <EditText
             android:id="@+id/etComment"
             android:layout_width="0dp"
@@ -72,7 +105,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/btnSend"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/replyIndicatorLayout" />
 
         <ImageButton
             android:id="@+id/btnSend"
@@ -82,7 +115,7 @@
             android:src="@drawable/ic_send"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/replyIndicatorLayout"
             app:tint="@color/primary" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
