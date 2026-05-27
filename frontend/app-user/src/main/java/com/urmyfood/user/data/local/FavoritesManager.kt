@@ -5,12 +5,13 @@ import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.urmyfood.user.domain.model.FoodPost
+import com.urmyfood.user.domain.model.TokenProvider
 
 /**
  * Manages local storage of bookmarked/favorite food posts.
  * Uses SharedPreferences and Gson for local serialization.
  */
-class FavoritesManager(context: Context) {
+class FavoritesManager(context: Context, private val tokenProvider: TokenProvider) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
 
@@ -19,11 +20,42 @@ class FavoritesManager(context: Context) {
         private const val KEY_FAVORITES = "favorite_posts"
     }
 
+    private fun getFavoritesKey(): String {
+        val token = tokenProvider.getAccessToken() ?: return KEY_FAVORITES + "_guest"
+        val email = getEmailFromToken(token)
+        return "${KEY_FAVORITES}_$email"
+    }
+
+    private fun getEmailFromToken(token: String): String {
+        return try {
+            val cleanToken = token.removePrefix("Bearer ").trim()
+            val parts = cleanToken.split(".")
+            if (parts.size >= 2) {
+                val payload = String(
+                    android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE or android.util.Base64.NO_WRAP)
+                )
+                val subKey = "\"sub\":\""
+                val index = payload.indexOf(subKey)
+                if (index != -1) {
+                    val start = index + subKey.length
+                    val end = payload.indexOf("\"", start)
+                    if (end != -1) {
+                        return payload.substring(start, end)
+                    }
+                }
+            }
+            cleanToken.takeLast(20).replace(Regex("[^a-zA-Z0-9]"), "")
+        } catch (e: Exception) {
+            "unknown"
+        }
+    }
+
     /**
      * Retrieve the list of favorite food posts.
      */
     fun getFavorites(): List<FoodPost> {
-        val json = prefs.getString(KEY_FAVORITES, null) ?: return emptyList()
+        val key = getFavoritesKey()
+        val json = prefs.getString(key, null) ?: return emptyList()
         val type = object : TypeToken<List<FoodPost>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
@@ -32,7 +64,8 @@ class FavoritesManager(context: Context) {
      * Save the entire list of favorite food posts.
      */
     fun saveFavorites(posts: List<FoodPost>) {
-        prefs.edit().putString(KEY_FAVORITES, gson.toJson(posts)).apply()
+        val key = getFavoritesKey()
+        prefs.edit().putString(key, gson.toJson(posts)).apply()
     }
 
     /**
