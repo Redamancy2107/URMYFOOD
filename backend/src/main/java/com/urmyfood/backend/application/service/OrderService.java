@@ -25,8 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +52,7 @@ public class OrderService {
         }
 
         PaymentMethod paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        lockCartPosts(cartItems);
         Account shop = validateCartForCheckout(cartItems);
         BigDecimal totalAmount = calculateTotal(cartItems);
         Voucher voucher = resolveVoucher(request.getVoucherId(), request.getVoucherCode(), totalAmount);
@@ -94,7 +99,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse cancelOrder(Long customerId, UUID orderId, CancelOrderRequest request) {
-        Order order = findOwnedOrder(customerId, orderId);
+        Order order = findOwnedOrderForUpdate(customerId, orderId);
         if (order.getOrderStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
         }
@@ -103,6 +108,15 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(request.getCancelReason());
         return toResponse(orderRepository.save(order));
+    }
+
+    private Order findOwnedOrderForUpdate(Long customerId, UUID orderId) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new IllegalArgumentException("Bạn không có quyền xem đơn hàng này");
+        }
+        return order;
     }
 
     private Order findOwnedOrder(Long customerId, UUID orderId) {
@@ -176,6 +190,22 @@ public class OrderService {
                 .build();
     }
 
+    private void lockCartPosts(List<CartItem> cartItems) {
+        Map<UUID, Post> lockedPosts = lockPostsById(cartItems.stream()
+                .map(item -> item.getPost().getPostId())
+                .toList());
+        cartItems.forEach(item -> item.setPost(lockedPosts.get(item.getPost().getPostId())));
+    }
+
+    private Map<UUID, Post> lockPostsById(List<UUID> postIds) {
+        return postIds.stream()
+                .distinct()
+                .sorted(Comparator.comparing(UUID::toString))
+                .map(postId -> postRepository.findByIdForUpdate(postId)
+                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy món ăn")))
+                .collect(Collectors.toMap(Post::getPostId, Function.identity()));
+    }
+
     private void decreasePostQuantities(List<CartItem> cartItems) {
         cartItems.forEach(item -> {
             Post post = item.getPost();
@@ -189,9 +219,11 @@ public class OrderService {
     }
 
     private void restorePostQuantities(List<OrderItem> orderItems) {
+        Map<UUID, Post> lockedPosts = lockPostsById(orderItems.stream()
+                .map(item -> item.getPost().getPostId())
+                .toList());
         orderItems.forEach(item -> {
-            Post post = postRepository.findById(item.getPost().getPostId())
-                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy món ăn"));
+            Post post = lockedPosts.get(item.getPost().getPostId());
             post.setRemainingQuantity(post.getRemainingQuantity() + item.getQuantity());
             if (post.getStatus() == PostStatus.SOLD_OUT && post.getRemainingQuantity() > 0) {
                 post.setStatus(PostStatus.ACTIVE);

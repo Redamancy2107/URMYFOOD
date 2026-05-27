@@ -50,6 +50,11 @@ public class OrderPersistenceAdapter implements OrderRepository {
         return jpaOrderRepository.findById(orderId).map(this::toDomain);
     }
 
+    @Override
+    public Optional<Order> findByIdForUpdate(UUID orderId) {
+        return jpaOrderRepository.findByIdForUpdate(orderId).map(this::toDomain);
+    }
+
     private Order toDomain(OrderEntity entity) {
         List<OrderItem> items = entity.getItems().stream()
                 .map(this::toDomainItem)
