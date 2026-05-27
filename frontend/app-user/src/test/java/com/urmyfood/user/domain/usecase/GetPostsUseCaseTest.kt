@@ -30,25 +30,25 @@ class GetPostsUseCaseTest {
 
     private fun makeRepository(result: Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int) = result
-            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int): Result<PageResult<FoodPost>> = Result.Success(PageResult(emptyList(), 0, false))
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = result
+            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> = Result.Success(PageResult(emptyList(), 0, false))
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
-            override suspend fun getComments(postId: String, token: String, page: Int, size: Int): Result<PageResult<Comment>> = Result.Success(PageResult(emptyList(), 0, false))
-            override suspend fun postComment(postId: String, content: String, token: String): Result<Comment> = Result.Success(Comment("", "", null, "", ""))
+            override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int): Result<PageResult<Comment>> = Result.Success(PageResult(emptyList(), 0, false))
+            override suspend fun postComment(postId: String, content: String, token: String, parentId: String?): Result<Comment> = Result.Success(Comment("", "", null, "", ""))
         }
 
     @Test
     fun `invoke delegates to repository with bearer token`() = runTest {
         var receivedToken: String? = null
         val repo = object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int): Result<PageResult<FoodPost>> {
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
                 receivedToken = token
                 return Result.Success(PageResult(emptyList(), 0, false))
             }
-            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
-            override suspend fun getComments(postId: String, token: String, page: Int, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
-            override suspend fun postComment(postId: String, content: String, token: String) = Result.Success(Comment("", "", null, "", ""))
+            override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
+            override suspend fun postComment(postId: String, content: String, token: String, parentId: String?) = Result.Success(Comment("", "", null, "", ""))
         }
         val useCase = GetPostsUseCase(repo, fakeTokenProvider)
 
@@ -87,14 +87,14 @@ class GetPostsUseCaseTest {
             override fun getAccessToken(): String? = null
         }
         val repo = object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int): Result<PageResult<FoodPost>> {
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
                 receivedToken = token
                 return Result.Success(PageResult(emptyList(), 0, false))
             }
-            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
-            override suspend fun getComments(postId: String, token: String, page: Int, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
-            override suspend fun postComment(postId: String, content: String, token: String) = Result.Success(Comment("", "", null, "", ""))
+            override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
+            override suspend fun postComment(postId: String, content: String, token: String, parentId: String?) = Result.Success(Comment("", "", null, "", ""))
         }
         val useCase = GetPostsUseCase(repo, nullTokenProvider)
 
