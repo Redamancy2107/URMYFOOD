@@ -49,6 +49,32 @@ class FavoritesFragment : Fragment() {
         
         setupRecyclerView()
         setupClickListeners()
+        observeSharedEvents()
+    }
+
+    private fun observeSharedEvents() {
+        com.urmyfood.user.di.ServiceLocator.postCommentEvent.observe(viewLifecycleOwner) { postId ->
+            if (favoritesManager.isFavorite(postId)) {
+                val favList = favoritesManager.getFavorites()
+                val target = favList.find { it.postId == postId }
+                if (target != null) {
+                    favoritesManager.updateFavorite(target.copy(commentCount = target.commentCount + 1))
+                }
+            }
+            loadFavorites()
+        }
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, likeData) = event
+            val (isLiked, likeCount) = likeData
+            if (favoritesManager.isFavorite(postId)) {
+                val favList = favoritesManager.getFavorites()
+                val target = favList.find { it.postId == postId }
+                if (target != null && (target.isLiked != isLiked || target.likeCount != likeCount)) {
+                    favoritesManager.updateFavorite(target.copy(isLiked = isLiked, likeCount = likeCount))
+                }
+            }
+            loadFavorites()
+        }
     }
 
     override fun onResume() {
@@ -70,6 +96,7 @@ class FavoritesFragment : Fragment() {
             val optimisticPost = post.copy(isLiked = !post.isLiked, likeCount = optimisticCount)
             favoritesManager.updateFavorite(optimisticPost)
             loadFavorites()
+            com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(!post.isLiked, optimisticCount)))
 
             viewLifecycleOwner.lifecycleScope.launch {
                 when (val result = com.urmyfood.user.di.ServiceLocator.toggleLikeUseCase(post.postId, post.isLiked)) {
@@ -81,10 +108,12 @@ class FavoritesFragment : Fragment() {
                             )
                         )
                         loadFavorites()
+                        com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(result.data.isLiked, result.data.likeCount)))
                     }
                     is Result.Error -> {
                         favoritesManager.updateFavorite(post.copy(isLiked = post.isLiked, likeCount = currentCount))
                         loadFavorites()
+                        com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(post.isLiked, currentCount)))
                         Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -128,7 +157,16 @@ class FavoritesFragment : Fragment() {
         }
     }
 
+    private var syncJob: kotlinx.coroutines.Job? = null
+
     private fun loadFavorites() {
+        val list = loadFavoritesOnly()
+        if (list.isNotEmpty()) {
+            syncFavoritesWithBackend(list)
+        }
+    }
+
+    private fun loadFavoritesOnly(): List<com.urmyfood.user.domain.model.FoodPost> {
         val list = favoritesManager.getFavorites()
         if (list.isEmpty()) {
             binding.layoutEmptyState.visibility = View.VISIBLE
@@ -139,10 +177,41 @@ class FavoritesFragment : Fragment() {
             adapter.submitList(list)
             adapter.notifyDataSetChanged()
         }
+        return list
+    }
+
+    private fun syncFavoritesWithBackend(list: List<com.urmyfood.user.domain.model.FoodPost>) {
+        syncJob?.cancel()
+        syncJob = viewLifecycleOwner.lifecycleScope.launch {
+            val getPost = com.urmyfood.user.di.ServiceLocator.getPostUseCase
+            var changed = false
+            for (post in list) {
+                if (!isAdded) break
+                when (val result = getPost(post.postId)) {
+                    is Result.Success -> {
+                        val backendPost = result.data
+                        if (backendPost.commentCount != post.commentCount ||
+                            backendPost.likeCount != post.likeCount ||
+                            backendPost.isLiked != post.isLiked
+                        ) {
+                            favoritesManager.updateFavorite(backendPost)
+                            changed = true
+                        }
+                    }
+                    is Result.Error -> {
+                        // ignore errors silently
+                    }
+                }
+            }
+            if (changed && isAdded) {
+                loadFavoritesOnly()
+            }
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        syncJob?.cancel()
         _binding = null
     }
 }

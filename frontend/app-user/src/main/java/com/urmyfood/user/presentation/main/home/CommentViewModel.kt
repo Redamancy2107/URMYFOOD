@@ -31,8 +31,9 @@ class CommentViewModel(
     private val _sendResult = MutableLiveData<String?>()
     val sendResult: LiveData<String?> = _sendResult
 
+    // Raw flat list from the API — not yet threaded
     private val loadedComments = mutableListOf<Comment>()
-    private var currentPage = 0
+    private var nextCursor: String? = null
     private var hasNextPage = false
     private var isLoading = false
 
@@ -40,14 +41,16 @@ class CommentViewModel(
         if (isLoading) return
         isLoading = true
         loadedComments.clear()
-        currentPage = 0
+        nextCursor = null
+        hasNextPage = false
         _uiState.value = CommentUiState.Loading
         viewModelScope.launch {
-            when (val r = getCommentsUseCase(postId, 0)) {
+            when (val r = getCommentsUseCase(postId, cursor = null)) {
                 is Result.Success -> {
                     loadedComments.addAll(r.data.items)
                     hasNextPage = r.data.hasNext
-                    _uiState.value = CommentUiState.Success(loadedComments.toList())
+                    nextCursor = r.data.nextCursor
+                    emitThreaded()
                 }
                 is Result.Error -> _uiState.value = CommentUiState.Error(r.message)
             }
@@ -60,12 +63,12 @@ class CommentViewModel(
         isLoading = true
         _isLoadingMore.value = true
         viewModelScope.launch {
-            when (val r = getCommentsUseCase(postId, currentPage + 1)) {
+            when (val r = getCommentsUseCase(postId, cursor = nextCursor)) {
                 is Result.Success -> {
                     loadedComments.addAll(r.data.items)
                     hasNextPage = r.data.hasNext
-                    currentPage++
-                    _uiState.value = CommentUiState.Success(loadedComments.toList())
+                    nextCursor = r.data.nextCursor
+                    emitThreaded()
                 }
                 is Result.Error -> {}
             }
@@ -74,17 +77,55 @@ class CommentViewModel(
         }
     }
 
-    fun postComment(postId: String, content: String) {
+    fun postComment(postId: String, content: String, parentId: String? = null) {
         viewModelScope.launch {
-            when (val r = postCommentUseCase(postId, content)) {
+            when (val r = postCommentUseCase(postId, content, parentId)) {
                 is Result.Success -> {
-                    loadedComments.add(0, r.data)
-                    _uiState.value = CommentUiState.Success(loadedComments.toList())
+                    loadedComments.add(r.data)
+                    emitThreaded()
+                    com.urmyfood.user.di.ServiceLocator.postCommentEvent.postValue(postId)
                     _sendResult.value = null
                 }
                 is Result.Error -> _sendResult.value = r.message
             }
         }
+    }
+
+    /**
+     * Transforms the flat [loadedComments] list into a threaded display list:
+     *   Parent 1 (newest first)
+     *     └─ Reply A (oldest first)
+     *     └─ Reply B
+     *   Parent 2
+     *     └─ Reply C
+     *   ...
+     */
+    private fun emitThreaded() {
+        _uiState.value = CommentUiState.Success(buildThreadedList(loadedComments))
+    }
+
+    private fun buildThreadedList(flat: List<Comment>): List<Comment> {
+        // Separate parents from replies
+        val parents = flat.filter { it.parentId == null }
+        val repliesByParent = flat.filter { it.parentId != null }
+            .groupBy { it.parentId!! }
+
+        // Parents: newest first (createdAt is already formatted as "HH:mm dd/MM/yyyy",
+        // so we keep the original order from the API which is created_at DESC)
+        val result = mutableListOf<Comment>()
+        for (parent in parents) {
+            result.add(parent)
+            // Replies under this parent: oldest first (chronological reading order)
+            val replies = repliesByParent[parent.commentId] ?: emptyList()
+            result.addAll(replies.reversed())
+        }
+
+        // Orphaned replies whose parent isn't in the current page — show at the end
+        val knownParentIds = parents.map { it.commentId }.toSet()
+        val orphans = flat.filter { it.parentId != null && it.parentId !in knownParentIds }
+        result.addAll(orphans)
+
+        return result
     }
 
     fun clearSendResult() {

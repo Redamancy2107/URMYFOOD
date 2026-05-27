@@ -57,6 +57,20 @@ class HomeFragment : Fragment() {
         observeUiState()
         observeLoadingMore()
         observeLikeError()
+        observeSharedEvents()
+    }
+
+    private fun observeSharedEvents() {
+        com.urmyfood.user.di.ServiceLocator.postCommentEvent.observe(viewLifecycleOwner) { postId ->
+            viewModel.incrementCommentCount(postId)
+            adapter.notifyDataSetChanged()
+        }
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, likeData) = event
+            val (isLiked, likeCount) = likeData
+            viewModel.updateLikeStateExternally(postId, isLiked, likeCount)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun setupRecyclerView() {

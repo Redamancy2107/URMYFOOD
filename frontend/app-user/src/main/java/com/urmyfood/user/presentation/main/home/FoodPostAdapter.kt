@@ -19,6 +19,11 @@ import java.util.Locale
 class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCallback()) {
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
+
+    companion object {
+        private val MOCK_TIMES = listOf("Vừa xong", "5 phút trước", "1 giờ trước", "3 giờ trước")
+        private val MOCK_LOCATIONS = listOf("Hà Nội", "KTX Khu A", "Làng Đại học", "Thủ Đức")
+    }
     
     var onCommentClick: ((String) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
@@ -48,9 +53,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 // --- Header: shop info ---
                 tvShopName.text = post.shopName
                 
-                // Mock metadata: Time + Dot + Location
-                val mockTime = listOf("Vừa xong", "5 phút trước", "1 giờ trước", "3 giờ trước").random()
-                val mockLocation = listOf("Hà Nội", "KTX Khu A", "Làng Đại học", "Thủ Đức").random()
+                // Stable deterministic mock metadata based on postId to prevent rendering jitters and object allocation on scroll
+                val stableHash = Math.abs(post.postId.hashCode())
+                val mockTime = MOCK_TIMES[stableHash % MOCK_TIMES.size]
+                val mockLocation = MOCK_LOCATIONS[stableHash % MOCK_LOCATIONS.size]
                 tvPostMeta.text = "$mockTime • $mockLocation"
 
                 // --- Content description ---

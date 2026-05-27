@@ -53,6 +53,7 @@ class SearchViewModel(
     private var typedQuery = ""
     private var hasNextPage = false
     private var isLoading = false
+    private var currentAnchor: String? = null
     private var searchJob: Job? = null
 
     fun onQueryChanged(query: String) {
@@ -97,14 +98,16 @@ class SearchViewModel(
             isLoading = true
             loadedPosts.clear()
             hasNextPage = false
+            currentAnchor = null
             _uiState.value = UiState.Loading
 
             try {
-                when (val result = searchPostsUseCase(trimmed, page = 0)) {
+                when (val result = searchPostsUseCase(trimmed, page = 0, anchor = null)) {
                     is Result.Success -> {
                         if (currentQuery == trimmed) {
                             loadedPosts.addAll(result.data.items)
                             hasNextPage = result.data.hasNext
+                            currentAnchor = result.data.anchor
                             _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, 0)
                         }
                     }
@@ -144,7 +147,7 @@ class SearchViewModel(
         _isLoadingMore.value = true
 
         viewModelScope.launch {
-            when (val result = searchPostsUseCase(currentQuery, page = currentPageNum + 1)) {
+            when (val result = searchPostsUseCase(currentQuery, page = currentPageNum + 1, anchor = currentAnchor)) {
                 is Result.Success -> {
                     val newPosts = result.data.items.filter { new ->
                         loadedPosts.none { it.postId == new.postId }
@@ -198,6 +201,7 @@ class SearchViewModel(
         loadedPosts.clear()
         hasNextPage = false
         isLoading = false
+        currentAnchor = null
         _isLoadingMore.value = false
         _uiState.value = UiState.Idle
     }

@@ -43,6 +43,7 @@ class HomeViewModel(
     private var currentPage = 0
     private var hasNextPage = false
     private var isLoading = false
+    private var currentAnchor: String? = null
 
     init {
         loadPosts()
@@ -68,13 +69,15 @@ class HomeViewModel(
         loadedPosts.clear()
         currentPage = 0
         hasNextPage = false
+        currentAnchor = null
         _uiState.value = NewsfeedUiState.Loading
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = 0)) {
+            when (val result = getPostsUseCase(page = 0, anchor = null)) {
                 is Result.Success -> {
                     loadedPosts.addAll(result.data.items)
                     hasNextPage = result.data.hasNext
+                    currentAnchor = result.data.anchor
                     applySortingAndEmit()
                 }
                 is Result.Error -> _uiState.value = NewsfeedUiState.Error(result.message)
@@ -89,7 +92,7 @@ class HomeViewModel(
         _isLoadingMore.value = true
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = currentPage + 1)) {
+            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor)) {
                 is Result.Success -> {
                     val newPosts = result.data.items.filter { new ->
                         loadedPosts.none { it.postId == new.postId }
@@ -132,6 +135,25 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+            
+            // Dispatch to favorites screen or other listeners
+            com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(postId, Pair(isLiked, likeCount)))
+        }
+    }
+
+    fun updateLikeStateExternally(postId: String, isLiked: Boolean, likeCount: Int) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0 && (loadedPosts[idx].isLiked != isLiked || loadedPosts[idx].likeCount != likeCount)) {
+            loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+        }
+    }
+
+    fun incrementCommentCount(postId: String) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0) {
+            loadedPosts[idx] = loadedPosts[idx].copy(commentCount = loadedPosts[idx].commentCount + 1)
             applySortingAndEmit()
         }
     }
