@@ -36,6 +36,9 @@ class HomeViewModel(
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
 
+    private val _sortOrder = MutableLiveData<String?>(null)
+    val sortOrder: LiveData<String?> = _sortOrder
+
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
     private var hasNextPage = false
@@ -43,6 +46,20 @@ class HomeViewModel(
 
     init {
         loadPosts()
+    }
+
+    fun setSortOrder(order: String?) {
+        _sortOrder.value = order
+        applySortingAndEmit()
+    }
+
+    private fun applySortingAndEmit() {
+        val sortedList = when (_sortOrder.value) {
+            "LOW_TO_HIGH" -> loadedPosts.sortedBy { it.price }
+            "HIGH_TO_LOW" -> loadedPosts.sortedByDescending { it.price }
+            else -> loadedPosts.toList()
+        }
+        _uiState.value = NewsfeedUiState.Success(sortedList)
     }
 
     fun loadPosts() {
@@ -58,7 +75,7 @@ class HomeViewModel(
                 is Result.Success -> {
                     loadedPosts.addAll(result.data.items)
                     hasNextPage = result.data.hasNext
-                    _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+                    applySortingAndEmit()
                 }
                 is Result.Error -> _uiState.value = NewsfeedUiState.Error(result.message)
             }
@@ -80,7 +97,7 @@ class HomeViewModel(
                     loadedPosts.addAll(newPosts)
                     hasNextPage = result.data.hasNext
                     currentPage++
-                    _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+                    applySortingAndEmit()
                 }
                 is Result.Error -> { /* silently ignore load-more errors */ }
             }
@@ -115,7 +132,7 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
-            _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+            applySortingAndEmit()
         }
     }
 
