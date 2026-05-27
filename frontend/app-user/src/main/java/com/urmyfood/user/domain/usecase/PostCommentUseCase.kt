@@ -9,8 +9,8 @@ class PostCommentUseCase(
     private val repository: PostRepository,
     private val tokenProvider: TokenProvider
 ) {
-    suspend operator fun invoke(postId: String, content: String): Result<Comment> {
+    suspend operator fun invoke(postId: String, content: String, parentId: String? = null): Result<Comment> {
         val token = tokenProvider.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập")
-        return repository.postComment(postId, content, "Bearer $token")
+        return repository.postComment(postId, content, "Bearer $token", parentId)
     }
 }

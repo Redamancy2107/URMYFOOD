@@ -15,9 +15,9 @@ class GetCommentsUseCase(
         const val PAGE_SIZE = 15
     }
 
-    suspend operator fun invoke(postId: String, page: Int, size: Int = PAGE_SIZE): Result<PageResult<Comment>> {
+    suspend operator fun invoke(postId: String, cursor: String? = null, size: Int = PAGE_SIZE): Result<PageResult<Comment>> {
         val token = tokenProvider.getAccessToken()
             ?: return Result.Error("Vui lòng đăng nhập")
-        return repository.getComments(postId, "Bearer $token", page, size)
+        return repository.getComments(postId, "Bearer $token", cursor, size)
     }
 }
