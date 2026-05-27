@@ -15,9 +15,10 @@ class PostSearchIntegrationTest {
 
     @Test
     void searchHandlesFlexibleQueries() {
-        assertThat(postRepository.searchByKeyword("bun", null, 0, 5)).isNotNull();
-        assertThat(postRepository.searchByKeyword("bn", null, 0, 5)).isNotNull();
-        assertThat(postRepository.searchByKeyword("toi muon an bun", null, 0, 5)).isNotNull();
-        assertThat(postRepository.countByKeyword("bun")).isGreaterThanOrEqualTo(0L);
+        java.time.OffsetDateTime anchor = java.time.OffsetDateTime.now();
+        assertThat(postRepository.searchByKeyword("bun", null, 0, 5, anchor)).isNotNull();
+        assertThat(postRepository.searchByKeyword("bn", null, 0, 5, anchor)).isNotNull();
+        assertThat(postRepository.searchByKeyword("toi muon an bun", null, 0, 5, anchor)).isNotNull();
+        assertThat(postRepository.countByKeyword("bun", anchor)).isGreaterThanOrEqualTo(0L);
     }
 }
