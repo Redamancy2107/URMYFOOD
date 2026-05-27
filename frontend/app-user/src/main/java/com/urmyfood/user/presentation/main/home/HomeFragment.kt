@@ -348,6 +348,8 @@ class HomeFragment : Fragment() {
             
             setOnItemClickListener { _, _, position, _ ->
                 val selected = items[position].first
+                val order = if (position == 0) "LOW_TO_HIGH" else "HIGH_TO_LOW"
+                viewModel.setSortOrder(order)
                 Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
                 dismiss()
             }
