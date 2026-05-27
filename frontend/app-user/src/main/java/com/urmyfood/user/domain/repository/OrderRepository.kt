@@ -9,7 +9,8 @@ interface OrderRepository {
         paymentMethod: String,
         deliveryAddress: String,
         voucherId: Long?,
-        note: String?
+        note: String?,
+        voucherCode: String? = null
     ): Result<OrderResponse>
 
     suspend fun getOrders(token: String): Result<List<OrderResponse>>
