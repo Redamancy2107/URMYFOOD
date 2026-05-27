@@ -17,11 +17,18 @@ import retrofit2.http.Query
 
 interface PostApiService {
 
+    @GET("api/v1/posts/{postId}")
+    suspend fun getPost(
+        @Path("postId") postId: String,
+        @Header("Authorization") token: String?
+    ): Response<ApiResponse<PostResponse>>
+
     @GET("api/v1/posts")
     suspend fun getPosts(
         @Header("Authorization") token: String?,
         @Query("page") page: Int,
-        @Query("size") size: Int
+        @Query("size") size: Int,
+        @Query("anchor") anchor: String?
     ): Response<ApiResponse<PageResponse<PostResponse>>>
 
     @GET("api/v1/posts/search")
@@ -29,7 +36,8 @@ interface PostApiService {
         @Header("Authorization") token: String?,
         @Query("query") query: String,
         @Query("page") page: Int,
-        @Query("size") size: Int
+        @Query("size") size: Int,
+        @Query("anchor") anchor: String?
     ): Response<ApiResponse<PageResponse<PostResponse>>>
 
     @POST("api/v1/posts/{postId}/like")
@@ -48,7 +56,7 @@ interface PostApiService {
     suspend fun getComments(
         @Path("postId") postId: String,
         @Header("Authorization") token: String,
-        @Query("page") page: Int,
+        @Query("cursor") cursor: String?,
         @Query("size") size: Int
     ): Response<ApiResponse<PageResponse<CommentResponse>>>
 

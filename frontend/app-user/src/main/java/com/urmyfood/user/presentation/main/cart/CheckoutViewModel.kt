@@ -5,8 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.urmyfood.user.data.model.AddressResponse
+import com.urmyfood.user.data.model.VoucherResponse
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.CheckoutUseCase
+import com.urmyfood.user.domain.usecase.GetAddressesUseCase
+import com.urmyfood.user.domain.usecase.GetVouchersUseCase
 import kotlinx.coroutines.launch
 
 data class CheckoutUiState(
@@ -16,16 +20,64 @@ data class CheckoutUiState(
 )
 
 class CheckoutViewModel(
-    private val checkoutUseCase: CheckoutUseCase
+    private val checkoutUseCase: CheckoutUseCase,
+    private val getAddressesUseCase: GetAddressesUseCase,
+    private val getVouchersUseCase: GetVouchersUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(CheckoutUiState())
     val uiState: LiveData<CheckoutUiState> = _uiState
 
-    fun checkout(paymentMethod: String) {
+    private val _addresses = MutableLiveData<List<AddressResponse>>(emptyList())
+    val addresses: LiveData<List<AddressResponse>> = _addresses
+
+    private val _vouchers = MutableLiveData<List<VoucherResponse>>(emptyList())
+    val vouchers: LiveData<List<VoucherResponse>> = _vouchers
+
+    private val _selectedAddress = MutableLiveData<AddressResponse?>()
+    val selectedAddress: LiveData<AddressResponse?> = _selectedAddress
+
+    private val _selectedVoucher = MutableLiveData<VoucherResponse?>()
+    val selectedVoucher: LiveData<VoucherResponse?> = _selectedVoucher
+
+    fun loadData() {
+        viewModelScope.launch {
+            // Load addresses
+            when (val result = getAddressesUseCase()) {
+                is Result.Success -> {
+                    _addresses.value = result.data
+                    val defaultAddr = result.data.find { it.isDefault } ?: result.data.firstOrNull()
+                    _selectedAddress.value = defaultAddr
+                }
+                is Result.Error -> { /* silently ignore address load error */ }
+            }
+
+            // Load vouchers
+            when (val result = getVouchersUseCase()) {
+                is Result.Success -> {
+                    _vouchers.value = result.data
+                }
+                is Result.Error -> { /* silently ignore voucher load error */ }
+            }
+        }
+    }
+
+    fun selectAddress(address: AddressResponse) {
+        _selectedAddress.value = address
+    }
+
+    fun selectVoucher(voucher: VoucherResponse?) {
+        _selectedVoucher.value = voucher
+    }
+
+    fun checkout(paymentMethod: String, deliveryAddress: String, note: String? = null, voucherCode: String? = null) {
         viewModelScope.launch {
             _uiState.value = CheckoutUiState(isLoading = true)
-            when (val result = checkoutUseCase(paymentMethod, DEFAULT_DELIVERY_ADDRESS, DEFAULT_NOTE)) {
+            val address = if (deliveryAddress.isBlank()) DEFAULT_DELIVERY_ADDRESS else deliveryAddress
+            val finalNote = if (note.isNullOrBlank()) DEFAULT_NOTE else note
+            val finalVoucher = if (voucherCode.isNullOrBlank()) null else voucherCode.trim()
+
+            when (val result = checkoutUseCase(paymentMethod, address, finalNote, finalVoucher)) {
                 is Result.Success -> _uiState.value = CheckoutUiState(
                     isSuccess = true,
                     message = "Đặt hàng thành công!"
@@ -40,12 +92,14 @@ class CheckoutViewModel(
     }
 
     class Factory(
-        private val checkoutUseCase: CheckoutUseCase
+        private val checkoutUseCase: CheckoutUseCase,
+        private val getAddressesUseCase: GetAddressesUseCase,
+        private val getVouchersUseCase: GetVouchersUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(CheckoutViewModel::class.java)) {
-                return CheckoutViewModel(checkoutUseCase) as T
+                return CheckoutViewModel(checkoutUseCase, getAddressesUseCase, getVouchersUseCase) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

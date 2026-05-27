@@ -22,5 +22,8 @@ public class CheckoutRequest {
     @JsonAlias("voucher_id")
     private Long voucherId;
 
+    @JsonAlias("voucher_code")
+    private String voucherCode;
+
     private String note;
 }

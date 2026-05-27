@@ -50,7 +50,7 @@ public class OrderService {
         PaymentMethod paymentMethod = parsePaymentMethod(request.getPaymentMethod());
         Account shop = validateCartForCheckout(cartItems);
         BigDecimal totalAmount = calculateTotal(cartItems);
-        Voucher voucher = resolveVoucher(request.getVoucherId(), totalAmount);
+        Voucher voucher = resolveVoucher(request.getVoucherId(), request.getVoucherCode(), totalAmount);
         BigDecimal discountAmount = voucher == null ? BigDecimal.ZERO : voucher.getDiscountValue().min(totalAmount);
         BigDecimal finalAmount = totalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
 
@@ -139,12 +139,18 @@ public class OrderService {
         return shop;
     }
 
-    private Voucher resolveVoucher(Long voucherId, BigDecimal totalAmount) {
-        if (voucherId == null) {
+    private Voucher resolveVoucher(Long voucherId, String voucherCode, BigDecimal totalAmount) {
+        if (voucherId == null && (voucherCode == null || voucherCode.trim().isEmpty())) {
             return null;
         }
-        Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy voucher"));
+        Voucher voucher = null;
+        if (voucherId != null) {
+            voucher = voucherRepository.findById(voucherId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy voucher"));
+        } else {
+            voucher = voucherRepository.findByCode(voucherCode.trim())
+                    .orElseThrow(() -> new IllegalArgumentException("Mã voucher không tồn tại hoặc đã hết hạn"));
+        }
         if (!voucher.isActive() || voucher.getExpiryDate().isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Voucher không còn hiệu lực");
         }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.Normalizer;
 import java.time.OffsetDateTime;
@@ -70,6 +71,19 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
+    public Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId) {
+        String sql = SELECT_FRAGMENT + """
+                WHERE p.post_id = :postId
+                GROUP BY p.post_id, a.full_name, a.avatar_url
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("viewerAccountId", viewerAccountId, Types.BIGINT);
+        List<PostRanked> result = jdbc.query(sql, params, this::mapRow);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
+    @Override
     public Optional<Post> findById(UUID postId) {
         return jpaPostRepository.findById(postId).map(this::toDomain);
     }
@@ -83,9 +97,9 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size) {
+    public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor) {
         String sql = SELECT_FRAGMENT + """
-                WHERE p.status = 'ACTIVE'
+                WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
                 GROUP BY p.post_id, a.full_name, a.avatar_url
                 ORDER BY (
                     :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
@@ -100,6 +114,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 .addValue("w1", w1)
                 .addValue("w2", w2)
                 .addValue("w3", w3)
+                .addValue("anchor", Timestamp.from(anchor.toInstant()), Types.TIMESTAMP)
                 .addValue("size", size)
                 .addValue("offset", (long) page * size);
 
@@ -107,21 +122,21 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public long countActive() {
-        String sql = "SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE'";
-        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource(), Long.class);
+    public long countActive(OffsetDateTime anchor) {
+        String sql = "SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE' AND created_at <= :anchor";
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("anchor", Timestamp.from(anchor.toInstant())), Long.class);
         return count != null ? count : 0L;
     }
 
     @Override
-    public List<PostRanked> searchByKeyword(String keyword, Long viewerAccountId, int page, int size) {
+    public List<PostRanked> searchByKeyword(String keyword, Long viewerAccountId, int page, int size, OffsetDateTime anchor) {
         SearchTerms terms = searchTerms(keyword);
         if (terms.query().isBlank()) {
             return List.of();
         }
 
         String sql = SELECT_FRAGMENT + """
-                WHERE p.status = 'ACTIVE'
+                WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
                     AND (
                 """ + searchPredicate(terms) + """
                     )
@@ -138,6 +153,7 @@ public class PostPersistenceAdapter implements PostRepository {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
                 .addValue("query", terms.query())
+                .addValue("anchor", Timestamp.from(anchor.toInstant()), Types.TIMESTAMP)
                 .addValue("size", size)
                 .addValue("offset", (long) page * size);
         addSearchParams(params, terms);
@@ -146,7 +162,7 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public long countByKeyword(String keyword) {
+    public long countByKeyword(String keyword, OffsetDateTime anchor) {
         SearchTerms terms = searchTerms(keyword);
         if (terms.query().isBlank()) {
             return 0L;
@@ -156,12 +172,14 @@ public class PostPersistenceAdapter implements PostRepository {
                 SELECT COUNT(DISTINCT p.post_id)
                 FROM posts p
                 JOIN accounts a ON a.id = p.author_id
-                WHERE p.status = 'ACTIVE'
+                WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
                     AND (
                 """ + searchPredicate(terms) + """
                     )
                 """;
-        MapSqlParameterSource params = new MapSqlParameterSource("query", terms.query());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("query", terms.query())
+                .addValue("anchor", Timestamp.from(anchor.toInstant()), Types.TIMESTAMP);
         addSearchParams(params, terms);
         Long count = jdbc.queryForObject(sql, params, Long.class);
         return count != null ? count : 0L;
@@ -193,20 +211,23 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public List<PostComment> findComments(UUID postId, int page, int size) {
+    public List<PostComment> findComments(UUID postId, OffsetDateTime cursor, int size) {
+        String cursorClause = cursor != null ? "AND c.created_at < :cursor" : "";
         String sql = """
                 SELECT c.comment_id, a.full_name AS author_name, a.avatar_url AS author_avatar_url,
-                       c.content, c.created_at
+                       c.content, c.created_at, c.parent_id
                 FROM comments c
                 JOIN accounts a ON a.id = c.account_id
-                WHERE c.post_id = :postId
+                WHERE c.post_id = :postId %s
                 ORDER BY c.created_at DESC
-                LIMIT :size OFFSET :offset
-                """;
+                LIMIT :size
+                """.formatted(cursorClause);
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("postId", postId)
-                .addValue("size", size)
-                .addValue("offset", (long) page * size);
+                .addValue("size", size);
+        if (cursor != null) {
+            params.addValue("cursor", Timestamp.from(cursor.toInstant()), Types.TIMESTAMP);
+        }
         return jdbc.query(sql, params, this::mapCommentRow);
     }
 
@@ -218,20 +239,22 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public PostComment saveComment(UUID postId, Long accountId, String content) {
+    public PostComment saveComment(UUID postId, Long accountId, String content, UUID parentId) {
         String sql = """
-                INSERT INTO comments (post_id, account_id, content)
-                VALUES (:postId, :accountId, :content)
+                INSERT INTO comments (post_id, account_id, content, parent_id)
+                VALUES (:postId, :accountId, :content, :parentId)
                 RETURNING comment_id,
                           (SELECT full_name FROM accounts WHERE id = :accountId) AS author_name,
                           (SELECT avatar_url FROM accounts WHERE id = :accountId) AS author_avatar_url,
                           content,
-                          created_at
+                          created_at,
+                          parent_id
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("postId", postId)
                 .addValue("accountId", accountId)
-                .addValue("content", content);
+                .addValue("content", content)
+                .addValue("parentId", parentId, Types.OTHER);
         return jdbc.queryForObject(sql, params, this::mapCommentRow);
     }
 
@@ -362,7 +385,8 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getString("author_name"),
                 rs.getString("author_avatar_url"),
                 rs.getString("content"),
-                rs.getObject("created_at", OffsetDateTime.class)
+                rs.getObject("created_at", OffsetDateTime.class),
+                rs.getObject("parent_id", UUID.class)
         );
     }
 

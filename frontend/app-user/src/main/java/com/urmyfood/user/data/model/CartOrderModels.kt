@@ -55,7 +55,9 @@ data class CheckoutRequest(
     @SerializedName("voucherId")
     val voucherId: Long? = null,
     @SerializedName("note")
-    val note: String? = null
+    val note: String? = null,
+    @SerializedName("voucher_code")
+    val voucherCode: String? = null
 )
 
 data class CancelOrderRequest(

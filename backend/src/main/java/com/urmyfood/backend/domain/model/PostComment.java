@@ -8,6 +8,7 @@ public record PostComment(
         String authorName,
         String authorAvatarUrl,
         String content,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        UUID parentId
 ) {
 }

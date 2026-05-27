@@ -29,6 +29,11 @@ public class VoucherPersistenceAdapter implements VoucherRepository {
         return jpaVoucherRepository.findById(id).map(this::toDomain);
     }
 
+    @Override
+    public Optional<Voucher> findByCode(String code) {
+        return jpaVoucherRepository.findByCode(code).map(this::toDomain);
+    }
+
     Voucher toDomain(VoucherEntity e) {
         return Voucher.builder()
                 .id(e.getId())

@@ -36,13 +36,31 @@ class HomeViewModel(
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
 
+    private val _sortOrder = MutableLiveData<String?>(null)
+    val sortOrder: LiveData<String?> = _sortOrder
+
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
     private var hasNextPage = false
     private var isLoading = false
+    private var currentAnchor: String? = null
 
     init {
         loadPosts()
+    }
+
+    fun setSortOrder(order: String?) {
+        _sortOrder.value = order
+        applySortingAndEmit()
+    }
+
+    private fun applySortingAndEmit() {
+        val sortedList = when (_sortOrder.value) {
+            "LOW_TO_HIGH" -> loadedPosts.sortedBy { it.price }
+            "HIGH_TO_LOW" -> loadedPosts.sortedByDescending { it.price }
+            else -> loadedPosts.toList()
+        }
+        _uiState.value = NewsfeedUiState.Success(sortedList)
     }
 
     fun loadPosts() {
@@ -51,14 +69,16 @@ class HomeViewModel(
         loadedPosts.clear()
         currentPage = 0
         hasNextPage = false
+        currentAnchor = null
         _uiState.value = NewsfeedUiState.Loading
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = 0)) {
+            when (val result = getPostsUseCase(page = 0, anchor = null)) {
                 is Result.Success -> {
                     loadedPosts.addAll(result.data.items)
                     hasNextPage = result.data.hasNext
-                    _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+                    currentAnchor = result.data.anchor
+                    applySortingAndEmit()
                 }
                 is Result.Error -> _uiState.value = NewsfeedUiState.Error(result.message)
             }
@@ -72,7 +92,7 @@ class HomeViewModel(
         _isLoadingMore.value = true
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = currentPage + 1)) {
+            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor)) {
                 is Result.Success -> {
                     val newPosts = result.data.items.filter { new ->
                         loadedPosts.none { it.postId == new.postId }
@@ -80,7 +100,7 @@ class HomeViewModel(
                     loadedPosts.addAll(newPosts)
                     hasNextPage = result.data.hasNext
                     currentPage++
-                    _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+                    applySortingAndEmit()
                 }
                 is Result.Error -> { /* silently ignore load-more errors */ }
             }
@@ -115,7 +135,26 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
-            _uiState.value = NewsfeedUiState.Success(loadedPosts.toList())
+            applySortingAndEmit()
+            
+            // Dispatch to favorites screen or other listeners
+            com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(postId, Pair(isLiked, likeCount)))
+        }
+    }
+
+    fun updateLikeStateExternally(postId: String, isLiked: Boolean, likeCount: Int) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0 && (loadedPosts[idx].isLiked != isLiked || loadedPosts[idx].likeCount != likeCount)) {
+            loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+        }
+    }
+
+    fun incrementCommentCount(postId: String) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0) {
+            loadedPosts[idx] = loadedPosts[idx].copy(commentCount = loadedPosts[idx].commentCount + 1)
+            applySortingAndEmit()
         }
     }
 

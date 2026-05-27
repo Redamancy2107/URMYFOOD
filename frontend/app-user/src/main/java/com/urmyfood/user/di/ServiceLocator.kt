@@ -61,6 +61,9 @@ import com.urmyfood.user.presentation.main.profile.OrderHistoryViewModel
  */
 object ServiceLocator {
 
+    val postCommentEvent = androidx.lifecycle.MutableLiveData<String>()
+    val postLikeEvent = androidx.lifecycle.MutableLiveData<Pair<String, Pair<Boolean, Int>>>()
+
     private lateinit var applicationContext: Context
 
     fun init(context: Context) {
@@ -82,7 +85,7 @@ object ServiceLocator {
     }
 
     val favoritesManager: com.urmyfood.user.data.local.FavoritesManager by lazy {
-        com.urmyfood.user.data.local.FavoritesManager(applicationContext)
+        com.urmyfood.user.data.local.FavoritesManager(applicationContext, tokenManager)
     }
 
     val notificationSettingsManager: NotificationSettingsManager by lazy {
@@ -158,6 +161,7 @@ object ServiceLocator {
     val verifyOtpUseCase: VerifyOtpUseCase by lazy { VerifyOtpUseCase(authRepository) }
     val resetPasswordUseCase: ResetPasswordUseCase by lazy { ResetPasswordUseCase(authRepository) }
     val getPostsUseCase: GetPostsUseCase by lazy { GetPostsUseCase(postRepository, tokenManager) }
+    val getPostUseCase: GetPostUseCase by lazy { GetPostUseCase(postRepository, tokenManager) }
     val toggleLikeUseCase: ToggleLikeUseCase by lazy { ToggleLikeUseCase(postRepository, tokenManager) }
     val getCommentsUseCase: GetCommentsUseCase by lazy { GetCommentsUseCase(postRepository, tokenManager) }
     val postCommentUseCase: PostCommentUseCase by lazy { PostCommentUseCase(postRepository, tokenManager) }
@@ -246,7 +250,7 @@ object ServiceLocator {
     }
 
     fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
-        return CheckoutViewModel.Factory(checkoutUseCase)
+        return CheckoutViewModel.Factory(checkoutUseCase, getAddressesUseCase, getVouchersUseCase)
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {

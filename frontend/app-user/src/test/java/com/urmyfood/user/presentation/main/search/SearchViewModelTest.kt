@@ -80,11 +80,11 @@ class SearchViewModelTest {
 
     private fun makeRepo(searchResult: (String, Int) -> Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
-            override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int) = searchResult(query, page)
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?) = searchResult(query, page)
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
-            override suspend fun getComments(postId: String, token: String, page: Int, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
-            override suspend fun postComment(postId: String, content: String, token: String) = Result.Success(Comment("", "", null, "", ""))
+            override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
+            override suspend fun postComment(postId: String, content: String, token: String, parentId: String?) = Result.Success(Comment("", "", null, "", ""))
         }
 
     private fun makeViewModel(

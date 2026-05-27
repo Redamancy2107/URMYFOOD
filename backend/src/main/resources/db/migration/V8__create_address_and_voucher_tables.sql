@@ -24,12 +24,16 @@ CREATE TABLE IF NOT EXISTS addresses (
     updated_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_addresses_account_id ON addresses(account_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_account_id ON addresses(account_id);
 
-CREATE TRIGGER update_addresses_updated_at
-BEFORE UPDATE ON addresses
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+    CREATE TRIGGER update_addresses_updated_at
+    BEFORE UPDATE ON addresses
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- =============================================
 -- Bảng vouchers: Mã khuyến mãi
@@ -47,10 +51,14 @@ CREATE TABLE IF NOT EXISTS vouchers (
     updated_at   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER update_vouchers_updated_at
-BEFORE UPDATE ON vouchers
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+DO $$ BEGIN
+    CREATE TRIGGER update_vouchers_updated_at
+    BEFORE UPDATE ON vouchers
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- =============================================
 -- Dữ liệu mẫu vouchers
@@ -59,4 +67,5 @@ INSERT INTO vouchers (code, title, description, discount_value, min_order_value,
 ('FREESHIP50', 'Miễn phí vận chuyển', 'Giảm 50.000đ phí vận chuyển cho đơn hàng từ 100.000đ', 50000, 100000, '2026-06-30', TRUE),
 ('FOOD30', 'Giảm 30% đơn hàng', 'Giảm 30% tổng đơn hàng, tối đa 100.000đ', 100000, 200000, '2026-06-15', TRUE),
 ('NEWUSER', 'Ưu đãi khách mới', 'Giảm 25.000đ cho đơn hàng đầu tiên', 25000, 50000, '2026-07-31', TRUE),
-('COMBO20', 'Combo tiết kiệm', 'Giảm 20.000đ khi đặt combo từ 2 món trở lên', 20000, 80000, '2026-06-20', TRUE);
+('COMBO20', 'Combo tiết kiệm', 'Giảm 20.000đ khi đặt combo từ 2 món trở lên', 20000, 80000, '2026-06-20', TRUE)
+ON CONFLICT (code) DO NOTHING;

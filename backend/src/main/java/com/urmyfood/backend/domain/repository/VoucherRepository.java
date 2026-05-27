@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface VoucherRepository {
     List<Voucher> findAllActive();
     Optional<Voucher> findById(Long id);
+    Optional<Voucher> findByCode(String code);
 }
+

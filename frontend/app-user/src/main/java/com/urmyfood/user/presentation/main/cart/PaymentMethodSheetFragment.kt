@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.LayoutPaymentMethodSheetBinding
 import com.urmyfood.user.di.ServiceLocator
@@ -44,6 +45,9 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
         setupSelectionLogic()
         setupClickListeners()
         observeCheckout()
+
+        // Load stored addresses and vouchers
+        viewModel.loadData()
     }
 
     private fun setupBottomSheetBehavior() {
@@ -98,22 +102,86 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
     }
 
     private fun setupClickListeners() {
+        // Confirm Button
         binding.btnConfirmPayment.setOnClickListener {
             val paymentMethod = if (isPayCardSelected) "MOMO" else "COD"
-            viewModel.checkout(paymentMethod)
+            val deliveryAddress = binding.etDeliveryAddress.text?.toString()?.trim().orEmpty()
+            val note = binding.etNote.text?.toString()?.trim()
+            val voucherCode = binding.etVoucherCode.text?.toString()?.trim()
+
+            viewModel.checkout(
+                paymentMethod = paymentMethod,
+                deliveryAddress = deliveryAddress,
+                note = if (note.isNullOrBlank()) null else note,
+                voucherCode = if (voucherCode.isNullOrBlank()) null else voucherCode
+            )
+        }
+
+        // Saved Address Selection Button
+        binding.btnSelectSavedAddress.setOnClickListener {
+            val addresses = viewModel.addresses.value.orEmpty()
+            if (addresses.isEmpty()) {
+                Toast.makeText(requireContext(), "Chưa có địa chỉ nào được lưu", Toast.LENGTH_SHORT).show()
+            } else {
+                val items = addresses.map { "[${it.label}] ${it.name} (${it.phone}): ${it.detail}" }.toTypedArray()
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Chọn địa chỉ giao hàng")
+                    .setItems(items) { _, which ->
+                        val selected = addresses[which]
+                        viewModel.selectAddress(selected)
+                    }
+                    .show()
+            }
+        }
+
+        // Voucher Selection Button
+        binding.btnSelectSavedVoucher.setOnClickListener {
+            val vouchers = viewModel.vouchers.value.orEmpty()
+            if (vouchers.isEmpty()) {
+                Toast.makeText(requireContext(), "Chưa có mã ưu đãi nào khả dụng", Toast.LENGTH_SHORT).show()
+            } else {
+                val items = vouchers.map { "${it.code} - ${it.title} (Giảm ${it.discountValue.toInt()}đ)" }.toTypedArray()
+                MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Chọn mã ưu đãi / Voucher")
+                    .setItems(items) { _, which ->
+                        val selected = vouchers[which]
+                        viewModel.selectVoucher(selected)
+                    }
+                    .show()
+            }
         }
     }
 
     private fun observeCheckout() {
+        // Observe checkout state
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             binding.btnConfirmPayment.isEnabled = !state.isLoading
             state.message?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
                 if (state.isSuccess) {
                     (parentFragment as? CartFragment)?.loadCartItems()
+                    try {
+                        findNavController().navigate(R.id.orderHistoryFragment)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                     dismiss()
                 }
                 viewModel.clearMessage()
+            }
+        }
+
+        // Observe selected address to pre-fill the EditText
+        viewModel.selectedAddress.observe(viewLifecycleOwner) { address ->
+            address?.let {
+                binding.etDeliveryAddress.setText(it.detail)
+            }
+        }
+
+        // Observe selected voucher to fill the EditText
+        viewModel.selectedVoucher.observe(viewLifecycleOwner) { voucher ->
+            voucher?.let {
+                binding.etVoucherCode.setText(it.code)
             }
         }
     }

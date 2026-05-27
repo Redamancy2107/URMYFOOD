@@ -9,9 +9,14 @@ class CheckoutUseCase(
     private val orderRepository: OrderRepository,
     private val tokenManager: TokenProvider
 ) {
-    suspend operator fun invoke(paymentMethod: String, deliveryAddress: String, note: String? = null): Result<OrderResponse> {
+    suspend operator fun invoke(
+        paymentMethod: String,
+        deliveryAddress: String,
+        note: String? = null,
+        voucherCode: String? = null
+    ): Result<OrderResponse> {
         val token = tokenManager.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập để đặt hàng")
-        return orderRepository.checkout("Bearer $token", paymentMethod, deliveryAddress, null, note)
+        return orderRepository.checkout("Bearer $token", paymentMethod, deliveryAddress, null, note, voucherCode)
     }
 }
 

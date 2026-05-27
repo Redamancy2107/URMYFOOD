@@ -57,6 +57,20 @@ class HomeFragment : Fragment() {
         observeUiState()
         observeLoadingMore()
         observeLikeError()
+        observeSharedEvents()
+    }
+
+    private fun observeSharedEvents() {
+        com.urmyfood.user.di.ServiceLocator.postCommentEvent.observe(viewLifecycleOwner) { postId ->
+            viewModel.incrementCommentCount(postId)
+            adapter.notifyDataSetChanged()
+        }
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, likeData) = event
+            val (isLiked, likeCount) = likeData
+            viewModel.updateLikeStateExternally(postId, isLiked, likeCount)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -348,6 +362,8 @@ class HomeFragment : Fragment() {
             
             setOnItemClickListener { _, _, position, _ ->
                 val selected = items[position].first
+                val order = if (position == 0) "LOW_TO_HIGH" else "HIGH_TO_LOW"
+                viewModel.setSortOrder(order)
                 Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
                 dismiss()
             }

@@ -3,6 +3,7 @@ package com.urmyfood.user.data.model
 import com.google.gson.annotations.SerializedName
 import com.urmyfood.user.domain.model.Comment
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -11,7 +12,8 @@ data class CommentResponse(
     @SerializedName("author_name") val authorName: String,
     @SerializedName("author_avatar_url") val authorAvatarUrl: String?,
     @SerializedName("content") val content: String,
-    @SerializedName("created_at") val createdAt: String
+    @SerializedName("created_at") val createdAt: String,
+    @SerializedName("parent_id") val parentId: String? = null
 )
 
 private val commentDisplayFormatter = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy", Locale.forLanguageTag("vi-VN"))
@@ -21,10 +23,13 @@ fun CommentResponse.toDomain() = Comment(
     authorName = authorName,
     authorAvatarUrl = authorAvatarUrl,
     content = content,
-    createdAt = formatCommentTime(createdAt)
+    createdAt = formatCommentTime(createdAt),
+    parentId = parentId
 )
 
 private fun formatCommentTime(value: String): String =
     runCatching {
-        OffsetDateTime.parse(value).format(commentDisplayFormatter)
+        OffsetDateTime.parse(value)
+            .atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+            .format(commentDisplayFormatter)
     }.getOrElse { value }

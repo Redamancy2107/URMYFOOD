@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @RestController
@@ -32,9 +33,11 @@ public class PostController {
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getNewsfeed(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String anchor
     ) {
-        PageResponse<PostResponse> result = postService.getNewsfeed(page, size);
+        OffsetDateTime anchorDt = anchor != null ? OffsetDateTime.parse(anchor) : null;
+        PageResponse<PostResponse> result = postService.getNewsfeed(page, size, anchorDt);
         return ResponseEntity.ok(ApiResponse.success("Tải bài viết thành công", result));
     }
 
@@ -42,10 +45,18 @@ public class PostController {
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> searchPosts(
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String anchor
     ) {
-        PageResponse<PostResponse> result = postService.searchPosts(query, page, size);
+        OffsetDateTime anchorDt = anchor != null ? OffsetDateTime.parse(anchor) : null;
+        PageResponse<PostResponse> result = postService.searchPosts(query, page, size, anchorDt);
         return ResponseEntity.ok(ApiResponse.success("Tìm kiếm thành công", result));
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<ApiResponse<PostResponse>> getPost(@PathVariable UUID postId) {
+        PostResponse response = postService.getPost(postId);
+        return ResponseEntity.ok(ApiResponse.success("Tải bài viết thành công", response));
     }
 
     @PostMapping
@@ -69,10 +80,10 @@ public class PostController {
     @GetMapping("/{postId}/comments")
     public ResponseEntity<ApiResponse<PageResponse<CommentResponse>>> getComments(
             @PathVariable UUID postId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size
     ) {
-        PageResponse<CommentResponse> response = postService.getComments(postId, page, size);
+        PageResponse<CommentResponse> response = postService.getComments(postId, cursor, size);
         return ResponseEntity.ok(ApiResponse.success("Tải bình luận thành công", response));
     }
 
