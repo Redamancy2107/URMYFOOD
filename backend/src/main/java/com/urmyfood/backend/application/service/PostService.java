@@ -22,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,22 +43,31 @@ public class PostService {
     @Value("${recommendation.weight.recency:100.0}")
     private double wRecency;
 
-    public PageResponse<PostResponse> getNewsfeed(int page, int size) {
+    public PageResponse<PostResponse> getNewsfeed(int page, int size, OffsetDateTime anchor) {
         int clampedSize = Math.min(size, 50);
         Long viewerAccountId = resolveViewerAccountId();
-        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize);
-        long total = postRepository.countActive();
+        OffsetDateTime effectiveAnchor = anchor != null ? anchor : OffsetDateTime.now();
+        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize, effectiveAnchor);
+        long total = postRepository.countActive(effectiveAnchor);
         List<PostResponse> content = ranked.stream().map(this::toResponse).toList();
-        return PageResponse.of(content, page, clampedSize, total);
+        return PageResponse.ofAnchored(content, page, clampedSize, total, effectiveAnchor.toString());
     }
 
-    public PageResponse<PostResponse> searchPosts(String keyword, int page, int size) {
+    public PageResponse<PostResponse> searchPosts(String keyword, int page, int size, OffsetDateTime anchor) {
         int clampedSize = Math.min(size, 50);
         Long viewerAccountId = resolveViewerAccountId();
-        List<PostRanked> results = postRepository.searchByKeyword(keyword, viewerAccountId, page, clampedSize);
-        long total = postRepository.countByKeyword(keyword);
+        OffsetDateTime effectiveAnchor = anchor != null ? anchor : OffsetDateTime.now();
+        List<PostRanked> results = postRepository.searchByKeyword(keyword, viewerAccountId, page, clampedSize, effectiveAnchor);
+        long total = postRepository.countByKeyword(keyword, effectiveAnchor);
         List<PostResponse> content = results.stream().map(this::toResponse).toList();
-        return PageResponse.of(content, page, clampedSize, total);
+        return PageResponse.ofAnchored(content, page, clampedSize, total, effectiveAnchor.toString());
+    }
+
+    public PostResponse getPost(UUID postId) {
+        Long viewerAccountId = resolveViewerAccountId();
+        PostRanked pr = postRepository.findRankedPostById(postId, viewerAccountId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        return toResponse(pr);
     }
 
     public PostResponse createPost(CreatePostRequest request) {
@@ -116,15 +126,20 @@ public class PostService {
                 .build();
     }
 
-    public PageResponse<CommentResponse> getComments(UUID postId, int page, int size) {
+    public PageResponse<CommentResponse> getComments(UUID postId, String cursor, int size) {
         ensurePostExists(postId);
         int clampedSize = Math.min(size, 50);
-        List<CommentResponse> comments = postRepository.findComments(postId, page, clampedSize)
-                .stream()
-                .map(this::toCommentResponse)
-                .toList();
-        long total = postRepository.countComments(postId);
-        return PageResponse.of(comments, page, clampedSize, total);
+        OffsetDateTime parsedCursor = null;
+        if (cursor != null && !cursor.isBlank()) {
+            parsedCursor = OffsetDateTime.parse(cursor);
+        }
+        // Fetch one extra to determine hasNext
+        List<PostComment> raw = postRepository.findComments(postId, parsedCursor, clampedSize + 1);
+        boolean hasNext = raw.size() > clampedSize;
+        List<PostComment> page = hasNext ? raw.subList(0, clampedSize) : raw;
+        List<CommentResponse> comments = page.stream().map(this::toCommentResponse).toList();
+        String nextCursor = hasNext ? page.get(page.size() - 1).createdAt().toString() : null;
+        return PageResponse.ofCursor(comments, clampedSize, hasNext, nextCursor);
     }
 
     public CommentResponse createComment(UUID postId, CreateCommentRequest request) {
@@ -134,7 +149,7 @@ public class PostService {
         if (content.isBlank()) {
             throw new IllegalArgumentException("Content must not be blank");
         }
-        return toCommentResponse(postRepository.saveComment(postId, account.getId(), content));
+        return toCommentResponse(postRepository.saveComment(postId, account.getId(), content, request.getParentId()));
     }
 
     private PostResponse toResponse(PostRanked pr) {
@@ -166,6 +181,7 @@ public class PostService {
                 .authorAvatarUrl(comment.authorAvatarUrl())
                 .content(comment.content())
                 .createdAt(comment.createdAt())
+                .parentId(comment.parentId())
                 .build();
     }
 

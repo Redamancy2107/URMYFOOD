@@ -28,4 +28,7 @@ public class CommentResponse {
 
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
+
+    @JsonProperty("parent_id")
+    private UUID parentId;
 }
