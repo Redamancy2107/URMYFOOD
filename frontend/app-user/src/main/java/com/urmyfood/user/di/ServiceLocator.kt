@@ -246,7 +246,7 @@ object ServiceLocator {
     }
 
     fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
-        return CheckoutViewModel.Factory(checkoutUseCase)
+        return CheckoutViewModel.Factory(checkoutUseCase, getAddressesUseCase, getVouchersUseCase)
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {
