@@ -23,10 +23,11 @@ class OrderRepositoryImpl(
         paymentMethod: String,
         deliveryAddress: String,
         voucherId: Long?,
-        note: String?
+        note: String?,
+        voucherCode: String?
     ): Result<OrderResponse> {
         return safeApiCall {
-            orderApiService.checkout(token, CheckoutRequest(paymentMethod, deliveryAddress, voucherId, note))
+            orderApiService.checkout(token, CheckoutRequest(paymentMethod, deliveryAddress, voucherId, note, voucherCode))
         }
     }
 
