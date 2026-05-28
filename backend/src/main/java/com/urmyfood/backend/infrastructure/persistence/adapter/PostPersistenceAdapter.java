@@ -89,6 +89,11 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
+    public Optional<Post> findByIdForUpdate(UUID postId) {
+        return jpaPostRepository.findByIdForUpdate(postId).map(this::toDomain);
+    }
+
+    @Override
     public List<Post> findAllOrderedByCreatedAt() {
         return jpaPostRepository.findAllByOrderByCreatedAtDesc()
                 .stream()

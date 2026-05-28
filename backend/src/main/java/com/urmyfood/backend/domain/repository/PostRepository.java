@@ -13,6 +13,7 @@ public interface PostRepository {
     Post save(Post post);
     Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId);
     Optional<Post> findById(UUID postId);
+    Optional<Post> findByIdForUpdate(UUID postId);
     List<Post> findAllOrderedByCreatedAt();
 
     // Anchored offset for newsfeed
