@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_auth"
+    app:startDestination="@id/nav_registration_flow">
+
+    <navigation
+        android:id="@+id/nav_registration_flow"
+        app:startDestination="@id/step1Fragment">
+
+        <fragment
+            android:id="@+id/step1Fragment"
+            android:name="com.urmyfood.shop.presentation.auth.registration.step1.RegistrationStep1Fragment"
+            android:label="Thông tin quán"
+            tools:layout="@layout/fragment_registration_step1">
+            <action
+                android:id="@+id/action_step1_to_step2"
+                app:destination="@id/step2Fragment" />
+            <action
+                android:id="@+id/action_step1_to_map"
+                app:destination="@id/mapPickerFragment" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/step2Fragment"
+            android:name="com.urmyfood.shop.presentation.auth.registration.step2.RegistrationStep2Fragment"
+            android:label="Giấy tờ cá nhân"
+            tools:layout="@layout/fragment_registration_step2">
+            <action
+                android:id="@+id/action_step2_to_step3"
+                app:destination="@id/step3Fragment" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/step3Fragment"
+            android:name="com.urmyfood.shop.presentation.auth.registration.step3.RegistrationStep3Fragment"
+            android:label="Ảnh cửa quán"
+            tools:layout="@layout/fragment_registration_step3">
+            <action
+                android:id="@+id/action_step3_to_main"
+                app:destination="@id/mainFragment"
+                app:popUpTo="@id/nav_registration_flow"
+                app:popUpToInclusive="true" />
+        </fragment>
+
+        <fragment
+            android:id="@+id/mapPickerFragment"
+            android:name="com.urmyfood.shop.presentation.auth.map.MapPickerFragment"
+            android:label="Chọn vị trí"
+            tools:layout="@layout/fragment_map_picker" />
+
+    </navigation>
+
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.urmyfood.shop.presentation.main.MainFragment"
+        android:label="Trang chủ"
+        tools:layout="@layout/fragment_main" />
+
+</navigation>

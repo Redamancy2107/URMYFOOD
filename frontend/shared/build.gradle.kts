@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.urmyfood.shared"
-    compileSdk = 35
+    compileSdk = 36
 
 
     defaultConfig {
