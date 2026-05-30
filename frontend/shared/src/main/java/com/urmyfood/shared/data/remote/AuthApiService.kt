@@ -4,7 +4,9 @@ import com.urmyfood.shared.data.model.ApiResponse
 import com.urmyfood.shared.data.model.ForgotPasswordRequest
 import com.urmyfood.shared.data.model.LoginRequest
 import com.urmyfood.shared.data.model.LoginResponse
+import com.urmyfood.shared.data.model.RegisterRequest
 import com.urmyfood.shared.data.model.ResetPasswordRequest
+import com.urmyfood.shared.data.model.SendOtpRequest
 import com.urmyfood.shared.data.model.VerifyOtpRequest
 import com.urmyfood.shared.data.model.VerifyOtpResponse
 import retrofit2.Response
@@ -15,6 +17,12 @@ interface AuthApiService {
 
     @POST("api/v1/auth/login")
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<LoginResponse>>
+
+    @POST("api/v1/auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<ApiResponse<LoginResponse>>
+
+    @POST("api/v1/auth/send-otp")
+    suspend fun sendOtp(@Body request: SendOtpRequest): Response<ApiResponse<Unit>>
 
     @POST("api/v1/auth/forgot-password")
     suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ApiResponse<Unit>>

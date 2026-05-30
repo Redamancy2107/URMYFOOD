@@ -1,3 +1,62 @@
 <resources>
     <string name="app_name">URMYFOOD Shop</string>
+
+    <!-- Common -->
+    <string name="cd_back_button">Quay lại</string>
+    <string name="brand_name">URMYFOOD</string>
+
+    <!-- Splash -->
+    <string name="splash_tagline">Dành cho chủ quán</string>
+
+    <!-- Landing -->
+    <string name="landing_brand">URMYFOOD Shop</string>
+    <string name="landing_hero_subtitle">Ứng dụng quản lý bán hàng chuyên nghiệp</string>
+    <string name="landing_login">Tôi đã có tài khoản</string>
+    <string name="landing_register">Tạo tài khoản mới</string>
+    <string name="landing_google_login">Đăng nhập với Google</string>
+    <string name="landing_google_unavailable">Đăng nhập Google chắc để sau nha</string>
+
+    <!-- Login -->
+    <string name="login_title">Đăng nhập</string>
+    <string name="login_subtitle">Chào mừng chủ quán quay lại</string>
+    <string name="login_email_hint">Email hoặc số điện thoại</string>
+    <string name="login_password_hint">Mật khẩu</string>
+    <string name="login_forgot_password">Quên mật khẩu?</string>
+    <string name="login_btn">Đăng nhập</string>
+    <string name="login_no_account">Chưa có tài khoản?</string>
+    <string name="login_register_link">Đăng ký bán hàng</string>
+
+    <!-- Register -->
+    <string name="register_title">Đăng ký bán hàng</string>
+    <string name="register_subtitle">Tạo tài khoản chủ quán mới</string>
+    <string name="register_name_hint">Họ và tên</string>
+    <string name="register_email_hint">Email</string>
+    <string name="register_phone_hint">Số điện thoại</string>
+    <string name="register_password_hint">Mật khẩu</string>
+    <string name="register_confirm_password_hint">Xác nhận mật khẩu</string>
+    <string name="register_terms">Tôi đồng ý với</string>
+    <string name="register_terms_link">Điều khoản sử dụng</string>
+    <string name="register_btn">Đăng ký</string>
+    <string name="register_has_account">Đã có tài khoản?</string>
+    <string name="register_login_link">Đăng nhập</string>
+
+    <!-- Forgot password -->
+    <string name="forgot_password_title">Quên mật khẩu</string>
+    <string name="forgot_password_subtitle">Nhập email để nhận mã xác thực</string>
+    <string name="forgot_email_hint">Email</string>
+    <string name="forgot_send_otp_btn">Gửi mã OTP</string>
+
+    <!-- OTP -->
+    <string name="otp_title">Nhập mã OTP</string>
+    <string name="otp_subtitle">Mã xác thực đã được gửi về email của bạn</string>
+    <string name="otp_btn">Xác nhận</string>
+    <string name="otp_resend">Gửi lại mã</string>
+    <string name="otp_resend_countdown">Gửi lại mã sau %1$d giây</string>
+
+    <!-- Reset password -->
+    <string name="reset_password_title">Đặt lại mật khẩu</string>
+    <string name="reset_password_subtitle">Nhập mật khẩu mới cho tài khoản của bạn</string>
+    <string name="reset_new_password_hint">Mật khẩu mới</string>
+    <string name="reset_confirm_password_hint">Xác nhận mật khẩu</string>
+    <string name="reset_password_btn">Đặt lại mật khẩu</string>
 </resources>

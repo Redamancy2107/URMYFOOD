@@ -3,7 +3,9 @@ package com.urmyfood.shared.data.repository
 import com.urmyfood.shared.data.model.ApiResponse
 import com.urmyfood.shared.data.model.ForgotPasswordRequest
 import com.urmyfood.shared.data.model.LoginRequest
+import com.urmyfood.shared.data.model.RegisterRequest
 import com.urmyfood.shared.data.model.ResetPasswordRequest
+import com.urmyfood.shared.data.model.SendOtpRequest
 import com.urmyfood.shared.data.model.VerifyOtpRequest
 import com.google.gson.Gson
 import com.urmyfood.shared.data.model.toDomain
@@ -31,6 +33,49 @@ class AuthRepositoryImpl(
             } else {
                 val msg = parseErrorMessage(response.errorBody()?.string())
                 Result.Error(msg ?: "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+        }
+    }
+
+    override suspend fun register(
+        fullName: String,
+        email: String,
+        phone: String,
+        password: String,
+        otpCode: String
+    ): Result<AuthToken> {
+        return try {
+            val response = authApiService.register(
+                RegisterRequest(fullName, email, phone, password, otpCode)
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    Result.Success(body.data.toDomain())
+                } else {
+                    Result.Error(body?.message ?: "Đăng ký thất bại", response.code())
+                }
+            } else {
+                val msg = parseErrorMessage(response.errorBody()?.string())
+                Result.Error(msg ?: "Đăng ký thất bại. Email hoặc số điện thoại có thể đã tồn tại.", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+        }
+    }
+
+    override suspend fun sendOtp(email: String, phone: String?): Result<Unit> {
+        return try {
+            val response = authApiService.sendOtp(SendOtpRequest(email, phone))
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success) Result.Success(Unit)
+                else Result.Error(body?.message ?: "Gửi OTP thất bại", response.code())
+            } else {
+                val msg = parseErrorMessage(response.errorBody()?.string())
+                Result.Error(msg ?: "Gửi OTP thất bại. Vui lòng thử lại.", response.code())
             }
         } catch (e: Exception) {
             Result.Error(e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
