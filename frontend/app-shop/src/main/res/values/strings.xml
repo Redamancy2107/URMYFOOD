@@ -53,6 +53,24 @@
     <string name="otp_resend">Gửi lại mã</string>
     <string name="otp_resend_countdown">Gửi lại mã sau %1$d giây</string>
 
+    <!-- Terms of Use -->
+    <string name="terms_title">Điều khoản sử dụng</string>
+    <string name="terms_close_btn">Đã hiểu</string>
+    <string name="terms_content">1. ĐIỀU KHOẢN CHUNG\n\nBằng việc đăng ký tài khoản và sử dụng nền tảng URMYFOOD dành cho chủ quán ("Ứng dụng"), bạn xác nhận đã đọc, hiểu và đồng ý tuân thủ toàn bộ các điều khoản và điều kiện được quy định trong tài liệu này. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không tiếp tục đăng ký.\n\n2. QUYỀN VÀ NGHĨA VỤ CỦA CHỦ QUÁN\n\n• Cung cấp thông tin đăng ký trung thực, chính xác và đầy đủ.\n• Duy trì chất lượng sản phẩm và dịch vụ đúng với mô tả đã đăng tải.\n• Xử lý đơn hàng kịp thời và thông báo trạng thái cho khách hàng.\n• Không chuyển nhượng tài khoản cho bên thứ ba khi chưa được URMYFOOD cho phép bằng văn bản.\n• Thông báo kịp thời cho URMYFOOD khi phát hiện thông tin tài khoản bị xâm phạm.\n\n3. QUY ĐỊNH VỀ SẢN PHẨM\n\n• Tuyệt đối không đăng bán hàng hóa thuộc danh mục bị cấm theo quy định pháp luật Việt Nam.\n• Đảm bảo các sản phẩm thực phẩm đáp ứng tiêu chuẩn vệ sinh an toàn thực phẩm (ATTP).\n• Hình ảnh và mô tả sản phẩm phải phản ánh trung thực về sản phẩm thực tế.\n• URMYFOOD có quyền gỡ bỏ bất kỳ sản phẩm nào vi phạm quy định mà không cần thông báo trước.\n\n4. CHÍNH SÁCH THANH TOÁN VÀ HOA HỒNG\n\n• URMYFOOD thu hoa hồng trên mỗi đơn hàng thành công theo tỷ lệ được thỏa thuận tại thời điểm đăng ký.\n• Thanh toán cho chủ quán được thực hiện theo chu kỳ quy định và chuyển khoản về tài khoản ngân hàng đã đăng ký.\n• Các tranh chấp về thanh toán cần được gửi bằng văn bản trong vòng 30 ngày kể từ ngày phát sinh.\n\n5. BẢO MẬT DỮ LIỆU\n\n• URMYFOOD cam kết bảo vệ thông tin cá nhân và dữ liệu kinh doanh của chủ quán theo Chính sách bảo mật hiện hành.\n• Chủ quán có trách nhiệm bảo mật thông tin đăng nhập của mình và chịu trách nhiệm với mọi hoạt động phát sinh từ tài khoản.\n• URMYFOOD không chia sẻ thông tin cá nhân cho bên thứ ba khi không có sự đồng ý của chủ quán, trừ trường hợp có yêu cầu từ cơ quan nhà nước có thẩm quyền.\n\n6. CHẤM DỨT HỢP ĐỒNG\n\n• URMYFOOD có quyền tạm khóa hoặc chấm dứt tài khoản nếu chủ quán vi phạm bất kỳ điều khoản nào trong tài liệu này.\n• Chủ quán có thể yêu cầu đóng tài khoản bất cứ lúc nào bằng cách liên hệ bộ phận hỗ trợ.\n• Khi tài khoản bị chấm dứt, mọi đơn hàng đang xử lý cần được hoàn tất theo thỏa thuận.\n\n7. LIÊN HỆ HỖ TRỢ\n\nMọi thắc mắc liên quan đến Điều khoản sử dụng, vui lòng liên hệ:\n• Email: support@urmyfood.com\n• Hotline: 1800 xxxx (miễn phí, 8:00–22:00 hằng ngày)\n\nURMYFOOD có quyền cập nhật Điều khoản sử dụng này theo từng thời kỳ. Phiên bản mới nhất luôn được cập nhật trong ứng dụng.</string>
+
+    <!-- Verification Pending -->
+    <string name="verification_pending_label">FOOD DELIVERY</string>
+    <string name="verification_pending_en_title">VERIFICATION IN PROCESS</string>
+    <string name="verification_pending_title">Đang phê duyệt hồ sơ</string>
+    <string name="verification_pending_description">Hồ sơ đăng ký quán của bạn đã được gửi thành công. Ban quản trị URMYFOOD đang tiến hành xác minh thông tin. Kết quả phê duyệt sẽ được gửi tới bạn trong vòng 24 giờ tới.</string>
+    <string name="verification_pending_btn">Trở về trang chủ</string>
+
+    <!-- Wrong Role Bottom Sheet -->
+    <string name="wrong_role_title">Tài khoản không hợp lệ</string>
+    <string name="wrong_role_description">Tài khoản này hiện đang là tài khoản Sinh viên (Người mua). Mỗi số điện thoại chỉ được đăng ký một vai trò duy nhất. Bạn không thể sử dụng tài khoản này để đăng nhập vào ứng dụng Chủ quán.</string>
+    <string name="wrong_role_btn_register">Đăng ký tài khoản Chủ quán mới</string>
+    <string name="wrong_role_btn_back">Quay lại Đăng nhập</string>
+
     <!-- Reset password -->
     <string name="reset_password_title">Đặt lại mật khẩu</string>
     <string name="reset_password_subtitle">Nhập mật khẩu mới cho tài khoản của bạn</string>
