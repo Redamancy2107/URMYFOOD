@@ -18,14 +18,12 @@ import com.urmyfood.shop.presentation.auth.register.RegisterViewModel
 
 object ServiceLocator {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/"
-
     private lateinit var appContext: Context
 
     val tokenManager: TokenManager by lazy { TokenManager(appContext, "shop_prefs") }
 
     private val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(NetworkModule.provideAuthApiService(BASE_URL, debug = BuildConfig.DEBUG))
+        AuthRepositoryImpl(NetworkModule.provideAuthApiService(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG))
     }
 
     fun init(context: Context) {
