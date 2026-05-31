@@ -10,7 +10,7 @@ import androidx.navigation.navGraphViewModels
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentAuthRegisterBinding
 import com.urmyfood.shop.di.ServiceLocator
-import com.urmyfood.shop.presentation.common.safeNavigate
+import com.urmyfood.shop.presentation.common.*
 
 class RegisterFragment : Fragment() {
 
@@ -35,7 +35,10 @@ class RegisterFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.tvTermsLink.setOnClickListener {
+            TermsBottomSheetFragment.newInstance()
+                .show(parentFragmentManager, TermsBottomSheetFragment.TAG)
+        }
         binding.tvLoginLink.setOnClickListener {
             findNavController().safeNavigate(R.id.action_register_to_login)
         }
