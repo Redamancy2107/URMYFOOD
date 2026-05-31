@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
+import com.urmyfood.shop.presentation.common.safeNavigate
 import androidx.recyclerview.widget.GridLayoutManager
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentRegistrationStep3Binding
@@ -86,7 +87,7 @@ class RegistrationStep3Fragment : Fragment() {
                 }
                 is Step3UiState.Success -> {
                     viewModel.resetStep3State()
-                    findNavController().navigate(R.id.action_step3_to_main)
+                    findNavController().safeNavigate(R.id.action_step3_to_verification_pending)
                 }
             }
         }

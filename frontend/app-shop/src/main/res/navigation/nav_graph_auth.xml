@@ -141,12 +141,22 @@
             android:label="RegistrationStep3Fragment"
             tools:layout="@layout/fragment_registration_step3">
             <action
-                android:id="@+id/action_step3_to_main"
-                app:destination="@id/mainFragment"
+                android:id="@+id/action_step3_to_verification_pending"
+                app:destination="@id/verificationPendingFragment"
                 app:popUpTo="@id/landingFragment"
                 app:popUpToInclusive="true" />
         </fragment>
     </navigation>
+
+    <fragment
+        android:id="@+id/verificationPendingFragment"
+        android:name="com.urmyfood.shop.presentation.auth.registration.VerificationPendingFragment"
+        android:label="VerificationPendingFragment"
+        tools:layout="@layout/fragment_verification_pending">
+        <action
+            android:id="@+id/action_verification_pending_to_main"
+            app:destination="@id/mainFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/resetPasswordFragment"
