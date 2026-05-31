@@ -59,7 +59,7 @@ class LoginViewModelTest {
     }
 
     @Test
-    fun `login with non-SHOP role emits Error and does not save token`() = runTest {
+    fun `login with non-SHOP role emits WrongRole and does not save token`() = runTest {
         repository.loginResult = Result.Success(
             AuthToken("access-token", null, null, "User", "USER")
         )
@@ -67,9 +67,7 @@ class LoginViewModelTest {
         viewModel.login("user@mail.com", "secret")
         advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertTrue(state is LoginViewModel.UiState.Error)
-        assertEquals("Tài khoản không hợp lệ", (state as LoginViewModel.UiState.Error).message)
+        assertTrue(viewModel.uiState.value is LoginViewModel.UiState.WrongRole)
         assertNull(tokenStore.savedToken)
     }
 

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.shop.R
@@ -32,6 +33,9 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeViewModel()
+        setFragmentResultListener(WrongRoleBottomSheetFragment.KEY) { _, _ ->
+            findNavController().safeNavigate(R.id.action_login_to_register)
+        }
     }
 
     private fun setupClickListeners() {
@@ -65,6 +69,13 @@ class LoginFragment : Fragment() {
                 is LoginViewModel.UiState.Success -> {
                     viewModel.resetState()
                     findNavController().safeNavigate(R.id.action_login_to_main)
+                }
+                is LoginViewModel.UiState.WrongRole -> {
+                    binding.btnLogin.isEnabled = true
+                    binding.progressBar.visibility = View.GONE
+                    viewModel.resetState()
+                    WrongRoleBottomSheetFragment.newInstance()
+                        .show(parentFragmentManager, WrongRoleBottomSheetFragment.TAG)
                 }
                 is LoginViewModel.UiState.Error -> {
                     binding.btnLogin.isEnabled = true

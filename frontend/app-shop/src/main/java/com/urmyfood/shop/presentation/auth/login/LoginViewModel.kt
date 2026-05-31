@@ -23,6 +23,7 @@ class LoginViewModel(
         object Idle : UiState()
         object Loading : UiState()
         object Success : UiState()
+        object WrongRole : UiState()
         data class Error(val message: String) : UiState()
     }
 
@@ -37,7 +38,7 @@ class LoginViewModel(
                 is Result.Success -> {
                     val token = result.data
                     if (token.role != ROLE_SHOP) {
-                        _uiState.value = UiState.Error("Tài khoản không hợp lệ")
+                        _uiState.value = UiState.WrongRole
                     } else {
                         tokenStore.saveToken(
                             token = token.accessToken,
