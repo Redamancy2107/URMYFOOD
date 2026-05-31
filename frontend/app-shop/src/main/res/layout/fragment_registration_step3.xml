@@ -7,6 +7,14 @@
     android:background="@color/bg_light"
     android:padding="24dp">
 
+    <include
+        android:id="@+id/miniBranding"
+        layout="@layout/layout_mini_branding"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginBottom="8dp" />
+
     <!-- Header -->
     <TextView
         android:layout_width="match_parent"

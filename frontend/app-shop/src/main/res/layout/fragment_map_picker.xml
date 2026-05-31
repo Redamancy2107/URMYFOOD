@@ -28,7 +28,17 @@
         android:background="@color/bg_card"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <include
+            android:id="@+id/miniBranding"
+            layout="@layout/layout_mini_branding"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="4dp" />
+
+    </com.google.android.material.appbar.MaterialToolbar>
 
     <!-- Center pin -->
     <ImageView
