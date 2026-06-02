@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/iv_photo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null"
+        android:adjustViewBounds="true"
+        android:minHeight="100dp" />
+
+    <ImageButton
+        android:id="@+id/btn_remove"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="4dp"
+        android:background="@drawable/bg_btn_primary"
+        android:src="@drawable/ic_arrow_back"
+        android:rotation="45"
+        android:padding="4dp"
+        android:contentDescription="Xóa ảnh" />
+
+</FrameLayout>
