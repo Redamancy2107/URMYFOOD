@@ -172,8 +172,8 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.urmyfood.shop.presentation.main.MainFragment"
-        android:label="MainFragment"
-        tools:layout="@layout/fragment_main" />
+        android:name="com.urmyfood.shop.presentation.main.MainContainerFragment"
+        android:label="MainContainerFragment"
+        tools:layout="@layout/fragment_main_container" />
 
 </navigation>
