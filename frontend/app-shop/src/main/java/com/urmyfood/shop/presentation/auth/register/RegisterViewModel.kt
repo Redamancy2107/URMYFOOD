@@ -5,13 +5,16 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.data.local.TokenStore
+import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shared.domain.usecase.RegisterUseCase
 import com.urmyfood.shared.domain.usecase.SendOtpUseCase
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(
     private val registerUseCase: RegisterUseCase,
-    private val sendOtpUseCase: SendOtpUseCase
+    private val sendOtpUseCase: SendOtpUseCase,
+    private val tokenStore: TokenStore
 ) : ViewModel() {
 
     private var fullName: String = ""
@@ -65,7 +68,10 @@ class RegisterViewModel(
 
         _formUiState.value = FormUiState.Loading
         viewModelScope.launch {
-            _formUiState.value = FormUiState.OtpSent
+            _formUiState.value = when (val result = sendOtpUseCase(this@RegisterViewModel.email, this@RegisterViewModel.phone)) {
+                is Result.Success -> FormUiState.OtpSent
+                is Result.Error -> FormUiState.Error(result.message)
+            }
         }
     }
 
@@ -77,10 +83,13 @@ class RegisterViewModel(
         if (_registerUiState.value is RegisterUiState.Loading) return
         _registerUiState.value = RegisterUiState.Loading
         viewModelScope.launch {
-            _registerUiState.value = if (otpCode == MOCK_OTP_CODE) {
-                RegisterUiState.Success
-            } else {
-                RegisterUiState.Error("Mã OTP demo là $MOCK_OTP_CODE")
+            _registerUiState.value = when (val result = registerUseCase(fullName, email, phone, password, confirmPassword, otpCode, ROLE_SHOP)) {
+                is Result.Success -> {
+                    val token = result.data
+                    tokenStore.saveToken(token.accessToken, token.refreshToken, token.fullName, token.role)
+                    RegisterUiState.Success
+                }
+                is Result.Error -> RegisterUiState.Error(result.message)
             }
         }
     }
@@ -111,15 +120,16 @@ class RegisterViewModel(
 
     companion object {
         private val emailRegex = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+\$")
-        private const val MOCK_OTP_CODE = "123456"
+        private const val ROLE_SHOP = "SHOP"
     }
 
     class Factory(
         private val registerUseCase: RegisterUseCase,
-        private val sendOtpUseCase: SendOtpUseCase
+        private val sendOtpUseCase: SendOtpUseCase,
+        private val tokenStore: TokenStore
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            RegisterViewModel(registerUseCase, sendOtpUseCase) as T
+            RegisterViewModel(registerUseCase, sendOtpUseCase, tokenStore) as T
     }
 }
