@@ -27,7 +27,7 @@
         android:layout_marginBottom="20dp"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.urmyfood.user.util.BrandingTextView
+        <com.urmyfood.shared.util.BrandingTextView
             android:id="@+id/tvLogo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

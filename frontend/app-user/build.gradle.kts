@@ -31,6 +31,9 @@ android {
         // Lấy mã Google Client ID từ file local.properties
         val googleClientId = properties.getProperty("GOOGLE_SERVER_CLIENT_ID") ?: ""
         buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$googleClientId\"")
+
+        val baseUrl = properties.getProperty("base_url") ?: "http://10.0.2.2:8080/"
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
     buildTypes {

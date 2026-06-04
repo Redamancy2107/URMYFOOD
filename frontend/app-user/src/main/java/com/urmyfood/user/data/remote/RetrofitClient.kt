@@ -1,18 +1,15 @@
 package com.urmyfood.user.data.remote
 
+import com.urmyfood.user.BuildConfig
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * Singleton object providing Retrofit client configuration.
- */
 object RetrofitClient {
 
-    // 10.0.2.2 = localhost from Android emulator
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    private val BASE_URL get() = BuildConfig.BASE_URL
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
