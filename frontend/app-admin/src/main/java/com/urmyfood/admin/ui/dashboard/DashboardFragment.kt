@@ -1,5 +1,6 @@
 package com.urmyfood.admin.ui.dashboard
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,9 @@ import com.urmyfood.admin.databinding.FragmentDashboardBinding
 class DashboardFragment : Fragment() {
     private var _binding: FragmentDashboardBinding? = null
     private val binding get() = _binding!!
+    
+    private var mediaPlayer: MediaPlayer? = null
+    private var isMusicPlaying = true
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -51,10 +55,56 @@ class DashboardFragment : Fragment() {
         binding.ivNoti.setOnClickListener(showDevToast)
         binding.ivMessage.setOnClickListener(showDevToast)
         binding.fabAdd.setOnClickListener(showDevToast)
+        
+        // Setup background music
+        setupBackgroundMusic()
+    }
+    
+    private fun setupBackgroundMusic() {
+        mediaPlayer = MediaPlayer.create(requireContext(), com.urmyfood.admin.R.raw.bg_music)
+        mediaPlayer?.isLooping = true
+        
+        if (isMusicPlaying) {
+            mediaPlayer?.start()
+            binding.ivSoundToggle.setImageResource(com.urmyfood.admin.R.drawable.ic_volume_up)
+        } else {
+            binding.ivSoundToggle.setImageResource(com.urmyfood.admin.R.drawable.ic_volume_off)
+        }
+        
+        binding.ivSoundToggle.setOnClickListener {
+            if (isMusicPlaying) {
+                // Pause music
+                mediaPlayer?.pause()
+                binding.ivSoundToggle.setImageResource(com.urmyfood.admin.R.drawable.ic_volume_off)
+                isMusicPlaying = false
+            } else {
+                // Play music
+                mediaPlayer?.start()
+                binding.ivSoundToggle.setImageResource(com.urmyfood.admin.R.drawable.ic_volume_up)
+                isMusicPlaying = true
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (isMusicPlaying) {
+            mediaPlayer?.start()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (mediaPlayer?.isPlaying == true) {
+            mediaPlayer?.pause()
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
         _binding = null
     }
 }
