@@ -102,7 +102,9 @@
                 android:background="@drawable/bg_input"
                 android:hint="admin@urmyfood.com"
                 android:inputType="textEmailAddress"
-                android:paddingStart="48dp"
+                android:drawableStart="@drawable/ic_email_outline"
+                android:drawablePadding="12dp"
+                android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
@@ -126,8 +128,11 @@
                 android:background="@drawable/bg_input"
                 android:hint="••••••••"
                 android:inputType="textPassword"
-                android:paddingStart="48dp"
-                android:paddingEnd="48dp"
+                android:drawableStart="@drawable/ic_lock_outline"
+                android:drawableEnd="@drawable/ic_eye_outline"
+                android:drawablePadding="12dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_secondary"
                 android:textSize="14sp" />
@@ -171,71 +176,6 @@
                 app:backgroundTint="@color/mint_green"
                 app:cornerRadius="12dp" />
 
-            <!-- Social Login Divider -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="@color/border_color" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="16dp"
-                    android:text="Hoặc đăng nhập với"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1"
-                    android:background="@color/border_color" />
-            </LinearLayout>
-
-            <!-- Social Buttons -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:orientation="horizontal"
-                android:weightSum="2">
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:text="Google"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/bg_color"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/border_color"
-                    app:strokeWidth="1dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:layout_width="0dp"
-                    android:layout_height="56dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:text="Biometrics"
-                    android:textColor="@color/text_primary"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:backgroundTint="@color/bg_color"
-                    app:cornerRadius="12dp"
-                    app:strokeColor="@color/border_color"
-                    app:strokeWidth="1dp" />
-            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
