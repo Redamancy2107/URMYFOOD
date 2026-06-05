@@ -10,7 +10,8 @@ interface AuthRepository {
         email: String,
         phone: String,
         password: String,
-        otpCode: String
+        otpCode: String,
+        role: String? = null
     ): Result<AuthToken>
     suspend fun sendOtp(email: String, phone: String?): Result<Unit>
     suspend fun forgotPassword(email: String): Result<Unit>

@@ -1,7 +1,12 @@
 package com.urmyfood.shop.presentation.auth.registration
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.domain.model.ShopCategory
+import com.urmyfood.shop.domain.model.ShopRegistrationData
+import com.urmyfood.shop.domain.repository.ShopVerificationRepository
+import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
+import com.urmyfood.shop.presentation.auth.FakeTokenStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -24,12 +29,18 @@ class ShopRegistrationFlowViewModelTest {
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val testDispatcher = StandardTestDispatcher()
+    private lateinit var repository: FakeShopVerificationRepository
+    private lateinit var tokenStore: FakeTokenStore
     private lateinit var viewModel: ShopRegistrationFlowViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = ShopRegistrationFlowViewModel()
+        repository = FakeShopVerificationRepository()
+        tokenStore = FakeTokenStore().also {
+            it.saveToken("token", null, null, "SHOP")
+        }
+        viewModel = ShopRegistrationFlowViewModel(SubmitShopVerificationUseCase(repository, tokenStore))
     }
 
     @After
@@ -238,11 +249,30 @@ class ShopRegistrationFlowViewModelTest {
 
     @Test
     fun `validateStep3 with photos transitions through Loading to Success`() = runTest {
+        fillStep1()
+        viewModel.setCccdFront("content://front")
+        viewModel.setCccdBack("content://back")
         viewModel.addShopPhotos(listOf("content://photo1"))
         viewModel.validateStep3()
         assertEquals(ShopRegistrationFlowViewModel.Step3UiState.Loading, viewModel.step3UiState.value)
         advanceUntilIdle()
         assertEquals(ShopRegistrationFlowViewModel.Step3UiState.Success, viewModel.step3UiState.value)
+        assertEquals("token", repository.lastToken)
+        assertEquals("Quán Cơm", repository.lastData?.shopName)
+    }
+
+    @Test
+    fun `validateStep3 with submit error emits Error`() = runTest {
+        repository.result = Result.Error("Gửi hồ sơ xác minh thất bại")
+        fillStep1()
+        viewModel.setCccdFront("content://front")
+        viewModel.setCccdBack("content://back")
+        viewModel.addShopPhotos(listOf("content://photo1"))
+        viewModel.validateStep3()
+        advanceUntilIdle()
+        val state = viewModel.step3UiState.value
+        assertTrue(state is ShopRegistrationFlowViewModel.Step3UiState.Error)
+        assertEquals("Gửi hồ sơ xác minh thất bại", (state as ShopRegistrationFlowViewModel.Step3UiState.Error).message)
     }
 
     // --- Helpers ---
@@ -255,5 +285,17 @@ class ShopRegistrationFlowViewModelTest {
         viewModel.setShopName(shopName)
         category?.let { viewModel.selectCategory(it) }
         viewModel.updateAddressText(address)
+    }
+
+    private class FakeShopVerificationRepository : ShopVerificationRepository {
+        var result: Result<Unit> = Result.Success(Unit)
+        var lastToken: String? = null
+        var lastData: ShopRegistrationData? = null
+
+        override suspend fun submitVerification(token: String, data: ShopRegistrationData): Result<Unit> {
+            lastToken = token
+            lastData = data
+            return result
+        }
     }
 }

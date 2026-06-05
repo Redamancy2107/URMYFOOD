@@ -28,9 +28,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        val mapsApiKey = properties.getProperty("MAPS_API_KEY") ?: ""
-        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = mapsApiKey
-
         val baseUrl = properties.getProperty("base_url") ?: "http://10.0.2.2:8080/"
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
@@ -68,8 +65,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
     implementation(libs.glide)
-    implementation(libs.play.services.maps)
+    implementation(libs.osmdroid.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.androidx.arch.core.testing)

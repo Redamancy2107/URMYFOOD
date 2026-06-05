@@ -13,6 +13,7 @@ import com.bumptech.glide.Glide
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentRegistrationStep2Binding
 import com.urmyfood.shop.databinding.ItemImageUploadCardBinding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Field
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Step2UiState
@@ -23,7 +24,7 @@ class RegistrationStep2Fragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ShopRegistrationFlowViewModel by navGraphViewModels(R.id.nav_registration_flow) {
-        ShopRegistrationFlowViewModel.Factory()
+        ServiceLocator.provideShopRegistrationFlowViewModelFactory()
     }
 
     private val pickCccdFront = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
