@@ -61,6 +61,15 @@ class RegisterUseCaseTest {
         val result = useCase("  Quán A ", " a@b.com ", "0123456789", "secret1", "secret1", "123456")
         assertTrue(result is Result.Success)
         assertEquals("a@b.com", repository.lastRegisterEmail)
+        assertNull(repository.lastRegisterRole)
+    }
+
+    @Test
+    fun `valid input delegates role to repository`() = runTest {
+        repository.registerResult = Result.Success(AuthToken("token", null, null, "Quán A", "SHOP"))
+        val result = useCase("Quán A", "a@b.com", "0123456789", "secret1", "secret1", "123456", "SHOP")
+        assertTrue(result is Result.Success)
+        assertEquals("SHOP", repository.lastRegisterRole)
     }
 
     @Test

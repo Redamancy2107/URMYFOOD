@@ -2,48 +2,59 @@ package com.urmyfood.shop.presentation.auth.registration.step1
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.model.LatLng
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentRegistrationStep1Binding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.domain.model.ShopCategory
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Field
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Step1UiState
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
 
-class RegistrationStep1Fragment : Fragment(), OnMapReadyCallback {
+class RegistrationStep1Fragment : Fragment() {
 
     private var _binding: FragmentRegistrationStep1Binding? = null
     private val binding get() = _binding!!
 
     private val viewModel: ShopRegistrationFlowViewModel by navGraphViewModels(R.id.nav_registration_flow) {
-        ShopRegistrationFlowViewModel.Factory()
+        ServiceLocator.provideShopRegistrationFlowViewModelFactory()
     }
 
-    private var googleMap: GoogleMap? = null
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        Configuration.getInstance().userAgentValue = requireContext().packageName
         _binding = FragmentRegistrationStep1Binding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.mapViewPreview.onCreate(savedInstanceState)
-        binding.mapViewPreview.getMapAsync(this)
+        setupMapPreview()
         setupClickListeners()
         observeViewModel()
         setupFragmentResultListener()
         restoreUiState()
+    }
+
+    private fun setupMapPreview() {
+        binding.mapViewPreview.apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(false)
+            minZoomLevel = 4.0
+            maxZoomLevel = 20.0
+            controller.setZoom(15.0)
+            setOnTouchListener { _, event -> event.action == MotionEvent.ACTION_MOVE }
+        }
     }
 
     private fun setupClickListeners() {
@@ -86,7 +97,7 @@ class RegistrationStep1Fragment : Fragment(), OnMapReadyCallback {
 
     private fun showMapPreview(lat: Double, lng: Double) {
         binding.mapViewPreview.visibility = View.VISIBLE
-        googleMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(lat, lng), 15f))
+        binding.mapViewPreview.controller.setCenter(GeoPoint(lat, lng))
     }
 
     private fun restoreUiState() {
@@ -135,7 +146,7 @@ class RegistrationStep1Fragment : Fragment(), OnMapReadyCallback {
         }
     }
 
-    private fun showError(textView: android.widget.TextView, message: String) {
+    private fun showError(textView: TextView, message: String) {
         textView.text = message
         textView.visibility = View.VISIBLE
     }
@@ -144,22 +155,6 @@ class RegistrationStep1Fragment : Fragment(), OnMapReadyCallback {
         binding.tvShopNameError.visibility = View.GONE
         binding.tvCategoryError.visibility = View.GONE
         binding.tvAddressError.visibility = View.GONE
-    }
-
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-        map.uiSettings.setAllGesturesEnabled(false)
-        val lat = viewModel.latitude.value
-        val lng = viewModel.longitude.value
-        if (lat != null && lng != null) {
-            map.moveCamera(CameraUpdateFactory.newLatLngZoom(LatLng(lat, lng), 15f))
-        }
-    }
-
-    // MapView lifecycle delegation
-    override fun onStart() {
-        super.onStart()
-        binding.mapViewPreview.onStart()
     }
 
     override fun onResume() {
@@ -172,18 +167,8 @@ class RegistrationStep1Fragment : Fragment(), OnMapReadyCallback {
         super.onPause()
     }
 
-    override fun onStop() {
-        binding.mapViewPreview.onStop()
-        super.onStop()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        _binding?.mapViewPreview?.onSaveInstanceState(outState)
-    }
-
     override fun onDestroyView() {
-        binding.mapViewPreview.onDestroy()
+        binding.mapViewPreview.onDetach()
         super.onDestroyView()
         _binding = null
     }

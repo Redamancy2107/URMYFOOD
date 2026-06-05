@@ -5,11 +5,15 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.domain.model.ShopCategory
-import kotlinx.coroutines.delay
+import com.urmyfood.shop.domain.model.ShopRegistrationData
+import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
 import kotlinx.coroutines.launch
 
-class ShopRegistrationFlowViewModel : ViewModel() {
+class ShopRegistrationFlowViewModel(
+    private val submitShopVerificationUseCase: SubmitShopVerificationUseCase
+) : ViewModel() {
 
     companion object {
         const val MAX_PHOTOS = 5
@@ -35,6 +39,7 @@ class ShopRegistrationFlowViewModel : ViewModel() {
         data class ValidationError(val fields: Map<Field, String>) : Step3UiState()
         object Loading : Step3UiState()
         object Success : Step3UiState()
+        data class Error(val message: String) : Step3UiState()
     }
 
     enum class Field { SHOP_NAME, CATEGORY, ADDRESS, CCCD_FRONT, CCCD_BACK, SHOP_PHOTOS }
@@ -136,14 +141,28 @@ class ShopRegistrationFlowViewModel : ViewModel() {
     private fun submit() {
         _step3UiState.value = Step3UiState.Loading
         viewModelScope.launch {
-            delay(1000)
-            _step3UiState.value = Step3UiState.Success
+            val data = ShopRegistrationData(
+                shopName = _shopName.value.orEmpty().trim(),
+                category = _selectedCategory.value ?: ShopCategory.KHAC,
+                address = _address.value.orEmpty().trim(),
+                latitude = _latitude.value,
+                longitude = _longitude.value,
+                cccdFrontUri = _cccdFrontUri.value,
+                cccdBackUri = _cccdBackUri.value,
+                shopPhotoUris = _shopPhotoUris.value.orEmpty()
+            )
+            _step3UiState.value = when (val result = submitShopVerificationUseCase(data)) {
+                is Result.Success -> Step3UiState.Success
+                is Result.Error -> Step3UiState.Error(result.message)
+            }
         }
     }
 
-    class Factory : ViewModelProvider.Factory {
+    class Factory(
+        private val submitShopVerificationUseCase: SubmitShopVerificationUseCase
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ShopRegistrationFlowViewModel() as T
+            ShopRegistrationFlowViewModel(submitShopVerificationUseCase) as T
     }
 }

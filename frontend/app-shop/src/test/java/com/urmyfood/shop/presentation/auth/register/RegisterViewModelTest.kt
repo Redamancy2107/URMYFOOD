@@ -1,10 +1,12 @@
 package com.urmyfood.shop.presentation.auth.register
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.urmyfood.shared.domain.model.AuthToken
 import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shared.domain.usecase.RegisterUseCase
 import com.urmyfood.shared.domain.usecase.SendOtpUseCase
 import com.urmyfood.shop.presentation.auth.FakeAuthRepository
+import com.urmyfood.shop.presentation.auth.FakeTokenStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -26,13 +28,15 @@ class RegisterViewModelTest {
     val instantRule = InstantTaskExecutorRule()
 
     private lateinit var repository: FakeAuthRepository
+    private lateinit var tokenStore: FakeTokenStore
     private lateinit var viewModel: RegisterViewModel
 
     @Before
     fun setup() {
         Dispatchers.setMain(StandardTestDispatcher())
         repository = FakeAuthRepository()
-        viewModel = RegisterViewModel(RegisterUseCase(repository), SendOtpUseCase(repository))
+        tokenStore = FakeTokenStore()
+        viewModel = RegisterViewModel(RegisterUseCase(repository), SendOtpUseCase(repository), tokenStore)
     }
 
     @After
@@ -55,33 +59,41 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun `submitForm valid emits OtpSent without backend`() = runTest {
+    fun `submitForm valid sends otp and emits OtpSent`() = runTest {
         viewModel.submitForm("Shop A", "a@b.com", "0123456789", "secret1", "secret1", true)
         advanceUntilIdle()
         assertTrue(viewModel.formUiState.value is RegisterViewModel.FormUiState.OtpSent)
         assertEquals("a@b.com", viewModel.email)
+        assertEquals("a@b.com", repository.lastSendOtpEmail)
     }
 
     @Test
-    fun `submitForm ignores sendOtp error in mock mode`() = runTest {
+    fun `submitForm emits Error when sendOtp fails`() = runTest {
         repository.sendOtpResult = Result.Error("Send OTP failed")
         viewModel.submitForm("Shop A", "a@b.com", "0123456789", "secret1", "secret1", true)
         advanceUntilIdle()
-        assertTrue(viewModel.formUiState.value is RegisterViewModel.FormUiState.OtpSent)
+        val state = viewModel.formUiState.value
+        assertTrue(state is RegisterViewModel.FormUiState.Error)
+        assertEquals("Send OTP failed", (state as RegisterViewModel.FormUiState.Error).message)
     }
 
     @Test
-    fun `register with mock otp emits Success`() = runTest {
+    fun `register calls backend with shop role and saves token`() = runTest {
+        repository.registerResult = Result.Success(AuthToken("access", "refresh", null, "Shop A", "SHOP"))
         viewModel.submitForm("Shop A", "a@b.com", "0123456789", "secret1", "secret1", true)
         advanceUntilIdle()
 
         viewModel.register("123456")
         advanceUntilIdle()
         assertTrue(viewModel.registerUiState.value is RegisterViewModel.RegisterUiState.Success)
+        assertEquals("SHOP", repository.lastRegisterRole)
+        assertEquals("access", tokenStore.savedToken)
+        assertEquals("SHOP", tokenStore.savedRole)
     }
 
     @Test
-    fun `register with wrong mock otp emits Error`() = runTest {
+    fun `register propagates backend error`() = runTest {
+        repository.registerResult = Result.Error("Mã OTP không chính xác hoặc đã hết hạn")
         viewModel.submitForm("Shop A", "a@b.com", "0123456789", "secret1", "secret1", true)
         advanceUntilIdle()
 
@@ -89,6 +101,6 @@ class RegisterViewModelTest {
         advanceUntilIdle()
         val state = viewModel.registerUiState.value
         assertTrue(state is RegisterViewModel.RegisterUiState.Error)
-        assertEquals("Mã OTP demo là 123456", (state as RegisterViewModel.RegisterUiState.Error).message)
+        assertEquals("Mã OTP không chính xác hoặc đã hết hạn", (state as RegisterViewModel.RegisterUiState.Error).message)
     }
 }

@@ -38,27 +38,40 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already exists");
+            throw new RuntimeException("Email đã được sử dụng bởi tài khoản khác");
         }
         if (accountRepository.findByPhone(request.getPhone()).isPresent()) {
-            throw new RuntimeException("Phone number already exists");
+            throw new RuntimeException("Số điện thoại đã được sử dụng bởi tài khoản khác");
         }
 
         if (!otpService.verifyOtp(request.getEmail(), request.getOtpCode())) {
             throw new RuntimeException("Mã OTP không chính xác hoặc đã hết hạn");
         }
 
+        String role = resolveRegisterRole(request.getRole());
+
         Account account = Account.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : "CUSTOMER")
+                .role(role)
                 .build();
 
         accountRepository.save(account);
         
         return generateAuthResponse(account);
+    }
+
+    private String resolveRegisterRole(String rawRole) {
+        if (rawRole == null || rawRole.trim().isEmpty()) {
+            return "CUSTOMER";
+        }
+        String role = rawRole.trim().toUpperCase();
+        if (!role.equals("CUSTOMER") && !role.equals("SHOP")) {
+            throw new RuntimeException("Vai trò đăng ký không hợp lệ");
+        }
+        return role;
     }
 
     public AuthResponse login(LoginRequest request) {
