@@ -28,6 +28,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: false
     ignore-migration-patterns: "*:missing"
+    out-of-order: true
 
   mail:
     host: ${MAIL_HOST:localhost}

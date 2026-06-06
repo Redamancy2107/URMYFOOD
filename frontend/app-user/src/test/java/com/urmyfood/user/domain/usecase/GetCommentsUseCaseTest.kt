@@ -21,6 +21,7 @@ class GetCommentsUseCaseTest {
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
             override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult(listOf(Comment("c1", "User", null, "Hi", "now")), 0, false))
             override suspend fun postComment(postId: String, content: String, token: String, parentId: String?) = Result.Success(Comment("c1", "User", null, content, "now"))
+            override suspend fun getPost(postId: String, token: String?) = Result.Error("Not implemented")
         }
 
     @Test
