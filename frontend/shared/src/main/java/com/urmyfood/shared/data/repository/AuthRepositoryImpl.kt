@@ -44,11 +44,12 @@ class AuthRepositoryImpl(
         email: String,
         phone: String,
         password: String,
-        otpCode: String
+        otpCode: String,
+        role: String?
     ): Result<AuthToken> {
         return try {
             val response = authApiService.register(
-                RegisterRequest(fullName, email, phone, password, otpCode)
+                RegisterRequest(fullName, email, phone, password, otpCode, role)
             )
             if (response.isSuccessful) {
                 val body = response.body()

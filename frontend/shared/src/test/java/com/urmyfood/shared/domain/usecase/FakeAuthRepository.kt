@@ -16,6 +16,7 @@ class FakeAuthRepository : AuthRepository {
     var lastLoginEmailOrPhone: String? = null
     var lastRegisterEmail: String? = null
     var lastRegisterPhone: String? = null
+    var lastRegisterRole: String? = null
     var lastSendOtpEmail: String? = null
     var lastForgotEmail: String? = null
     var lastVerifyEmail: String? = null
@@ -33,10 +34,12 @@ class FakeAuthRepository : AuthRepository {
         email: String,
         phone: String,
         password: String,
-        otpCode: String
+        otpCode: String,
+        role: String?
     ): Result<AuthToken> {
         lastRegisterEmail = email
         lastRegisterPhone = phone
+        lastRegisterRole = role
         return registerResult
     }
 

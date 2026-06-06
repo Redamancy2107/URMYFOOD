@@ -188,7 +188,7 @@
             android:visibility="gone" />
 
         <!-- Mini map thumbnail (shown after address selected) -->
-        <com.google.android.gms.maps.MapView
+        <org.osmdroid.views.MapView
             android:id="@+id/map_view_preview"
             android:layout_width="match_parent"
             android:layout_height="160dp"

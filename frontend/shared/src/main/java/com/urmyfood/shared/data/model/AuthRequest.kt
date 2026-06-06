@@ -19,7 +19,9 @@ data class RegisterRequest(
     @SerializedName("password")
     val password: String,
     @SerializedName("otpCode")
-    val otpCode: String
+    val otpCode: String,
+    @SerializedName("role")
+    val role: String? = null
 )
 
 data class SendOtpRequest(

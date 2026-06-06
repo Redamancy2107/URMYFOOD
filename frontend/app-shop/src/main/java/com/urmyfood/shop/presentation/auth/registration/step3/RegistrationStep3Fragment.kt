@@ -12,6 +12,7 @@ import com.urmyfood.shop.presentation.common.safeNavigate
 import androidx.recyclerview.widget.GridLayoutManager
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentRegistrationStep3Binding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Field
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel.Step3UiState
@@ -22,7 +23,7 @@ class RegistrationStep3Fragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: ShopRegistrationFlowViewModel by navGraphViewModels(R.id.nav_registration_flow) {
-        ShopRegistrationFlowViewModel.Factory()
+        ServiceLocator.provideShopRegistrationFlowViewModelFactory()
     }
 
     private lateinit var photoAdapter: ShopPhotoAdapter
@@ -88,6 +89,11 @@ class RegistrationStep3Fragment : Fragment() {
                 is Step3UiState.Success -> {
                     viewModel.resetStep3State()
                     findNavController().safeNavigate(R.id.action_step3_to_verification_pending)
+                }
+                is Step3UiState.Error -> {
+                    binding.btnSubmit.isEnabled = true
+                    binding.tvPhotosError.text = state.message
+                    binding.tvPhotosError.visibility = View.VISIBLE
                 }
             }
         }
