@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# AI Rules & Coding Guidelines
+CODING_RULES.md
+antigravity_rules.txt
+.clinerules
+.cursorrules
