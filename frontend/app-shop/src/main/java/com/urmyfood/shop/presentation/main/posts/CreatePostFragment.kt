@@ -22,6 +22,22 @@ class CreatePostFragment : Fragment() {
 
     private val viewModel: CreatePostViewModel by viewModels()
 
+    private var selectedImageUri: android.net.Uri? = null
+
+    private val pickImageLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            binding.ivPostImage.visibility = View.VISIBLE
+            com.bumptech.glide.Glide.with(this)
+                .load(it)
+                .placeholder(R.drawable.bg_food_banner)
+                .error(R.drawable.bg_food_banner)
+                .into(binding.ivPostImage)
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
@@ -54,6 +70,14 @@ class CreatePostFragment : Fragment() {
                     category = if (json.has("category")) json.getString("category") else null
                 )
                 viewModel.setupForEdit(post)
+                if (post.imageUrl.isNotEmpty()) {
+                    binding.ivPostImage.visibility = View.VISIBLE
+                    com.bumptech.glide.Glide.with(this)
+                        .load(post.imageUrl)
+                        .placeholder(R.drawable.bg_food_banner)
+                        .error(R.drawable.bg_food_banner)
+                        .into(binding.ivPostImage)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -161,7 +185,7 @@ class CreatePostFragment : Fragment() {
         }
 
         binding.btnAddImage.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng tải ảnh lên (giả lập)", Toast.LENGTH_SHORT).show()
+            pickImageLauncher.launch("image/*")
         }
     }
 
