@@ -4,16 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/profile_bg"
     android:orientation="vertical"
-    tools:context="com.urmyfood.shop.presentation.main.account.stats.StatisticsFragment">
+    tools:context="com.urmyfood.shop.presentation.main.account.StatisticsFragment">
 
     <!-- Toolbar -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/bg_card"
+        android:background="@color/white"
         android:elevation="0dp"
         app:navigationIcon="@drawable/ic_arrow_back"
         app:navigationIconTint="@color/text_primary"
@@ -31,127 +31,308 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
-            <!-- Toggle Buttons -->
+            <!-- Toggle Buttons for Period Filter -->
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/toggleGroup"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="16dp"
                 app:singleSelection="true"
                 app:selectionRequired="true"
-                app:checkedButton="@id/btnMonthly">
+                app:checkedButton="@id/btnMonth">
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnMonthly"
+                    android:id="@+id/btnDay"
                     style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="40dp"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:text="@string/statistics_monthly"
-                    android:textSize="14sp" />
+                    android:layout_weight="1"
+                    android:text="@string/statistics_day"
+                    android:textSize="13sp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnQuarterly"
+                    android:id="@+id/btnMonth"
                     style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="40dp"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:text="@string/statistics_quarterly"
-                    android:textSize="14sp" />
+                    android:layout_weight="1"
+                    android:text="@string/statistics_month"
+                    android:textSize="13sp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnYear"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="@string/statistics_year"
+                    android:textSize="13sp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnAll"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="@string/statistics_all"
+                    android:textSize="13sp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:padding="0dp" />
 
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
-            <!-- Summary Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardSummary"
+            <!-- Date Selector Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnDateSelector"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_marginBottom="16dp"
+                android:text="Tháng 06/2026"
+                app:icon="@drawable/ic_expand_more"
+                app:iconGravity="end"
+                app:iconTint="@color/primary"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                app:strokeColor="@color/primary"
+                app:strokeWidth="1dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp" />
+
+            <!-- Metrics Grid -->
+            <!-- Row 1: Doanh thu & SL đơn hàng -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/bg_card"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
+                android:orientation="horizontal"
+                android:weightSum="2">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <!-- Doanh thu Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0dp"
+                    app:cardElevation="2dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/statistics_total_revenue"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvTotalRevenue"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/primary"
-                        android:textSize="28sp"
-                        android:textStyle="bold"
-                        tools:text="12.500.000₫" />
-
-                    <TextView
-                        android:id="@+id/tvTotalOrders"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="14sp"
-                        tools:text="Tổng đơn hàng: 156" />
-
-                </LinearLayout>
-
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Bar Chart Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardChart"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="@color/bg_card"
-                app:cardElevation="2dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:id="@+id/tvChartTitle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/statistics_chart_title"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="16dp" />
-
-                    <!-- Bar chart rows will be added programmatically -->
                     <LinearLayout
-                        android:id="@+id/chartContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical" />
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                </LinearLayout>
+                        <FrameLayout
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="#FFF1F2">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_payment_card"
+                                app:tint="@color/primary" />
+                        </FrameLayout>
 
-            </com.google.android.material.card.MaterialCardView>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/statistics_revenue"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvRevenueValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="12.500.000₫" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- SL đơn hàng Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <FrameLayout
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="#FFF1F2">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_orders"
+                                app:tint="@color/primary" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/statistics_orders"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvOrdersValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="156" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Row 2: SL đơn hàng hủy & Tỉ lệ hủy hàng -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:weightSum="2">
+
+                <!-- SL đơn hàng hủy Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <FrameLayout
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="#FFF1F2">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_close"
+                                app:tint="@color/primary" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/statistics_cancelled_orders"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvCancelledValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="5" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Tỉ lệ hủy hàng Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_margin="4dp"
+                    app:cardCornerRadius="16dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeWidth="0dp"
+                    app:cardElevation="2dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <FrameLayout
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:background="@drawable/bg_circle"
+                            android:backgroundTint="#FFF1F2">
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:layout_gravity="center"
+                                android:src="@drawable/ic_chart"
+                                app:tint="@color/primary" />
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/statistics_cancellation_rate"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvRateValue"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/text_primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="3.2%" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
 
         </LinearLayout>
-
     </ScrollView>
 
 </LinearLayout>

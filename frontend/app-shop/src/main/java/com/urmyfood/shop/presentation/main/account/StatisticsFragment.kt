@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentStatisticsBinding
 import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
@@ -36,6 +37,7 @@ class StatisticsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupToolbar()
         setupToggleGroup()
+        setupClickListeners()
         observeViewModel()
     }
 
@@ -46,94 +48,252 @@ class StatisticsFragment : Fragment() {
     }
 
     private fun setupToggleGroup() {
+        // Handle pre-check states to ensure they match viewmodel defaults
         binding.toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
-                    R.id.btnMonthly -> viewModel.switchPeriod(StatisticsViewModel.Period.MONTHLY)
-                    R.id.btnQuarterly -> viewModel.switchPeriod(StatisticsViewModel.Period.QUARTERLY)
+                    R.id.btnDay -> viewModel.switchPeriod(StatisticsViewModel.Period.DAY)
+                    R.id.btnMonth -> viewModel.switchPeriod(StatisticsViewModel.Period.MONTH)
+                    R.id.btnYear -> viewModel.switchPeriod(StatisticsViewModel.Period.YEAR)
+                    R.id.btnAll -> viewModel.switchPeriod(StatisticsViewModel.Period.ALL)
                 }
             }
         }
+    }
+
+    private fun setupClickListeners() {
+        binding.btnDateSelector.setOnClickListener {
+            val period = viewModel.selectedPeriod.value ?: return@setOnClickListener
+            when (period) {
+                StatisticsViewModel.Period.DAY -> {
+                    showDatePicker()
+                }
+                StatisticsViewModel.Period.MONTH -> {
+                    showMonthScrollPicker()
+                }
+                StatisticsViewModel.Period.YEAR -> {
+                    showYearScrollPicker()
+                }
+                StatisticsViewModel.Period.ALL -> Unit
+            }
+        }
+    }
+
+    private fun showDatePicker() {
+        val context = requireContext()
+        val currentText = viewModel.selectorText.value ?: ""
+        var currentDay = 8
+        var currentMonth = 6
+        var currentYear = 2026
+
+        val parts = currentText.split("/")
+        if (parts.size == 3) {
+            try {
+                currentDay = parts[0].toInt()
+                currentMonth = parts[1].toInt()
+                currentYear = parts[2].toInt()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            val padding = (16 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+        }
+
+        val dayPicker = android.widget.NumberPicker(context)
+        val monthPicker = android.widget.NumberPicker(context)
+        val yearPicker = android.widget.NumberPicker(context)
+
+        fun updateDayRange() {
+            val m = monthPicker.value
+            val y = yearPicker.value
+            val maxDays = when (m) {
+                2 -> if ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)) 29 else 28
+                4, 6, 9, 11 -> 30
+                else -> 31
+            }
+
+            val oldVal = dayPicker.value
+            dayPicker.displayedValues = null
+            dayPicker.minValue = 1
+            dayPicker.maxValue = maxDays
+            dayPicker.value = oldVal.coerceAtMost(maxDays)
+            dayPicker.displayedValues = Array(maxDays) { String.format(Locale.getDefault(), "Ngày %02d", it + 1) }
+        }
+
+        yearPicker.apply {
+            minValue = 2020
+            maxValue = 2035
+            value = currentYear
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            setOnValueChangedListener { _, _, _ -> updateDayRange() }
+        }
+
+        monthPicker.apply {
+            minValue = 1
+            maxValue = 12
+            value = currentMonth
+            displayedValues = Array(12) { String.format(Locale.getDefault(), "Tháng %02d", it + 1) }
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = (8 * resources.displayMetrics.density).toInt()
+            }
+            setOnValueChangedListener { _, _, _ -> updateDayRange() }
+        }
+
+        dayPicker.apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = (8 * resources.displayMetrics.density).toInt()
+            }
+        }
+
+        dayPicker.minValue = 1
+        dayPicker.maxValue = 31
+        updateDayRange()
+        dayPicker.value = currentDay.coerceAtMost(dayPicker.maxValue)
+
+        container.addView(dayPicker)
+        container.addView(monthPicker)
+        container.addView(yearPicker)
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("Chọn ngày / tháng / năm")
+            .setView(container)
+            .setPositiveButton("Xác nhận") { _, _ ->
+                val selectedDateStr = String.format(Locale.getDefault(), "%02d/%02d/%d", dayPicker.value, monthPicker.value, yearPicker.value)
+                viewModel.selectDay(selectedDateStr)
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    private fun showMonthScrollPicker() {
+        val context = requireContext()
+        val currentText = viewModel.selectorText.value ?: ""
+        var currentMonth = 6
+        var currentYear = 2026
+
+        if (currentText.startsWith("Tháng ") && currentText.contains("/")) {
+            try {
+                val parts = currentText.substring(6).split("/")
+                if (parts.size == 2) {
+                    currentMonth = parts[0].toInt()
+                    currentYear = parts[1].toInt()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            val padding = (16 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+        }
+
+        val monthPicker = android.widget.NumberPicker(context).apply {
+            minValue = 1
+            maxValue = 12
+            value = currentMonth
+            displayedValues = Array(12) { String.format(Locale.getDefault(), "Tháng %02d", it + 1) }
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply {
+                marginEnd = (8 * resources.displayMetrics.density).toInt()
+            }
+        }
+
+        val yearPicker = android.widget.NumberPicker(context).apply {
+            minValue = 2020
+            maxValue = 2035
+            value = currentYear
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        container.addView(monthPicker)
+        container.addView(yearPicker)
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("Chọn tháng / năm")
+            .setView(container)
+            .setPositiveButton("Xác nhận") { _, _ ->
+                val selectedMonthStr = String.format(Locale.getDefault(), "Tháng %02d/%d", monthPicker.value, yearPicker.value)
+                viewModel.selectMonth(selectedMonthStr)
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
+    }
+
+    private fun showYearScrollPicker() {
+        val context = requireContext()
+        val currentText = viewModel.selectorText.value ?: ""
+        var currentYear = 2026
+
+        if (currentText.startsWith("Năm ")) {
+            try {
+                currentYear = currentText.substring(4).toInt()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            val padding = (16 * resources.displayMetrics.density).toInt()
+            setPadding(padding, padding, padding, padding)
+        }
+
+        val yearPicker = android.widget.NumberPicker(context).apply {
+            minValue = 2020
+            maxValue = 2035
+            value = currentYear
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        }
+
+        container.addView(yearPicker)
+
+        MaterialAlertDialogBuilder(context)
+            .setTitle("Chọn năm")
+            .setView(container)
+            .setPositiveButton("Xác nhận") { _, _ ->
+                val selectedYearStr = String.format(Locale.getDefault(), "Năm %d", yearPicker.value)
+                viewModel.selectYear(selectedYearStr)
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun observeViewModel() {
         viewModel.totalRevenue.observe(viewLifecycleOwner) { total ->
-            binding.tvTotalRevenue.text = formatCurrency(total)
+            binding.tvRevenueValue.text = formatCurrency(total)
         }
 
         viewModel.totalOrders.observe(viewLifecycleOwner) { orders ->
-            binding.tvTotalOrders.text = getString(R.string.statistics_total_orders, orders)
+            binding.tvOrdersValue.text = orders.toString()
         }
 
-        viewModel.revenueEntries.observe(viewLifecycleOwner) { entries ->
-            populateChart(entries)
+        viewModel.cancelledOrders.observe(viewLifecycleOwner) { cancelled ->
+            binding.tvCancelledValue.text = cancelled.toString()
         }
-    }
 
-    private fun populateChart(entries: List<StatisticsViewModel.RevenueEntry>) {
-        binding.chartContainer.removeAllViews()
-        val maxAmount = entries.maxOfOrNull { it.amount } ?: 1L
+        viewModel.cancellationRate.observe(viewLifecycleOwner) { rate ->
+            binding.tvRateValue.text = String.format(Locale.getDefault(), "%.1f%%", rate)
+        }
 
-        val context = requireContext()
-        val density = resources.displayMetrics.density
-        val dpToPx = { dp: Int -> (dp * density).toInt() }
+        viewModel.selectorText.observe(viewLifecycleOwner) { text ->
+            binding.btnDateSelector.text = text
+        }
 
-        for (entry in entries) {
-            // Horizontal row layout
-            val rowLayout = LinearLayout(context).apply {
-                orientation = LinearLayout.HORIZONTAL
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    setMargins(0, 0, 0, dpToPx(12))
-                }
-                gravity = Gravity.CENTER_VERTICAL
-            }
-
-            // Month/Period label
-            val tvLabel = TextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(dpToPx(40), LinearLayout.LayoutParams.WRAP_CONTENT)
-                text = entry.label
-                setTextColor(ContextCompat.getColor(context, R.color.text_primary))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-            }
-
-            // Chart bar
-            val barWidthPercentage = entry.amount.toFloat() / maxAmount
-            val maxBarWidthDp = 180 // max DP width for the bar
-            val barWidthPx = (maxBarWidthDp * barWidthPercentage * density).toInt().coerceAtLeast(dpToPx(8))
-
-            val vBar = View(context).apply {
-                layoutParams = LinearLayout.LayoutParams(barWidthPx, dpToPx(16)).apply {
-                    setMargins(dpToPx(8), 0, dpToPx(8), 0)
-                }
-                background = ContextCompat.getDrawable(context, R.drawable.bg_bar_chart)
-            }
-
-            // Amount text
-            val tvAmount = TextView(context).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    weight = 1f
-                }
-                text = formatCurrency(entry.amount)
-                setTextColor(ContextCompat.getColor(context, R.color.text_secondary))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
-                gravity = Gravity.END
-            }
-
-            rowLayout.addView(tvLabel)
-            rowLayout.addView(vBar)
-            rowLayout.addView(tvAmount)
-            binding.chartContainer.addView(rowLayout)
+        viewModel.showSelector.observe(viewLifecycleOwner) { show ->
+            binding.btnDateSelector.visibility = if (show) View.VISIBLE else View.GONE
         }
     }
 
     private fun formatCurrency(amount: Long): String {
-        val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+        val formatter = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("vi-VN"))
         return formatter.format(amount)
     }
 
