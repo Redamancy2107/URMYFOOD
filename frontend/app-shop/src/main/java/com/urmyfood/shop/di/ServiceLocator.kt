@@ -3,9 +3,15 @@ package com.urmyfood.shop.di
 import android.content.Context
 import com.urmyfood.shop.BuildConfig
 import com.urmyfood.shop.data.remote.ShopVerificationApiService
+import com.urmyfood.shop.data.remote.UserApiService
 import com.urmyfood.shop.data.repository.ShopVerificationRepositoryImpl
+import com.urmyfood.shop.data.repository.UserRepositoryImpl
 import com.urmyfood.shop.domain.repository.ShopVerificationRepository
+import com.urmyfood.shop.domain.repository.UserRepository
 import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
+import com.urmyfood.shop.domain.usecase.GetUserProfileUseCase
+import com.urmyfood.shop.domain.usecase.UpdateUserProfileUseCase
+import com.urmyfood.shop.domain.usecase.ChangePasswordUseCase
 import com.urmyfood.shared.data.local.TokenManager
 import com.urmyfood.shared.data.remote.NetworkModule
 import com.urmyfood.shared.data.repository.AuthRepositoryImpl
@@ -21,6 +27,8 @@ import com.urmyfood.shop.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.shop.presentation.auth.login.LoginViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
 import com.urmyfood.shop.presentation.auth.register.RegisterViewModel
+import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
+import com.urmyfood.shop.presentation.main.account.ChangePasswordViewModel
 
 object ServiceLocator {
 
@@ -40,6 +48,12 @@ object ServiceLocator {
         val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
             .create(ShopVerificationApiService::class.java)
         ShopVerificationRepositoryImpl(api)
+    }
+
+    private val userRepository: UserRepository by lazy {
+        val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
+            .create(UserApiService::class.java)
+        UserRepositoryImpl(api)
     }
 
     fun init(context: Context) {
@@ -65,5 +79,14 @@ object ServiceLocator {
 
     fun provideShopRegistrationFlowViewModelFactory() = ShopRegistrationFlowViewModel.Factory(
         SubmitShopVerificationUseCase(shopVerificationRepository, tokenManager)
+    )
+
+    fun provideShopProfileEditViewModelFactory() = ShopProfileEditViewModel.Factory(
+        GetUserProfileUseCase(userRepository, tokenManager),
+        UpdateUserProfileUseCase(userRepository, tokenManager)
+    )
+
+    fun provideChangePasswordViewModelFactory() = ChangePasswordViewModel.Factory(
+        ChangePasswordUseCase(userRepository, tokenManager)
     )
 }

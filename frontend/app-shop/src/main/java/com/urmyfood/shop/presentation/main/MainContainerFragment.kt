@@ -39,8 +39,10 @@ class MainContainerFragment : Fragment() {
         R.id.orderDetailFragment,
         R.id.createPostFragment,
         R.id.statisticsFragment,
-        R.id.businessHoursFragment,
-        R.id.chatDetailFragment
+        R.id.chatDetailFragment,
+        R.id.shopProfileEditFragment,
+        R.id.changePasswordFragment,
+        R.id.termsPoliciesFragment
     )
 
     override fun onCreateView(

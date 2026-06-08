@@ -92,9 +92,34 @@
             android:id="@+id/action_account_to_statistics"
             app:destination="@id/statisticsFragment" />
         <action
-            android:id="@+id/action_account_to_businessHours"
-            app:destination="@id/businessHoursFragment" />
+            android:id="@+id/action_account_to_shopProfileEditFragment"
+            app:destination="@id/shopProfileEditFragment" />
+        <action
+            android:id="@+id/action_account_to_termsPoliciesFragment"
+            app:destination="@id/termsPoliciesFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/shopProfileEditFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.ShopProfileEditFragment"
+        android:label="ShopProfileEditFragment"
+        tools:layout="@layout/fragment_shop_profile_edit">
+        <action
+            android:id="@+id/action_shopProfileEditFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.ChangePasswordFragment"
+        android:label="ChangePasswordFragment"
+        tools:layout="@layout/fragment_change_password" />
+
+    <fragment
+        android:id="@+id/termsPoliciesFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.TermsPoliciesFragment"
+        android:label="TermsPoliciesFragment"
+        tools:layout="@layout/fragment_terms_policies" />
 
     <fragment
         android:id="@+id/statisticsFragment"
@@ -102,11 +127,7 @@
         android:label="StatisticsFragment"
         tools:layout="@layout/fragment_statistics" />
 
-    <fragment
-        android:id="@+id/businessHoursFragment"
-        android:name="com.urmyfood.shop.presentation.main.account.BusinessHoursFragment"
-        android:label="BusinessHoursFragment"
-        tools:layout="@layout/fragment_business_hours" />
+
 
     <fragment
         android:id="@+id/chatDetailFragment"
