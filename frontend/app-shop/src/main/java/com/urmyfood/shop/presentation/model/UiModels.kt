@@ -1,4 +1,4 @@
-﻿package com.urmyfood.shop.presentation.model
+package com.urmyfood.shop.presentation.model
 
 data class ChatSession(
     val id: Int,
@@ -8,3 +8,12 @@ data class ChatSession(
     val time: String,
     val unreadCount: Int
 )
+
+data class Message(
+    val id: Int,
+    val content: String,
+    val time: String,
+    val isSent: Boolean,
+    val isOrderCard: Boolean = false
+)
+

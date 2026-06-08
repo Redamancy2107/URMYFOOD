@@ -82,14 +82,17 @@ class AccountFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.menuEditProfile.setOnClickListener {
+            findNavController().safeNavigate(R.id.action_account_to_shopProfileEditFragment)
+        }
         binding.menuNotificationSettings.setOnClickListener {
             handleNotificationToggle()
         }
-        binding.menuBusinessHours.setOnClickListener {
-            findNavController().safeNavigate(R.id.action_account_to_businessHours)
-        }
         binding.menuStatistics.setOnClickListener {
             findNavController().safeNavigate(R.id.action_account_to_statistics)
+        }
+        binding.menuTermsPolicies.setOnClickListener {
+            findNavController().safeNavigate(R.id.action_account_to_termsPoliciesFragment)
         }
         binding.btnLogout.setOnClickListener {
             showLogoutConfirmation()

@@ -19,9 +19,8 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
 
   flyway:
     enabled: true
@@ -61,8 +60,10 @@ server:
 springdoc:
   api-docs:
     path: /api-docs
+    enabled: ${SPRINGDOC_ENABLED:true}
   swagger-ui:
     path: /swagger-ui.html
+    enabled: ${SPRINGDOC_ENABLED:true}
 
 recommendation:
   weight:
@@ -73,6 +74,7 @@ recommendation:
 logging:
   level:
     org.flywaydb: INFO
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
 
 management:
   endpoints:

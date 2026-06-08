@@ -43,7 +43,9 @@ class HomeFragment : Fragment() {
     private fun setupRecyclerView() {
         activeOrdersAdapter = ActiveOrdersAdapter(
             onActionClick = { order ->
-                viewModel.advanceOrderStatus(order.orderId)
+                showActionConfirmation(order.orderId, order.status) {
+                    viewModel.advanceOrderStatus(order.orderId)
+                }
             },
             onOrderClick = { order ->
                 val args = Bundle().apply {
@@ -56,6 +58,30 @@ class HomeFragment : Fragment() {
             }
         )
         binding.rvActiveOrders.adapter = activeOrdersAdapter
+    }
+
+    private fun showActionConfirmation(
+        orderId: String,
+        status: com.urmyfood.shop.presentation.main.home.HomeViewModel.OrderStatus,
+        onConfirm: () -> Unit
+    ) {
+        val title = if (status == com.urmyfood.shop.presentation.main.home.HomeViewModel.OrderStatus.WAITING) {
+            "Nhận chuẩn bị đơn"
+        } else {
+            "Hoàn thành chuẩn bị"
+        }
+        val message = if (status == com.urmyfood.shop.presentation.main.home.HomeViewModel.OrderStatus.WAITING) {
+            "Bạn muốn bắt đầu chuẩn bị cho đơn hàng $orderId?"
+        } else {
+            "Xác nhận đơn hàng $orderId đã chuẩn bị xong và sẵn sàng giao?"
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Xác nhận") { _, _ -> onConfirm() }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun observeViewModel() {
