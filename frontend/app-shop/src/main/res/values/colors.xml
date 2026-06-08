@@ -27,4 +27,16 @@
     <color name="divider">#E7E5E4</color>
     <color name="overlay_dark">#80000000</color>
     <color name="landing_on_photo_secondary">#EDE7E1</color>
+
+    <!-- Profile screen colors copied from app-user -->
+    <color name="profile_bg">#FFFBFA</color>
+    <color name="profile_badge_verified">#00829B</color>
+    <color name="profile_logout_bg">#FEE2E2</color>
+    <color name="profile_icon_bg_order">#FEE2E2</color>
+    <color name="profile_icon_bg_voucher">#E0F2FE</color>
+    <color name="profile_icon_bg_address">#F1F5F9</color>
+    <color name="profile_icon_bg_person">#FEE2E2</color>
+    <color name="profile_icon_bg_notification">#E0F2FE</color>
+    <color name="profile_icon_bg_help">#E0E7FF</color>
+    <color name="profile_icon_bg_policy">#F1F5F9</color>
 </resources>

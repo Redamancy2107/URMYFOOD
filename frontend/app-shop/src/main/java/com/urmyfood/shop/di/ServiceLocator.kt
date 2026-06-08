@@ -16,6 +16,7 @@ import com.urmyfood.shared.domain.usecase.RegisterUseCase
 import com.urmyfood.shared.domain.usecase.ResetPasswordUseCase
 import com.urmyfood.shared.domain.usecase.SendOtpUseCase
 import com.urmyfood.shared.domain.usecase.VerifyOtpUseCase
+import com.urmyfood.shop.data.local.NotificationSettingsManager
 import com.urmyfood.shop.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.shop.presentation.auth.login.LoginViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
@@ -26,6 +27,10 @@ object ServiceLocator {
     private lateinit var appContext: Context
 
     val tokenManager: TokenManager by lazy { TokenManager(appContext, "shop_prefs") }
+
+    val notificationSettingsManager: NotificationSettingsManager by lazy {
+        NotificationSettingsManager(appContext)
+    }
 
     private val authRepository: AuthRepository by lazy {
         AuthRepositoryImpl(NetworkModule.provideAuthApiService(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG))

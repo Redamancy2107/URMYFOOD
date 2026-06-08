@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_main"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.urmyfood.shop.presentation.main.home.HomeFragment"
+        android:label="HomeFragment"
+        tools:layout="@layout/fragment_main_home">
+        <action
+            android:id="@+id/action_home_to_orderDetail"
+            app:destination="@id/orderDetailFragment" />
+        <action
+            android:id="@+id/action_home_to_createPost"
+            app:destination="@id/createPostFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postsFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.PostsFragment"
+        android:label="PostsFragment"
+        tools:layout="@layout/fragment_main_posts">
+        <action
+            android:id="@+id/action_posts_to_createPost"
+            app:destination="@id/createPostFragment" />
+        <action
+            android:id="@+id/action_posts_to_postDetail"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPostFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.CreatePostFragment"
+        android:label="CreatePostFragment"
+        tools:layout="@layout/fragment_create_post">
+        <argument
+            android:name="postJson"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.PostDetailFragment"
+        android:label="PostDetailFragment"
+        tools:layout="@layout/fragment_post_detail">
+        <argument
+            android:name="postJson"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/ordersFragment"
+        android:name="com.urmyfood.shop.presentation.main.orders.OrdersFragment"
+        android:label="OrdersFragment"
+        tools:layout="@layout/fragment_main_orders">
+        <action
+            android:id="@+id/action_orders_to_orderDetail"
+            app:destination="@id/orderDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/orderDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.orders.detail.OrderDetailFragment"
+        android:label="OrderDetailFragment"
+        tools:layout="@layout/fragment_order_detail">
+        <argument
+            android:name="orderId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.urmyfood.shop.presentation.main.chat.ChatFragment"
+        android:label="ChatFragment"
+        tools:layout="@layout/fragment_main_chat" />
+
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.AccountFragment"
+        android:label="AccountFragment"
+        tools:layout="@layout/fragment_main_account">
+        <action
+            android:id="@+id/action_account_to_statistics"
+            app:destination="@id/statisticsFragment" />
+        <action
+            android:id="@+id/action_account_to_businessHours"
+            app:destination="@id/businessHoursFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.StatisticsFragment"
+        android:label="StatisticsFragment"
+        tools:layout="@layout/fragment_statistics" />
+
+    <fragment
+        android:id="@+id/businessHoursFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.BusinessHoursFragment"
+        android:label="BusinessHoursFragment"
+        tools:layout="@layout/fragment_business_hours" />
+
+</navigation>

@@ -58,6 +58,7 @@ class HomeViewModelTest {
         override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
         override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
         override suspend fun postComment(postId: String, content: String, token: String, parentId: String?) = Result.Success(Comment("", "", null, "", ""))
+        override suspend fun getPost(postId: String, token: String?) = Result.Error("Not implemented")
     }
 
     private fun makeViewModel(

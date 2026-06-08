@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="12dp">
+
+    <!-- Avatar Circle -->
+    <View
+        android:id="@+id/viewAvatar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_status_badge"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvAvatarInitial"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:gravity="center"
+        android:textColor="@color/text_secondary"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="N"
+        app:layout_constraintStart_toStartOf="@id/viewAvatar"
+        app:layout_constraintTop_toTopOf="@id/viewAvatar" />
+
+    <!-- Customer Name -->
+    <TextView
+        android:id="@+id/tvCustomerName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        tools:text="Nguyễn Văn A"
+        app:layout_constraintEnd_toStartOf="@id/tvTimestamp"
+        app:layout_constraintStart_toEndOf="@id/viewAvatar"
+        app:layout_constraintTop_toTopOf="@id/viewAvatar" />
+
+    <!-- Timestamp -->
+    <TextView
+        android:id="@+id/tvTimestamp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_hint"
+        android:textSize="12sp"
+        tools:text="10:30"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tvCustomerName" />
+
+    <!-- Last Message Preview -->
+    <TextView
+        android:id="@+id/tvLastMessage"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        tools:text="Cho mình hỏi còn cơm tấm không?"
+        app:layout_constraintEnd_toStartOf="@id/tvUnreadBadge"
+        app:layout_constraintStart_toEndOf="@id/viewAvatar"
+        app:layout_constraintTop_toBottomOf="@id/tvCustomerName" />
+
+    <!-- Unread Badge -->
+    <TextView
+        android:id="@+id/tvUnreadBadge"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:background="@drawable/bg_btn_primary"
+        android:gravity="center"
+        android:textColor="@color/text_on_primary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="3"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/tvLastMessage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tvLastMessage" />
+
+    <!-- Divider -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/divider"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvLastMessage" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
