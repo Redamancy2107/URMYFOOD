@@ -74,7 +74,9 @@ class OrdersFragment : Fragment() {
     private fun setupRecyclerView() {
         ordersAdapter = OrdersAdapter(
             onActionClick = { order ->
-                viewModel.advanceOrderStatus(order.orderId)
+                showActionConfirmation(order.orderId, order.status) {
+                    viewModel.advanceOrderStatus(order.orderId)
+                }
             },
             onItemClick = { order ->
                 val args = Bundle().apply {
@@ -88,6 +90,30 @@ class OrdersFragment : Fragment() {
         )
         binding.rvOrders.layoutManager = LinearLayoutManager(requireContext())
         binding.rvOrders.adapter = ordersAdapter
+    }
+
+    private fun showActionConfirmation(
+        orderId: String,
+        status: OrderStatus,
+        onConfirm: () -> Unit
+    ) {
+        val title = if (status == OrderStatus.WAITING) {
+            "Nhận chuẩn bị đơn"
+        } else {
+            "Hoàn thành chuẩn bị"
+        }
+        val message = if (status == OrderStatus.WAITING) {
+            "Bạn muốn bắt đầu chuẩn bị cho đơn hàng $orderId?"
+        } else {
+            "Xác nhận đơn hàng $orderId đã chuẩn bị xong và sẵn sàng giao?"
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("Xác nhận") { _, _ -> onConfirm() }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun observeViewModel() {
@@ -106,6 +132,13 @@ class OrdersFragment : Fragment() {
     private fun updateFilteredList(orders: List<OrdersViewModel.ShopOrder>, status: OrderStatus) {
         val filtered = orders.filter { it.status == status }
         ordersAdapter.submitList(filtered)
+        if (filtered.isEmpty()) {
+            binding.rvOrders.visibility = View.GONE
+            binding.llEmptyState.visibility = View.VISIBLE
+        } else {
+            binding.rvOrders.visibility = View.VISIBLE
+            binding.llEmptyState.visibility = View.GONE
+        }
     }
 
     override fun onDestroyView() {
