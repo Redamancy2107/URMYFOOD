@@ -77,7 +77,11 @@
         android:id="@+id/chatFragment"
         android:name="com.urmyfood.shop.presentation.main.chat.ChatFragment"
         android:label="ChatFragment"
-        tools:layout="@layout/fragment_main_chat" />
+        tools:layout="@layout/fragment_main_chat">
+        <action
+            android:id="@+id/action_chat_to_chatDetail"
+            app:destination="@id/chatDetailFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/accountFragment"
@@ -103,5 +107,15 @@
         android:name="com.urmyfood.shop.presentation.main.account.BusinessHoursFragment"
         android:label="BusinessHoursFragment"
         tools:layout="@layout/fragment_business_hours" />
+
+    <fragment
+        android:id="@+id/chatDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.chat.ChatDetailFragment"
+        android:label="ChatDetailFragment"
+        tools:layout="@layout/fragment_chat_detail">
+        <argument
+            android:name="customerName"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

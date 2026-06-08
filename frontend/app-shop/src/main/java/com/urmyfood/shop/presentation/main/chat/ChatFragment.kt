@@ -7,8 +7,10 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.fragment.app.viewModels
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentMainChatBinding
+import com.urmyfood.shop.presentation.main.chat.adapter.ChatSessionsAdapter
 
 /**
  * Chat List Fragment.
@@ -18,6 +20,9 @@ class ChatFragment : Fragment() {
 
     private var _binding: FragmentMainChatBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: ChatViewModel by viewModels()
+    private lateinit var chatSessionsAdapter: ChatSessionsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,26 +37,22 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun setupRecyclerView() {
-        val dummySessions = listOf(
-            com.urmyfood.shop.presentation.model.ChatSession(
-                1, "The Coffee House", com.urmyfood.shop.R.drawable.bg_food_banner,
-                "Dạ quán đã nhận được ghi chú ít đá của bạn ạ.", "10:45", 1
-            ),
-            com.urmyfood.shop.presentation.model.ChatSession(
-                2, "Pizza Hut - Phạm Văn Đồng", com.urmyfood.shop.R.drawable.bg_food_banner,
-                "Cảm ơn bạn đã ủng hộ quán nhé!", "Hôm qua", 0
-            ),
-            com.urmyfood.shop.presentation.model.ChatSession(
-                3, "Linh Trần", com.urmyfood.shop.R.drawable.bg_food_banner,
-                "Ê trưa nay ăn bún bò không?", "T.2", 0
-            )
-        )
+        chatSessionsAdapter = ChatSessionsAdapter { session ->
+            val bundle = Bundle().apply {
+                putString("customerName", session.customerName)
+            }
+            findNavController().navigate(R.id.action_chat_to_chatDetail, bundle)
+        }
+        binding.rvChatList.adapter = chatSessionsAdapter
+    }
 
-        binding.rvChatList.adapter = com.urmyfood.shop.presentation.main.chat.adapter.ChatListAdapter(dummySessions) { session ->
-            Toast.makeText(requireContext(), "Tính năng đang phát triển", Toast.LENGTH_SHORT).show()
+    private fun observeViewModel() {
+        viewModel.chatSessions.observe(viewLifecycleOwner) { sessions ->
+            chatSessionsAdapter.submitList(sessions)
         }
     }
 
