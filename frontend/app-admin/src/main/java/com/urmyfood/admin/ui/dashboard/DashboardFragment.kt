@@ -33,14 +33,20 @@ class DashboardFragment : Fragment() {
         }
 
         // Setup Sidebar clicks
-        binding.menuTongQuan.setOnClickListener(showDevToast)
+        binding.menuTongQuan.setOnClickListener {
+            switchFragment(OverviewFragment())
+            updateMenuSelection(binding.menuTongQuan)
+        }
         binding.menuDuyetDoiTac.setOnClickListener(showDevToast)
         binding.menuKiemDuyet.setOnClickListener(showDevToast)
         binding.menuQuanLyUser.setOnClickListener(showDevToast)
         binding.menuQuanLyCuaHang.setOnClickListener(showDevToast)
         binding.menuMaGiamGia.setOnClickListener(showDevToast)
         binding.menuBaoCao.setOnClickListener(showDevToast)
-        binding.menuCaiDat.setOnClickListener(showDevToast)
+        binding.menuCaiDat.setOnClickListener {
+            switchFragment(SettingsFragment())
+            updateMenuSelection(binding.menuCaiDat)
+        }
         binding.btnXuatBaoCao.setOnClickListener(showDevToast)
         binding.llHoTro.setOnClickListener(showDevToast)
         binding.llDangXuat.setOnClickListener {
@@ -54,10 +60,36 @@ class DashboardFragment : Fragment() {
         binding.tvTabThangNay.setOnClickListener(showDevToast)
         binding.ivNoti.setOnClickListener(showDevToast)
         binding.ivMessage.setOnClickListener(showDevToast)
-        binding.fabAdd.setOnClickListener(showDevToast)
         
         // Setup background music
         setupBackgroundMusic()
+
+        // Load initial fragment
+        if (savedInstanceState == null) {
+            switchFragment(OverviewFragment())
+        }
+    }
+
+    private fun switchFragment(fragment: Fragment) {
+        childFragmentManager.beginTransaction()
+            .replace(com.urmyfood.admin.R.id.dashboard_content_frame, fragment)
+            .commit()
+    }
+
+    private fun updateMenuSelection(selectedView: View) {
+        val menus = listOf(
+            binding.menuTongQuan, binding.menuDuyetDoiTac, binding.menuKiemDuyet,
+            binding.menuQuanLyUser, binding.menuQuanLyCuaHang, binding.menuMaGiamGia,
+            binding.menuBaoCao, binding.menuCaiDat
+        )
+        
+        menus.forEach { menu ->
+            if (menu == selectedView) {
+                menu.setBackgroundResource(com.urmyfood.admin.R.drawable.bg_menu_item_active)
+            } else {
+                menu.setBackgroundResource(android.R.color.transparent)
+            }
+        }
     }
     
     private fun setupBackgroundMusic() {
