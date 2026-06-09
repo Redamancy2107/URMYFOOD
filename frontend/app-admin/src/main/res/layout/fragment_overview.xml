@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_main">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- 4 Summary Cards -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:weightSum="4">
+                
+                <!-- Card 1 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:background="@drawable/bg_badge_green" android:padding="4dp" android:src="@android:drawable/ic_menu_sort_by_size" app:tint="@color/mint_green"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:background="@drawable/bg_badge_green" android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:text="↗ 12.5%" android:textColor="@color/mint_green" android:textSize="12sp" android:textStyle="bold"/>
+                        </RelativeLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Tổng doanh thu" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="1,284,500,000 đ" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card 2 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:background="@drawable/bg_badge_green" android:padding="4dp" android:src="@android:drawable/ic_menu_gallery" app:tint="@color/mint_green"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:background="@drawable/bg_badge_green" android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:text="↗ 8.2%" android:textColor="@color/mint_green" android:textSize="12sp" android:textStyle="bold"/>
+                        </RelativeLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Đơn hàng mới" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="452 đơn" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card 3 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="12dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:background="@drawable/bg_badge_green" android:padding="4dp" android:src="@android:drawable/ic_menu_myplaces" app:tint="@color/mint_green"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:background="@drawable/bg_badge_green" android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:text="↗ 15.4%" android:textColor="@color/mint_green" android:textSize="12sp" android:textStyle="bold"/>
+                        </RelativeLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Người dùng mới" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="1,240" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Card 4 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:background="@drawable/bg_badge_green" android:padding="4dp" android:src="@android:drawable/ic_menu_mapmode" app:tint="@color/mint_green"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:background="@drawable/bg_badge_green" android:paddingHorizontal="6dp" android:paddingVertical="2dp" android:text="↗ 4.1%" android:textColor="@color/mint_green" android:textSize="12sp" android:textStyle="bold"/>
+                        </RelativeLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="Shop đang hoạt động" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="86 shop" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Chart & Activity -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="350dp"
+                android:layout_marginTop="24dp"
+                android:orientation="horizontal"
+                android:weightSum="3">
+                
+                <!-- Chart Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_chart"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:layout_marginEnd="16dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tăng trưởng doanh thu" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Theo tuần ▾" android:layout_alignParentEnd="true" android:background="@drawable/bg_input" android:paddingHorizontal="12dp" android:paddingVertical="6dp" android:textColor="@color/text_secondary"/>
+                        </RelativeLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thống kê 7 ngày gần nhất" android:textColor="@color/text_secondary" android:textSize="12sp"/>
+                        
+                        <!-- Chart Placeholder Area -->
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginTop="24dp" android:background="@color/sidebar_active_bg">
+                            <!-- Draw a simple curved shape using a vector drawable or just leave a static text -->
+                            <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:text="[Biểu đồ đường mượt mà]" android:textColor="@color/mint_green" android:gravity="center" android:textStyle="bold"/>
+                        </RelativeLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Activity Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cv_activity"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    app:cardCornerRadius="12dp"
+                    app:cardBackgroundColor="@color/white"
+                    app:strokeColor="@color/border_color"
+                    app:strokeWidth="1dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="24dp">
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hoạt động gần đây" android:textColor="@color/text_primary" android:textSize="16sp" android:textStyle="bold"/>
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Xem tất cả" android:layout_alignParentEnd="true" android:textColor="@color/mint_green"/>
+                        </RelativeLayout>
+
+                        <!-- Activity Items -->
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
+                            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/sym_def_app_icon"/>
+                            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nguyễn Văn An" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Đã đăng ký tài khoản đối tác mới" android:textColor="@color/text_secondary" android:textSize="12sp"/>
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ĐANG XỬ LÝ" android:textColor="@color/mint_green" android:textSize="10sp" android:background="@drawable/bg_badge_green" android:paddingHorizontal="4dp" android:layout_marginTop="4dp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+                        
+                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
+                            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/sym_def_app_icon"/>
+                            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trần Minh Khang" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hoàn thành đơn hàng #ORD-9921" android:textColor="@color/text_secondary" android:textSize="12sp"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Bottom Table -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="48dp"
+                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="@color/white"
+                app:strokeColor="@color/border_color"
+                app:strokeWidth="1dp">
+                
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="24dp">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Cửa hàng mới nhất" android:textColor="@color/text_primary" android:textSize="18sp" android:textStyle="bold"/>
+                        <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentEnd="true" android:orientation="horizontal">
+                            <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/ic_menu_sort_by_size" android:background="@drawable/bg_input" android:padding="6dp"/>
+                            <ImageView android:layout_width="32dp" android:layout_height="32dp" android:layout_marginStart="8dp" android:src="@android:drawable/ic_menu_sort_alphabetically" android:background="@drawable/bg_input" android:padding="6dp"/>
+                        </LinearLayout>
+                    </RelativeLayout>
+                    
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
+
+                    <!-- Table Header -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:background="@color/bg_main">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="Cửa hàng" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Chủ sở hữu" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Danh mục" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Doanh thu" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Trạng thái" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                        <TextView android:layout_width="40dp" android:layout_height="wrap_content" android:text="Thao tác" android:textColor="@color/text_secondary" android:textStyle="bold"/>
+                    </LinearLayout>
+                    
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
+
+                    <!-- Row 1 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="Bún Đậu Mắm Tôm A Chanh" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Phạm Tuấn Anh" android:textColor="@color/text_secondary"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ẩm thực Việt" android:textColor="@color/text_secondary"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12,500,000 đ" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="● Hoạt động" android:textColor="@color/mint_green" android:textStyle="bold"/>
+                        <ImageView android:layout_width="40dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_more" app:tint="@color/text_secondary"/>
+                    </LinearLayout>
+                    
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
+
+                    <!-- Row 2 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="The Coffee House" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Nguyễn Văn B" android:textColor="@color/text_secondary"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Đồ uống" android:textColor="@color/text_secondary"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="45,800,000 đ" android:textColor="@color/text_primary" android:textStyle="bold"/>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="● Hoạt động" android:textColor="@color/mint_green" android:textStyle="bold"/>
+                        <ImageView android:layout_width="40dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_more" app:tint="@color/text_secondary"/>
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+            
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/dark_green"
+        app:tint="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

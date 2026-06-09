@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_main">
+
+    <!-- LEFT SIDEBAR -->
+    <LinearLayout
+        android:id="@+id/ll_sidebar"
+        android:layout_width="260dp"
+        android:layout_height="match_parent"
+        android:background="@color/bg_color"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- Logo -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/bg_logo_rounded"
+                android:padding="8dp"
+                android:src="@drawable/ic_logo"
+                app:tint="@color/dark_green" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="URMYFOOD"
+                    android:textColor="@color/dark_green"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HỆ THỐNG QUẢN TRỊ"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Menu Items -->
+                <LinearLayout android:id="@+id/menu_tong_quan" android:layout_width="match_parent" android:layout_height="48dp" android:background="@drawable/bg_menu_item_active" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_agenda" app:tint="@color/dark_green"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Tổng quan" android:textColor="@color/dark_green" android:textSize="14sp" android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_duyet_doi_tac" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_myplaces" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Duyệt đối tác" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_kiem_duyet" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_view" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Kiểm duyệt nội dung" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_quan_ly_user" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_recent_history" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Quản lý người dùng" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_quan_ly_cua_hang" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_mapmode" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Quản lý cửa hàng" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+                
+                <LinearLayout android:id="@+id/menu_ma_giam_gia" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_sort_by_size" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Mã giảm giá" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_bao_cao" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_sort_alphabetically" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Báo cáo" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/menu_cai_dat" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:layout_marginTop="4dp" android:orientation="horizontal">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_manage" app:tint="@color/text_secondary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Cài đặt" android:textColor="@color/text_secondary" android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginBottom="16dp"
+            android:background="@color/border_color" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_xuat_bao_cao"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Xuất báo cáo"
+            android:textColor="@color/white"
+            app:icon="@android:drawable/ic_menu_save"
+            app:iconGravity="textStart"
+            app:backgroundTint="@color/dark_green"
+            app:cornerRadius="8dp" />
+
+        <LinearLayout
+            android:id="@+id/ll_ho_tro"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_help" app:tint="@color/text_secondary"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Hỗ trợ" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_dang_xuat"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="8dp">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_revert" app:tint="@color/text_secondary"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:text="Đăng xuất" android:textColor="@color/text_secondary" android:textSize="14sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:id="@+id/sidebar_divider"
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@color/border_color"
+        app:layout_constraintStart_toEndOf="@id/ll_sidebar" />
+
+    <!-- MAIN CONTENT -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/sidebar_divider">
+
+        <!-- Topbar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="24dp"
+            android:paddingBottom="12dp">
+
+            <EditText
+                android:id="@+id/et_search"
+                android:layout_width="300dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_input"
+                android:drawableStart="@android:drawable/ic_menu_search"
+                android:drawablePadding="8dp"
+                android:hint="Tìm kiếm đơn hàng, đối tác..."
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textSize="14sp" />
+
+            <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+            <TextView
+                android:id="@+id/tv_tab_hom_nay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hôm nay"
+                android:textColor="@color/mint_green"
+                android:textStyle="bold"
+                android:padding="8dp"/>
+            <TextView
+                android:id="@+id/tv_tab_tuan_nay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tuần này"
+                android:textColor="@color/text_secondary"
+                android:padding="8dp"
+                android:layout_marginStart="8dp"/>
+            <TextView
+                android:id="@+id/tv_tab_thang_nay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tháng này"
+                android:textColor="@color/text_secondary"
+                android:padding="8dp"
+                android:layout_marginStart="8dp"/>
+
+            <View android:layout_width="1dp" android:layout_height="24dp" android:background="@color/border_color" android:layout_marginHorizontal="16dp"/>
+
+            <ImageView android:id="@+id/iv_sound_toggle" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_volume_up" app:tint="@color/text_secondary" />
+            <ImageView android:id="@+id/iv_noti" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginStart="16dp" android:src="@android:drawable/ic_popup_reminder" app:tint="@color/text_secondary" />
+            <ImageView android:id="@+id/iv_message" android:layout_width="24dp" android:layout_height="24dp" android:layout_marginStart="16dp" android:src="@android:drawable/sym_action_chat" app:tint="@color/text_secondary" />
+
+            <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginStart="24dp">
+                <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/sym_def_app_icon"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Admin Tuấn Anh" android:layout_marginStart="8dp" android:textColor="@color/text_primary" android:textStyle="bold"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/dashboard_content_frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

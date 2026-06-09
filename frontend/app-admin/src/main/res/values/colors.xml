@@ -2,4 +2,18 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="mint_green">#32D0AD</color>
+    <color name="mint_green_dark">#2BB899</color>
+    <color name="dark_green">#067258</color>
+    <color name="text_primary">#1F2937</color>
+    <color name="text_secondary">#6B7280</color>
+    <color name="border_color">#E5E7EB</color>
+    <color name="input_bg">#F9FAFB</color>
+    <color name="bg_color">#FFFFFF</color>
+    <color name="bg_main">#F9FAFB</color>
+    <color name="sidebar_active_bg">#E6FBF7</color>
+    <color name="chart_fill">#D1F5EC</color>
+    <color name="transparent">#00000000</color>
+    <color name="splash_bg_start">#E6FAFC</color>
+    <color name="splash_bg_end">#DDF6F2</color>
 </resources>
