@@ -1,5 +1,6 @@
 package com.urmyfood.shop.presentation.main.account
 
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
@@ -78,15 +80,9 @@ class ShopProfileEditFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.loadState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ProfileUiState.Loading -> binding.btnSave.isEnabled = false
-                is ProfileUiState.Success -> {
-                    binding.btnSave.isEnabled = true
-                    renderProfile(state.profile)
-                }
-                is ProfileUiState.Error -> {
-                    binding.btnSave.isEnabled = true
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
+                is ProfileUiState.Loading -> renderLoading()
+                is ProfileUiState.Success -> renderProfile(state.profile)
+                is ProfileUiState.Error -> renderLoadError(state.message)
                 is ProfileUiState.Idle -> Unit
             }
         }
@@ -112,7 +108,27 @@ class ShopProfileEditFragment : Fragment() {
         }
     }
 
+    private fun renderLoading() {
+        Glide.with(this).clear(binding.ivCover)
+        Glide.with(this).clear(binding.ivAvatar)
+        setFormEnabled(false)
+
+        val loadingText = getString(R.string.shop_profile_loading)
+        binding.ivCover.setImageDrawable(null)
+        binding.ivCover.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy))
+        binding.ivAvatar.setImageResource(R.drawable.ic_person_placeholder)
+        binding.etShopName.setText(loadingText)
+        binding.tvCategoryValue.text = loadingText
+        binding.tvCategoryValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_hint))
+        binding.etAddress.setText(loadingText)
+        binding.etDescription.setText("")
+        binding.etOpeningHours.setText(loadingText)
+        binding.switchOpen.isChecked = false
+        binding.btnSave.text = getString(R.string.profile_edit_save)
+    }
+
     private fun renderProfile(profile: ShopProfile) {
+        setFormEnabled(true)
         binding.etShopName.setText(profile.shopName)
         selectedCategory = categoryFromCode(profile.category)
         binding.tvCategoryValue.text = selectedCategory?.displayName ?: getString(R.string.shop_profile_category_hint)
@@ -130,20 +146,59 @@ class ShopProfileEditFragment : Fragment() {
 
         currentLogoUrl = profile.logoUrl
         currentCoverUrl = profile.coverUrl
-        if (!profile.logoUrl.isNullOrEmpty()) {
+        binding.ivAvatar.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
+        binding.ivCover.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
+        if (profile.logoUrl.isNullOrEmpty()) {
+            binding.ivAvatar.setImageResource(R.drawable.ic_person_placeholder)
+        } else {
             Glide.with(this)
                 .load(profile.logoUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
                 .error(R.drawable.ic_person_placeholder)
                 .into(binding.ivAvatar)
         }
-        if (!profile.coverUrl.isNullOrEmpty()) {
+        if (profile.coverUrl.isNullOrEmpty()) {
+            binding.ivCover.setImageResource(R.drawable.bg_food_banner)
+        } else {
             Glide.with(this)
                 .load(profile.coverUrl)
-                .placeholder(R.drawable.bg_food_banner)
+                .placeholder(ColorDrawable(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy)))
                 .error(R.drawable.bg_food_banner)
                 .into(binding.ivCover)
         }
+    }
+
+    private fun renderLoadError(message: String) {
+        Glide.with(this).clear(binding.ivCover)
+        Glide.with(this).clear(binding.ivAvatar)
+        setFormEnabled(false)
+
+        binding.ivCover.setImageDrawable(null)
+        binding.ivCover.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy))
+        binding.ivAvatar.setImageResource(R.drawable.ic_person_placeholder)
+        binding.etShopName.setText("")
+        binding.tvCategoryValue.text = getString(R.string.shop_profile_category_hint)
+        binding.tvCategoryValue.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_hint))
+        binding.etAddress.setText("")
+        binding.etDescription.setText("")
+        binding.etOpeningHours.setText("")
+        binding.switchOpen.isChecked = false
+        binding.btnSave.text = getString(R.string.profile_edit_save)
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun setFormEnabled(enabled: Boolean) {
+        binding.etShopName.isEnabled = enabled
+        binding.rowCategory.isEnabled = enabled
+        binding.etAddress.isEnabled = enabled
+        binding.btnMapPicker.isEnabled = enabled
+        binding.etDescription.isEnabled = enabled
+        binding.etOpeningHours.isEnabled = enabled
+        binding.switchOpen.isEnabled = enabled
+        binding.btnEditAvatar.isEnabled = enabled
+        binding.btnEditCover.isEnabled = enabled
+        binding.btnChangePassword.isEnabled = enabled
+        binding.btnSave.isEnabled = enabled
     }
 
     private fun setupListeners() {

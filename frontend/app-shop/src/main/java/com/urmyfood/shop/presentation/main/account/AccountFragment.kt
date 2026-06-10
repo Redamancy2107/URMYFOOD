@@ -3,6 +3,7 @@ package com.urmyfood.shop.presentation.main.account
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -79,17 +80,27 @@ class AccountFragment : Fragment() {
     private fun observeViewModel() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is AccountUiState.Loading -> {
-                    binding.tvProfileStatus.text = getString(R.string.shop_profile_loading)
-                }
+                is AccountUiState.Loading -> renderLoading()
                 is AccountUiState.Success -> renderProfile(state.profile)
-                is AccountUiState.Error -> {
-                    binding.tvProfileStatus.text = state.message
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
-                }
+                is AccountUiState.Error -> renderError(state.message)
                 is AccountUiState.Idle -> Unit
             }
         }
+    }
+
+    private fun renderLoading() {
+        Glide.with(this).clear(binding.ivShopCover)
+        Glide.with(this).clear(binding.ivShopAvatar)
+
+        binding.ivShopCover.setImageDrawable(null)
+        binding.ivShopCover.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy))
+        binding.ivShopAvatar.setImageResource(R.drawable.ic_person_placeholder)
+        binding.tvShopName.text = getString(R.string.shop_profile_loading)
+        binding.tvProfileStatus.text = getString(R.string.shop_profile_loading)
+        binding.tvCategory.text = getString(R.string.shop_profile_loading)
+        binding.tvAddress.text = getString(R.string.shop_profile_loading)
+        binding.tvOpeningHours.text = getString(R.string.shop_profile_loading)
+        binding.tvOpenState.text = ""
     }
 
     private fun renderProfile(profile: ShopProfile) {
@@ -103,11 +114,38 @@ class AccountFragment : Fragment() {
         } else {
             getString(R.string.shop_profile_closed)
         }
+        binding.ivShopCover.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
+        if (profile.coverUrl.isNullOrBlank()) {
+            binding.ivShopCover.setImageResource(R.drawable.bg_food_banner)
+        } else {
+            Glide.with(this)
+                .load(profile.coverUrl)
+                .placeholder(ColorDrawable(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy)))
+                .error(R.drawable.bg_food_banner)
+                .into(binding.ivShopCover)
+        }
+
         Glide.with(this)
             .load(profile.logoUrl)
             .placeholder(R.drawable.ic_person_placeholder)
             .error(R.drawable.ic_person_placeholder)
             .into(binding.ivShopAvatar)
+    }
+
+    private fun renderError(message: String) {
+        Glide.with(this).clear(binding.ivShopCover)
+        Glide.with(this).clear(binding.ivShopAvatar)
+
+        binding.ivShopCover.setImageDrawable(null)
+        binding.ivShopCover.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.profile_icon_bg_policy))
+        binding.ivShopAvatar.setImageResource(R.drawable.ic_person_placeholder)
+        binding.tvProfileStatus.text = message
+        binding.tvShopName.text = getString(R.string.shop_profile_default_name)
+        binding.tvCategory.text = getString(R.string.shop_profile_unknown_category)
+        binding.tvAddress.text = getString(R.string.shop_profile_no_address)
+        binding.tvOpeningHours.text = getString(R.string.shop_profile_default_hours)
+        binding.tvOpenState.text = ""
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     private fun verificationText(status: String): String {
