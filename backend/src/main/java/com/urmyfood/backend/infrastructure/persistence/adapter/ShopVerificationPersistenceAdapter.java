@@ -1,5 +1,6 @@
 package com.urmyfood.backend.infrastructure.persistence.adapter;
 
+import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.ShopVerification;
 import com.urmyfood.backend.domain.repository.ShopVerificationRepository;
 import com.urmyfood.backend.infrastructure.persistence.entity.AccountEntity;
@@ -19,7 +20,6 @@ public class ShopVerificationPersistenceAdapter implements ShopVerificationRepos
 
     private final JpaShopVerificationRepository jpaShopVerificationRepository;
     private final JpaAccountRepository jpaAccountRepository;
-    private final AccountPersistenceAdapter accountAdapter;
 
     @Override
     public ShopVerification save(ShopVerification verification) {
@@ -54,7 +54,7 @@ public class ShopVerificationPersistenceAdapter implements ShopVerificationRepos
     private ShopVerification toDomain(ShopVerificationEntity entity) {
         return ShopVerification.builder()
                 .id(entity.getId())
-                .shop(accountAdapter.toDomain(entity.getShop()))
+                .shop(Account.builder().id(entity.getShop().getId()).build())
                 .shopName(entity.getShopName())
                 .category(entity.getCategory())
                 .address(entity.getAddress())

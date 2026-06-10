@@ -121,6 +121,29 @@
     <string name="account_logout_confirm_yes">Đăng xuất</string>
     <string name="account_logout_confirm_no">Hủy</string>
     <string name="cd_navigate">Điều hướng</string>
+    <string name="shop_profile_status_cd">Trạng thái xác minh quán</string>
+    <string name="shop_profile_loading">Đang tải hồ sơ quán...</string>
+    <string name="shop_profile_default_name">Quán của tôi</string>
+    <string name="shop_profile_unknown_category">Chưa cập nhật danh mục</string>
+    <string name="shop_profile_no_address">Chưa cập nhật địa chỉ</string>
+    <string name="shop_profile_default_hours">08:00 - 22:00</string>
+    <string name="shop_profile_open">Đang mở cửa</string>
+    <string name="shop_profile_closed">Đang đóng cửa</string>
+    <string name="shop_profile_verified">Đã xác minh</string>
+    <string name="shop_profile_pending">Đang chờ duyệt</string>
+    <string name="shop_profile_rejected">Hồ sơ bị từ chối</string>
+    <string name="shop_profile_not_submitted">Chưa gửi xác minh</string>
+    <string name="shop_profile_edit_menu">Hồ sơ quán</string>
+    <string name="shop_profile_edit_title">Hồ sơ quán</string>
+    <string name="shop_profile_name_hint">Tên quán</string>
+    <string name="shop_profile_category_hint">Danh mục quán</string>
+    <string name="shop_profile_address_hint">Địa chỉ quán</string>
+    <string name="shop_profile_pick_address_on_map">Chọn địa chỉ trên bản đồ</string>
+    <string name="shop_profile_description_hint">Mô tả ngắn</string>
+    <string name="shop_profile_hours_hint">Giờ hoạt động</string>
+    <string name="shop_profile_open_status">Mở cửa nhận đơn</string>
+    <string name="shop_profile_cover_cd">Ảnh bìa quán</string>
+    <string name="shop_profile_pick_cover">Đổi ảnh bìa</string>
 
     <!-- Statistics -->
     <string name="statistics_title">Thống kê cửa hàng</string>
@@ -157,6 +180,7 @@
     <string name="profile_edit_email_hint">Email</string>
     <string name="profile_edit_dob_hint">Ngày sinh</string>
     <string name="profile_edit_save">Lưu thay đổi</string>
+    <string name="profile_edit_saving">Đang lưu...</string>
     <string name="profile_edit_save_success">Cập nhật thông tin thành công!</string>
     <string name="profile_edit_name_empty">Vui lòng nhập họ tên</string>
     <string name="profile_change_password">Đổi mật khẩu</string>

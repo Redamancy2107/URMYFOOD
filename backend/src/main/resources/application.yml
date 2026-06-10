@@ -71,6 +71,13 @@ recommendation:
     comments: 0.5
     recency: 100.0
 
+supabase:
+  url: ${SUPABASE_URL:}
+  anon-key: ${SUPABASE_ANON_KEY:}
+  storage:
+    bucket: ${SUPABASE_STORAGE_BUCKET:shop-profile-images}
+    profile-image-max-size: ${SUPABASE_PROFILE_IMAGE_MAX_SIZE:5242880}
+
 logging:
   level:
     org.flywaydb: INFO

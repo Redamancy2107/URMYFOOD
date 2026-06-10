@@ -16,10 +16,13 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentMainAccountBinding
 import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shop.domain.model.ShopCategory
+import com.urmyfood.shop.domain.model.ShopProfile
 import com.urmyfood.shop.presentation.common.safeNavigate
 
 class AccountFragment : Fragment() {
@@ -27,7 +30,9 @@ class AccountFragment : Fragment() {
     private var _binding: FragmentMainAccountBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: AccountViewModel by viewModels()
+    private val viewModel: AccountViewModel by viewModels {
+        ServiceLocator.provideAccountViewModelFactory()
+    }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -62,6 +67,8 @@ class AccountFragment : Fragment() {
         observeViewModel()
         setupClickListeners()
         syncNotificationSwitchState()
+        observeRefreshSignal()
+        viewModel.loadProfile()
     }
 
     override fun onResume() {
@@ -70,14 +77,62 @@ class AccountFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.shopName.observe(viewLifecycleOwner) { name ->
-            binding.tvShopName.text = name
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is AccountUiState.Loading -> {
+                    binding.tvProfileStatus.text = getString(R.string.shop_profile_loading)
+                }
+                is AccountUiState.Success -> renderProfile(state.profile)
+                is AccountUiState.Error -> {
+                    binding.tvProfileStatus.text = state.message
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                is AccountUiState.Idle -> Unit
+            }
         }
-        viewModel.shopRating.observe(viewLifecycleOwner) { rating ->
-            binding.tvRating.text = rating.toString()
+    }
+
+    private fun renderProfile(profile: ShopProfile) {
+        binding.tvShopName.text = profile.shopName.ifBlank { getString(R.string.shop_profile_default_name) }
+        binding.tvProfileStatus.text = verificationText(profile.verificationStatus)
+        binding.tvCategory.text = categoryDisplayName(profile.category)
+        binding.tvAddress.text = profile.address.ifBlank { getString(R.string.shop_profile_no_address) }
+        binding.tvOpeningHours.text = profile.openingHours.ifBlank { getString(R.string.shop_profile_default_hours) }
+        binding.tvOpenState.text = if (profile.isOpen) {
+            getString(R.string.shop_profile_open)
+        } else {
+            getString(R.string.shop_profile_closed)
         }
-        viewModel.ratingCount.observe(viewLifecycleOwner) { count ->
-            binding.tvRatingCount.text = getString(R.string.account_rating_count_format, count)
+        Glide.with(this)
+            .load(profile.logoUrl)
+            .placeholder(R.drawable.ic_person_placeholder)
+            .error(R.drawable.ic_person_placeholder)
+            .into(binding.ivShopAvatar)
+    }
+
+    private fun verificationText(status: String): String {
+        return when (status) {
+            "APPROVED" -> getString(R.string.shop_profile_verified)
+            "PENDING" -> getString(R.string.shop_profile_pending)
+            "REJECTED" -> getString(R.string.shop_profile_rejected)
+            else -> getString(R.string.shop_profile_not_submitted)
+        }
+    }
+
+    private fun categoryDisplayName(categoryCode: String): String {
+        return ShopCategory.entries
+            .firstOrNull { it.name == categoryCode || it.displayName == categoryCode }
+            ?.displayName
+            ?: getString(R.string.shop_profile_unknown_category)
+    }
+
+    private fun observeRefreshSignal() {
+        val savedStateHandle = findNavController().currentBackStackEntry?.savedStateHandle ?: return
+        savedStateHandle.getLiveData<Boolean>("refresh_profile").observe(viewLifecycleOwner) { shouldRefresh ->
+            if (shouldRefresh) {
+                savedStateHandle["refresh_profile"] = false
+                viewModel.loadProfile()
+            }
         }
     }
 

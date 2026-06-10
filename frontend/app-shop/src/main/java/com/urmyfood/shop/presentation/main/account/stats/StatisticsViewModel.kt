@@ -4,16 +4,29 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import kotlin.math.abs
+import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.domain.model.RevenueEntry
+import com.urmyfood.shop.domain.model.ShopStatisticsPeriod
+import com.urmyfood.shop.domain.usecase.GetShopStatisticsUseCase
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.Year
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 
-class StatisticsViewModel : ViewModel() {
+sealed class StatisticsUiState {
+    object Idle : StatisticsUiState()
+    object Loading : StatisticsUiState()
+    object Success : StatisticsUiState()
+    data class Error(val message: String) : StatisticsUiState()
+}
+
+class StatisticsViewModel(
+    private val getShopStatisticsUseCase: GetShopStatisticsUseCase
+) : ViewModel() {
 
     enum class Period { DAY, MONTH, YEAR, ALL }
-
-    data class RevenueEntry(
-        val label: String,
-        val amount: Long
-    )
 
     private val _selectedPeriod = MutableLiveData(Period.MONTH)
     val selectedPeriod: LiveData<Period> = _selectedPeriod
@@ -33,27 +46,18 @@ class StatisticsViewModel : ViewModel() {
     private val _cancellationRate = MutableLiveData<Double>()
     val cancellationRate: LiveData<Double> = _cancellationRate
 
-    // Sub-period selections
     private val _selectorText = MutableLiveData<String>()
     val selectorText: LiveData<String> = _selectorText
 
     private val _showSelector = MutableLiveData<Boolean>()
     val showSelector: LiveData<Boolean> = _showSelector
 
-    // Lists of available options for dialogs
-    val availableMonths = listOf(
-        "Tháng 01/2026", "Tháng 02/2026", "Tháng 03/2026", "Tháng 04/2026",
-        "Tháng 05/2026", "Tháng 06/2026", "Tháng 07/2026", "Tháng 08/2026",
-        "Tháng 09/2026", "Tháng 10/2026", "Tháng 11/2026", "Tháng 12/2026"
-    )
+    private val _uiState = MutableLiveData<StatisticsUiState>(StatisticsUiState.Idle)
+    val uiState: LiveData<StatisticsUiState> = _uiState
 
-    val availableYears = listOf(
-        "Năm 2026", "Năm 2025", "Năm 2024", "Năm 2023", "Năm 2022"
-    )
-
-    private var currentSelectedDay = "08/06/2026"
-    private var currentSelectedMonth = "Tháng 06/2026"
-    private var currentSelectedYear = "Năm 2026"
+    private var currentSelectedDay = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    private var currentSelectedMonth = YearMonth.now()
+    private var currentSelectedYear = Year.now()
 
     init {
         loadData(Period.MONTH)
@@ -73,14 +77,14 @@ class StatisticsViewModel : ViewModel() {
     }
 
     fun selectMonth(month: String) {
-        currentSelectedMonth = month
+        parseMonth(month)?.let { currentSelectedMonth = it }
         if (_selectedPeriod.value == Period.MONTH) {
             loadData(Period.MONTH)
         }
     }
 
     fun selectYear(year: String) {
-        currentSelectedYear = year
+        parseYear(year)?.let { currentSelectedYear = it }
         if (_selectedPeriod.value == Period.YEAR) {
             loadData(Period.YEAR)
         }
@@ -88,92 +92,73 @@ class StatisticsViewModel : ViewModel() {
 
     private fun loadData(period: Period) {
         _showSelector.value = period != Period.ALL
+        _selectorText.value = selectorTextFor(period)
+        _uiState.value = StatisticsUiState.Loading
 
-        when (period) {
-            Period.DAY -> {
-                _selectorText.value = currentSelectedDay
-                val hash = abs(currentSelectedDay.hashCode().toLong())
-                
-                // Dynamic mock data based on selected day
-                val seedAmount = (hash % 1_500_000L) + 400_000L
-                val entries = listOf(
-                    RevenueEntry("Sáng", seedAmount * 2 / 10),
-                    RevenueEntry("Trưa", seedAmount * 4 / 10),
-                    RevenueEntry("Chiều", seedAmount * 3 / 10),
-                    RevenueEntry("Tối", seedAmount * 1 / 10)
-                )
-                _revenueEntries.value = entries
-                _totalRevenue.value = entries.sumOf { it.amount }
-
-                val orders = (hash % 12).toInt() + 6
-                val cancelled = (hash % 3).toInt()
-                _totalOrders.value = orders
-                _cancelledOrders.value = cancelled
-                _cancellationRate.value = if (orders > 0) (cancelled.toDouble() / orders.toDouble() * 100.0) else 0.0
-            }
-            Period.MONTH -> {
-                _selectorText.value = currentSelectedMonth
-                val hash = abs(currentSelectedMonth.hashCode().toLong())
-
-                // Dynamic mock data based on selected month
-                val seedAmount = (hash % 15_000_000L) + 12_000_000L
-                val entries = listOf(
-                    RevenueEntry("T1", seedAmount * 12 / 100),
-                    RevenueEntry("T2", seedAmount * 10 / 100),
-                    RevenueEntry("T3", seedAmount * 18 / 100),
-                    RevenueEntry("T4", seedAmount * 15 / 100),
-                    RevenueEntry("T5", seedAmount * 20 / 100),
-                    RevenueEntry("T6", seedAmount * 25 / 100)
-                )
-                _revenueEntries.value = entries
-                _totalRevenue.value = seedAmount
-
-                val orders = (hash % 100).toInt() + 200
-                val cancelled = (hash % 12).toInt() + 2
-                _totalOrders.value = orders
-                _cancelledOrders.value = cancelled
-                _cancellationRate.value = if (orders > 0) (cancelled.toDouble() / orders.toDouble() * 100.0) else 0.0
-            }
-            Period.YEAR -> {
-                _selectorText.value = currentSelectedYear
-                val hash = abs(currentSelectedYear.hashCode().toLong())
-
-                // Dynamic mock data based on selected year
-                val seedAmount = (hash % 150_000_000L) + 180_000_000L
-                val entries = listOf(
-                    RevenueEntry("2024", seedAmount * 30 / 100),
-                    RevenueEntry("2025", seedAmount * 40 / 100),
-                    RevenueEntry("2026", seedAmount * 30 / 100)
-                )
-                _revenueEntries.value = entries
-                _totalRevenue.value = seedAmount
-
-                val orders = (hash % 1000).toInt() + 2500
-                val cancelled = (hash % 100).toInt() + 50
-                _totalOrders.value = orders
-                _cancelledOrders.value = cancelled
-                _cancellationRate.value = if (orders > 0) (cancelled.toDouble() / orders.toDouble() * 100.0) else 0.0
-            }
-            Period.ALL -> {
-                val entries = listOf(
-                    RevenueEntry("2024", 150_000_000L),
-                    RevenueEntry("2025", 210_000_000L),
-                    RevenueEntry("2026", 180_000_000L)
-                )
-                _revenueEntries.value = entries
-                _totalRevenue.value = 540_000_000L
-                _totalOrders.value = 6800
-                _cancelledOrders.value = 180
-                _cancellationRate.value = 2.6
+        viewModelScope.launch {
+            val result = getShopStatisticsUseCase(
+                period.toDomainPeriod(),
+                date = if (period == Period.DAY) currentSelectedDay.toApiDate() else null,
+                month = if (period == Period.MONTH) currentSelectedMonth.toString() else null,
+                year = if (period == Period.YEAR) currentSelectedYear.toString() else null
+            )
+            when (result) {
+                is Result.Success -> {
+                    val statistics = result.data
+                    _selectorText.value = statistics.selectorText.ifBlank { selectorTextFor(period) }
+                    _revenueEntries.value = statistics.entries
+                    _totalRevenue.value = statistics.totalRevenue
+                    _totalOrders.value = statistics.totalOrders
+                    _cancelledOrders.value = statistics.cancelledOrders
+                    _cancellationRate.value = statistics.cancellationRate
+                    _uiState.value = StatisticsUiState.Success
+                }
+                is Result.Error -> _uiState.value = StatisticsUiState.Error(result.message)
             }
         }
     }
 
-    class Factory : ViewModelProvider.Factory {
+    private fun Period.toDomainPeriod(): ShopStatisticsPeriod {
+        return when (this) {
+            Period.DAY -> ShopStatisticsPeriod.DAY
+            Period.MONTH -> ShopStatisticsPeriod.MONTH
+            Period.YEAR -> ShopStatisticsPeriod.YEAR
+            Period.ALL -> ShopStatisticsPeriod.ALL
+        }
+    }
+
+    private fun selectorTextFor(period: Period): String {
+        return when (period) {
+            Period.DAY -> currentSelectedDay
+            Period.MONTH -> "Tháng %02d/%d".format(currentSelectedMonth.monthValue, currentSelectedMonth.year)
+            Period.YEAR -> "Năm ${currentSelectedYear.value}"
+            Period.ALL -> "Toàn bộ"
+        }
+    }
+
+    private fun String.toApiDate(): String {
+        val parsed = LocalDate.parse(this, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        return parsed.toString()
+    }
+
+    private fun parseMonth(value: String): YearMonth? {
+        return runCatching {
+            val parts = value.removePrefix("Tháng ").split("/")
+            YearMonth.of(parts[1].toInt(), parts[0].toInt())
+        }.getOrNull()
+    }
+
+    private fun parseYear(value: String): Year? {
+        return runCatching { Year.of(value.removePrefix("Năm ").toInt()) }.getOrNull()
+    }
+
+    class Factory(
+        private val getShopStatisticsUseCase: GetShopStatisticsUseCase
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(StatisticsViewModel::class.java)) {
-                return StatisticsViewModel() as T
+                return StatisticsViewModel(getShopStatisticsUseCase) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

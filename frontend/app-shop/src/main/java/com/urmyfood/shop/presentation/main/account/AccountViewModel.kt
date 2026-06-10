@@ -3,23 +3,53 @@ package com.urmyfood.shop.presentation.main.account
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.urmyfood.shop.di.ServiceLocator
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.data.local.TokenStore
+import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.domain.model.ShopProfile
+import com.urmyfood.shop.domain.usecase.GetShopProfileUseCase
+import kotlinx.coroutines.launch
 
-class AccountViewModel : ViewModel() {
+sealed class AccountUiState {
+    object Idle : AccountUiState()
+    object Loading : AccountUiState()
+    data class Success(val profile: ShopProfile) : AccountUiState()
+    data class Error(val message: String) : AccountUiState()
+}
 
-    // Mock data - remove when BE ready
-    private val _shopName = MutableLiveData("Quán Ăn Ngon")
-    val shopName: LiveData<String> = _shopName
+class AccountViewModel(
+    private val getShopProfileUseCase: GetShopProfileUseCase,
+    private val tokenStore: TokenStore
+) : ViewModel() {
 
-    // Mock data - remove when BE ready
-    private val _shopRating = MutableLiveData(4.7f)
-    val shopRating: LiveData<Float> = _shopRating
+    private val _uiState = MutableLiveData<AccountUiState>(AccountUiState.Idle)
+    val uiState: LiveData<AccountUiState> = _uiState
 
-    // Mock data - remove when BE ready
-    private val _ratingCount = MutableLiveData("1.3k")
-    val ratingCount: LiveData<String> = _ratingCount
+    fun loadProfile() {
+        _uiState.value = AccountUiState.Loading
+        viewModelScope.launch {
+            when (val result = getShopProfileUseCase()) {
+                is Result.Success -> _uiState.value = AccountUiState.Success(result.data)
+                is Result.Error -> _uiState.value = AccountUiState.Error(result.message)
+            }
+        }
+    }
 
     fun logout() {
-        ServiceLocator.tokenManager.clear()
+        tokenStore.clear()
+    }
+
+    class Factory(
+        private val getShopProfileUseCase: GetShopProfileUseCase,
+        private val tokenStore: TokenStore
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(AccountViewModel::class.java)) {
+                return AccountViewModel(getShopProfileUseCase, tokenStore) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
     }
 }

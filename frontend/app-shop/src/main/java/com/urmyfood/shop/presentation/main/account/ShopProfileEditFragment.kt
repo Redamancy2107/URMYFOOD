@@ -7,18 +7,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentShopProfileEditBinding
 import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shop.domain.model.ShopCategory
+import com.urmyfood.shop.domain.model.ShopProfile
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
-/**
- * Màn hình Chỉnh sửa thông tin cửa hàng.
- * Đọc dữ liệu từ backend, cho phép cập nhật avatar và thông tin cá nhân.
- */
 class ShopProfileEditFragment : Fragment() {
 
     private var _binding: FragmentShopProfileEditBinding? = null
@@ -28,16 +31,31 @@ class ShopProfileEditFragment : Fragment() {
         ServiceLocator.provideShopProfileEditViewModelFactory()
     }
 
-    private var selectedAvatarUri: Uri? = null
-    private var currentAvatarUrl: String? = null
+    private var selectedLogoUri: Uri? = null
+    private var selectedCoverUri: Uri? = null
+    private var currentLogoUrl: String? = null
+    private var currentCoverUrl: String? = null
+    private var pickingCover = false
+    private var selectedCategory: ShopCategory? = null
+    private var selectedLatitude: Double? = null
+    private var selectedLongitude: Double? = null
+    private var hasPendingMapSelection = false
 
     private val pickImageLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            selectedAvatarUri = it
+        uri ?: return@registerForActivityResult
+        if (pickingCover) {
+            selectedCoverUri = uri
             Glide.with(this)
-                .load(it)
+                .load(uri)
+                .placeholder(R.drawable.bg_food_banner)
+                .error(R.drawable.bg_food_banner)
+                .into(binding.ivCover)
+        } else {
+            selectedLogoUri = uri
+            Glide.with(this)
+                .load(uri)
                 .placeholder(R.drawable.ic_person_placeholder)
                 .error(R.drawable.ic_person_placeholder)
                 .into(binding.ivAvatar)
@@ -52,35 +70,21 @@ class ShopProfileEditFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupListeners()
+        setupFragmentResultListener()
         observeViewModel()
-        viewModel.loadProfile()
+        viewModel.loadProfileIfNeeded()
     }
 
     private fun observeViewModel() {
         viewModel.loadState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is ProfileUiState.Loading -> {
-                    // Loading UI
-                }
+                is ProfileUiState.Loading -> binding.btnSave.isEnabled = false
                 is ProfileUiState.Success -> {
-                    val profile = state.profile
-                    binding.etFullName.setText(profile.fullName)
-                    binding.etEmail.setText(profile.email)
-                    binding.etPhone.setText(profile.phone ?: "")
-                    
-                    // Email should be read-only
-                    binding.etEmail.isEnabled = false
-                    
-                    currentAvatarUrl = profile.avatarUrl
-                    if (!profile.avatarUrl.isNullOrEmpty()) {
-                        Glide.with(this)
-                            .load(profile.avatarUrl)
-                            .placeholder(R.drawable.ic_person_placeholder)
-                            .error(R.drawable.ic_person_placeholder)
-                            .into(binding.ivAvatar)
-                    }
+                    binding.btnSave.isEnabled = true
+                    renderProfile(state.profile)
                 }
                 is ProfileUiState.Error -> {
+                    binding.btnSave.isEnabled = true
                     Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
                 }
                 is ProfileUiState.Idle -> Unit
@@ -91,7 +95,7 @@ class ShopProfileEditFragment : Fragment() {
             when (state) {
                 is ProfileEditUiState.Loading -> {
                     binding.btnSave.isEnabled = false
-                    binding.btnSave.text = "Đang lưu..."
+                    binding.btnSave.text = state.message
                 }
                 is ProfileEditUiState.Success -> {
                     Toast.makeText(requireContext(), getString(R.string.profile_edit_save_success), Toast.LENGTH_SHORT).show()
@@ -108,11 +112,59 @@ class ShopProfileEditFragment : Fragment() {
         }
     }
 
+    private fun renderProfile(profile: ShopProfile) {
+        binding.etShopName.setText(profile.shopName)
+        selectedCategory = categoryFromCode(profile.category)
+        binding.tvCategoryValue.text = selectedCategory?.displayName ?: getString(R.string.shop_profile_category_hint)
+        binding.tvCategoryValue.setTextColor(requireContext().getColor(
+            if (selectedCategory == null) R.color.text_hint else R.color.text_primary
+        ))
+        if (!hasPendingMapSelection) {
+            binding.etAddress.setText(profile.address)
+            selectedLatitude = profile.latitude
+            selectedLongitude = profile.longitude
+        }
+        binding.etDescription.setText(profile.description.orEmpty())
+        binding.etOpeningHours.setText(profile.openingHours)
+        binding.switchOpen.isChecked = profile.isOpen
+
+        currentLogoUrl = profile.logoUrl
+        currentCoverUrl = profile.coverUrl
+        if (!profile.logoUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(profile.logoUrl)
+                .placeholder(R.drawable.ic_person_placeholder)
+                .error(R.drawable.ic_person_placeholder)
+                .into(binding.ivAvatar)
+        }
+        if (!profile.coverUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(profile.coverUrl)
+                .placeholder(R.drawable.bg_food_banner)
+                .error(R.drawable.bg_food_banner)
+                .into(binding.ivCover)
+        }
+    }
+
     private fun setupListeners() {
         binding.btnBack.setOnClickListener { findNavController().popBackStack() }
 
         binding.btnEditAvatar.setOnClickListener {
+            pickingCover = false
             pickImageLauncher.launch("image/*")
+        }
+
+        binding.btnEditCover.setOnClickListener {
+            pickingCover = true
+            pickImageLauncher.launch("image/*")
+        }
+
+        binding.rowCategory.setOnClickListener {
+            showCategoryPicker()
+        }
+
+        binding.btnMapPicker.setOnClickListener {
+            findNavController().navigate(R.id.action_shopProfileEditFragment_to_mapPickerFragment)
         }
 
         binding.btnChangePassword.setOnClickListener {
@@ -120,17 +172,69 @@ class ShopProfileEditFragment : Fragment() {
         }
 
         binding.btnSave.setOnClickListener {
-            val name = binding.etFullName.text.toString().trim()
-            val phone = binding.etPhone.text.toString().trim()
-
-            if (name.isEmpty()) {
-                Toast.makeText(requireContext(), getString(R.string.profile_edit_name_empty), Toast.LENGTH_SHORT).show()
+            val logoImagePart = selectedLogoUri?.toMultipartPart("file")
+            if (selectedLogoUri != null && logoImagePart == null) {
                 return@setOnClickListener
             }
-
-            val avatarUrl = selectedAvatarUri?.toString() ?: currentAvatarUrl
-            viewModel.updateProfile(name, phone, avatarUrl)
+            val coverImagePart = selectedCoverUri?.toMultipartPart("file")
+            if (selectedCoverUri != null && coverImagePart == null) {
+                return@setOnClickListener
+            }
+            viewModel.updateProfile(
+                shopName = binding.etShopName.text.toString(),
+                logoUrl = selectedLogoUri?.toString() ?: currentLogoUrl,
+                coverUrl = selectedCoverUri?.toString() ?: currentCoverUrl,
+                category = selectedCategory?.name.orEmpty(),
+                address = binding.etAddress.text.toString(),
+                latitude = selectedLatitude,
+                longitude = selectedLongitude,
+                description = binding.etDescription.text.toString(),
+                openingHours = binding.etOpeningHours.text.toString(),
+                isOpen = binding.switchOpen.isChecked,
+                logoImagePart = logoImagePart,
+                coverImagePart = coverImagePart
+            )
         }
+    }
+
+    private fun Uri.toMultipartPart(fieldName: String): MultipartBody.Part? {
+        return try {
+            val mimeType = requireContext().contentResolver.getType(this) ?: "image/jpeg"
+            val bytes = requireContext().contentResolver.openInputStream(this)?.use { it.readBytes() }
+                ?: return null
+            val body = RequestBody.create(MediaType.parse(mimeType), bytes)
+            MultipartBody.Part.createFormData(fieldName, "profile-image", body)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Không thể đọc ảnh đã chọn", Toast.LENGTH_SHORT).show()
+            null
+        }
+    }
+
+    private fun setupFragmentResultListener() {
+        setFragmentResultListener("map_result") { _, bundle ->
+            val address = bundle.getString("address", "")
+            selectedLatitude = bundle.getDouble("lat")
+            selectedLongitude = bundle.getDouble("lng")
+            hasPendingMapSelection = true
+            binding.etAddress.setText(address)
+        }
+    }
+
+    private fun showCategoryPicker() {
+        val categories = ShopCategory.entries.toTypedArray()
+        val names = categories.map { it.displayName }.toTypedArray()
+        AlertDialog.Builder(requireContext())
+            .setTitle(R.string.shop_profile_category_hint)
+            .setItems(names) { _, which ->
+                selectedCategory = categories[which]
+                binding.tvCategoryValue.text = categories[which].displayName
+                binding.tvCategoryValue.setTextColor(requireContext().getColor(R.color.text_primary))
+            }
+            .show()
+    }
+
+    private fun categoryFromCode(categoryCode: String): ShopCategory? {
+        return ShopCategory.entries.firstOrNull { it.name == categoryCode || it.displayName == categoryCode }
     }
 
     override fun onDestroyView() {

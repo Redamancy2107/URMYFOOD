@@ -126,7 +126,6 @@
                         android:textStyle="bold"
                         tools:text="Quán Ăn Ngon" />
 
-                    <!-- Rating Badge (Matching style of unverified badge in app-user) -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -140,29 +139,74 @@
                         <ImageView
                             android:layout_width="16dp"
                             android:layout_height="16dp"
-                            android:src="@drawable/ic_star"
+                            android:src="@drawable/ic_shield"
                             app:tint="#D97706"
-                            android:contentDescription="@string/account_rating_cd" />
+                            android:contentDescription="@string/shop_profile_status_cd" />
 
                         <TextView
-                            android:id="@+id/tvRating"
+                            android:id="@+id/tvProfileStatus"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            tools:text="4.7"
+                            tools:text="Đã xác minh"
                             android:textColor="#D97706"
                             android:textSize="14sp"
                             android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:fontFamily="sans-serif-medium"
+                        tools:text="Cơm" />
+
+                    <TextView
+                        android:id="@+id/tvAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp"
+                        tools:text="123 Lê Lợi" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_clock"
+                            app:tint="@color/primary"
+                            android:contentDescription="@null" />
 
                         <TextView
-                            android:id="@+id/tvRatingCount"
+                            android:id="@+id/tvOpeningHours"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginStart="4dp"
-                            tools:text="(1.3k)"
-                            android:textColor="#D97706"
+                            android:layout_marginStart="8dp"
+                            android:textColor="@color/text_secondary"
                             android:textSize="14sp"
-                            android:textStyle="bold" />
+                            tools:text="08:00 - 22:00" />
+
+                        <TextView
+                            android:id="@+id/tvOpenState"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:textColor="@color/primary"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            tools:text="Đang mở cửa" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -229,7 +273,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
                             android:layout_weight="1"
-                            android:text="@string/profile_personal_info"
+                            android:text="@string/shop_profile_edit_menu"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
                             android:fontFamily="sans-serif-medium" />
