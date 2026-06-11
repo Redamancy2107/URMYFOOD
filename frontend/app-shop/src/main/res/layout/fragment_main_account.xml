@@ -89,13 +89,22 @@
                     android:paddingBottom="32dp"
                     android:gravity="center">
 
-                    <ImageView
-                        android:id="@+id/ivShopCover"
+                    <androidx.cardview.widget.CardView
                         android:layout_width="match_parent"
                         android:layout_height="132dp"
-                        android:contentDescription="@string/shop_profile_cover_cd"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/bg_food_banner" />
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:cardPreventCornerOverlap="false"
+                        app:cardUseCompatPadding="false">
+
+                        <ImageView
+                            android:id="@+id/ivShopCover"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/shop_profile_cover_cd"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/bg_food_banner" />
+                    </androidx.cardview.widget.CardView>
 
                     <FrameLayout
                         android:layout_width="wrap_content"
