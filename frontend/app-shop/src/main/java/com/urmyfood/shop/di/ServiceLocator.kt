@@ -3,15 +3,23 @@ package com.urmyfood.shop.di
 import android.content.Context
 import com.urmyfood.shop.BuildConfig
 import com.urmyfood.shop.data.remote.ShopVerificationApiService
+import com.urmyfood.shop.data.remote.ShopProfileApiService
+import com.urmyfood.shop.data.remote.ShopStatisticsApiService
 import com.urmyfood.shop.data.remote.UserApiService
+import com.urmyfood.shop.data.repository.ShopProfileRepositoryImpl
+import com.urmyfood.shop.data.repository.ShopStatisticsRepositoryImpl
 import com.urmyfood.shop.data.repository.ShopVerificationRepositoryImpl
 import com.urmyfood.shop.data.repository.UserRepositoryImpl
+import com.urmyfood.shop.domain.repository.ShopProfileRepository
+import com.urmyfood.shop.domain.repository.ShopStatisticsRepository
 import com.urmyfood.shop.domain.repository.ShopVerificationRepository
 import com.urmyfood.shop.domain.repository.UserRepository
-import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
-import com.urmyfood.shop.domain.usecase.GetUserProfileUseCase
-import com.urmyfood.shop.domain.usecase.UpdateUserProfileUseCase
 import com.urmyfood.shop.domain.usecase.ChangePasswordUseCase
+import com.urmyfood.shop.domain.usecase.GetShopProfileUseCase
+import com.urmyfood.shop.domain.usecase.GetShopStatisticsUseCase
+import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
+import com.urmyfood.shop.domain.usecase.UpdateShopProfileUseCase
+import com.urmyfood.shop.domain.usecase.UploadShopProfileImageUseCase
 import com.urmyfood.shared.data.local.TokenManager
 import com.urmyfood.shared.data.remote.NetworkModule
 import com.urmyfood.shared.data.repository.AuthRepositoryImpl
@@ -27,8 +35,10 @@ import com.urmyfood.shop.presentation.auth.forgotpass.ForgotPasswordViewModel
 import com.urmyfood.shop.presentation.auth.login.LoginViewModel
 import com.urmyfood.shop.presentation.auth.registration.ShopRegistrationFlowViewModel
 import com.urmyfood.shop.presentation.auth.register.RegisterViewModel
-import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
+import com.urmyfood.shop.presentation.main.account.AccountViewModel
 import com.urmyfood.shop.presentation.main.account.ChangePasswordViewModel
+import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
+import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
 
 object ServiceLocator {
 
@@ -48,6 +58,18 @@ object ServiceLocator {
         val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
             .create(ShopVerificationApiService::class.java)
         ShopVerificationRepositoryImpl(api)
+    }
+
+    private val shopProfileRepository: ShopProfileRepository by lazy {
+        val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
+            .create(ShopProfileApiService::class.java)
+        ShopProfileRepositoryImpl(api)
+    }
+
+    private val shopStatisticsRepository: ShopStatisticsRepository by lazy {
+        val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
+            .create(ShopStatisticsApiService::class.java)
+        ShopStatisticsRepositoryImpl(api)
     }
 
     private val userRepository: UserRepository by lazy {
@@ -81,12 +103,22 @@ object ServiceLocator {
         SubmitShopVerificationUseCase(shopVerificationRepository, tokenManager)
     )
 
+    fun provideAccountViewModelFactory() = AccountViewModel.Factory(
+        GetShopProfileUseCase(shopProfileRepository, tokenManager),
+        tokenManager
+    )
+
     fun provideShopProfileEditViewModelFactory() = ShopProfileEditViewModel.Factory(
-        GetUserProfileUseCase(userRepository, tokenManager),
-        UpdateUserProfileUseCase(userRepository, tokenManager)
+        GetShopProfileUseCase(shopProfileRepository, tokenManager),
+        UpdateShopProfileUseCase(shopProfileRepository, tokenManager),
+        UploadShopProfileImageUseCase(shopProfileRepository, tokenManager)
     )
 
     fun provideChangePasswordViewModelFactory() = ChangePasswordViewModel.Factory(
         ChangePasswordUseCase(userRepository, tokenManager)
+    )
+
+    fun provideStatisticsViewModelFactory() = StatisticsViewModel.Factory(
+        GetShopStatisticsUseCase(shopStatisticsRepository, tokenManager)
     )
 }

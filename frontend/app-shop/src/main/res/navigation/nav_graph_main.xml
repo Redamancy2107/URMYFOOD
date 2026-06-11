@@ -107,7 +107,16 @@
         <action
             android:id="@+id/action_shopProfileEditFragment_to_changePasswordFragment"
             app:destination="@id/changePasswordFragment" />
+        <action
+            android:id="@+id/action_shopProfileEditFragment_to_mapPickerFragment"
+            app:destination="@id/mapPickerFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/mapPickerFragment"
+        android:name="com.urmyfood.shop.presentation.auth.map.MapPickerFragment"
+        android:label="MapPickerFragment"
+        tools:layout="@layout/fragment_map_picker" />
 
     <fragment
         android:id="@+id/changePasswordFragment"

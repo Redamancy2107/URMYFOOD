@@ -15,6 +15,8 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentStatisticsBinding
+import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shop.presentation.main.account.stats.StatisticsUiState
 import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
 import java.text.NumberFormat
 import java.util.Locale
@@ -24,7 +26,9 @@ class StatisticsFragment : Fragment() {
     private var _binding: FragmentStatisticsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: StatisticsViewModel by viewModels()
+    private val viewModel: StatisticsViewModel by viewModels {
+        ServiceLocator.provideStatisticsViewModelFactory()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -289,6 +293,15 @@ class StatisticsFragment : Fragment() {
 
         viewModel.showSelector.observe(viewLifecycleOwner) { show ->
             binding.btnDateSelector.visibility = if (show) View.VISIBLE else View.GONE
+        }
+
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is StatisticsUiState.Loading -> binding.toolbar.subtitle = "Đang tải dữ liệu..."
+                is StatisticsUiState.Error -> binding.toolbar.subtitle = state.message
+                is StatisticsUiState.Success -> binding.toolbar.subtitle = null
+                is StatisticsUiState.Idle -> Unit
+            }
         }
     }
 
