@@ -18,7 +18,20 @@
         app:navigationIconTint="@color/text_primary"
         app:title="Chi tiết bài đăng"
         app:titleTextColor="@color/text_primary"
-        app:titleTextAppearance="@style/ToolbarTitleBold" />
+        app:titleTextAppearance="@style/ToolbarTitleBold">
+
+        <ImageButton
+            android:id="@+id/btnDeletePost"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="end"
+            android:layout_marginEnd="12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_delete"
+            app:tint="@color/error"
+            android:contentDescription="Xóa bài viết" />
+
+    </androidx.appcompat.widget.Toolbar>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -348,15 +361,21 @@
                                 android:background="?attr/selectableItemBackgroundBorderless"
                                 android:textStyle="bold" />
 
-                            <TextView
-                                android:id="@+id/tvQuickStockCount"
-                                android:layout_width="48dp"
-                                android:layout_height="wrap_content"
-                                android:gravity="center"
-                                android:text="15"
-                                android:textColor="@color/text_primary"
-                                android:textSize="16sp"
-                                android:textStyle="bold" />
+                             <EditText
+                                 android:id="@+id/tvQuickStockCount"
+                                 android:layout_width="60dp"
+                                 android:layout_height="36dp"
+                                 android:gravity="center"
+                                 android:text="15"
+                                 android:textColor="@color/text_primary"
+                                 android:textSize="16sp"
+                                 android:textStyle="bold"
+                                 android:background="@drawable/bg_search_input"
+                                 android:inputType="number"
+                                 android:maxLength="4"
+                                 android:selectAllOnFocus="true"
+                                 android:imeOptions="actionDone"
+                                 tools:ignore="LabelFor" />
 
                             <TextView
                                 android:id="@+id/btnQuickIncrement"
