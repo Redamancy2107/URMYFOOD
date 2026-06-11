@@ -77,6 +77,12 @@ class CreatePostViewModel : ViewModel() {
         }
     }
 
+    fun setStock(stock: Int) {
+        if (_stockCount.value != stock) {
+            _stockCount.value = stock
+        }
+    }
+
     fun setupForEdit(post: ShopPost) {
         isEditMode = true
         editingPostId = post.postId
