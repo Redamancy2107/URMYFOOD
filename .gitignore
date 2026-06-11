@@ -145,3 +145,9 @@ fabric.properties
 
 ### VS Code ###
 .vscode/
+
+# URMYFOOD AI Rules
+.clinerules
+.cursorrules
+CODING_RULES.md
+antigravity_rules.txt
