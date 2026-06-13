@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.urmyfood.shop.R
@@ -20,6 +22,7 @@ class PostDetailFragment : Fragment() {
     private var _binding: FragmentPostDetailBinding? = null
     private val binding get() = _binding!!
 
+    private val postsViewModel: PostsViewModel by viewModels()
     private lateinit var currentPost: ShopPost
 
     override fun onCreateView(
@@ -36,8 +39,10 @@ class PostDetailFragment : Fragment() {
         arguments?.getString("postJson")?.let { jsonStr ->
             try {
                 val json = JSONObject(jsonStr)
-                currentPost = ShopPost(
-                    postId = json.getString("postId"),
+                val initialPostId = json.getString("postId")
+                val postInDb = PostsViewModel.allPosts.find { it.postId == initialPostId }
+                currentPost = postInDb ?: ShopPost(
+                    postId = initialPostId,
                     dishName = json.getString("dishName"),
                     price = json.getLong("price"),
                     originalPrice = if (json.has("originalPrice")) json.getLong("originalPrice") else null,
@@ -117,7 +122,11 @@ class PostDetailFragment : Fragment() {
 
     private fun updateStockUi() {
         binding.tvBadge.text = "Còn lại: ${currentPost.stock} suất"
-        binding.tvQuickStockCount.text = currentPost.stock.toString()
+        val currentInput = binding.tvQuickStockCount.text.toString()
+        val postStockStr = currentPost.stock.toString()
+        if (currentInput != postStockStr) {
+            binding.tvQuickStockCount.setText(postStockStr)
+        }
     }
 
     private fun setupControls() {
@@ -126,6 +135,7 @@ class PostDetailFragment : Fragment() {
             val updatedPost = currentPost.copy(stock = currentPost.stock + 1)
             currentPost = updatedPost
             updateStockUi()
+            postsViewModel.updateStock(currentPost.postId, currentPost.stock)
             Toast.makeText(requireContext(), "Đã tăng số suất ăn lên ${currentPost.stock}", Toast.LENGTH_SHORT).show()
         }
 
@@ -135,6 +145,7 @@ class PostDetailFragment : Fragment() {
                 val updatedPost = currentPost.copy(stock = currentPost.stock - 1)
                 currentPost = updatedPost
                 updateStockUi()
+                postsViewModel.updateStock(currentPost.postId, currentPost.stock)
                 Toast.makeText(requireContext(), "Đã giảm số suất ăn xuống ${currentPost.stock}", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(requireContext(), "Số suất ăn đã bằng 0", Toast.LENGTH_SHORT).show()
@@ -143,10 +154,45 @@ class PostDetailFragment : Fragment() {
 
         // Quick Availability Switch
         binding.switchQuickAvailable.setOnCheckedChangeListener { _, isChecked ->
-            val updatedPost = currentPost.copy(isActive = isChecked)
-            currentPost = updatedPost
-            val message = if (isChecked) "Đã mở nhận đơn cho món ăn" else "Đã tắt nhận đơn cho món ăn"
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            if (currentPost.isActive != isChecked) {
+                val updatedPost = currentPost.copy(isActive = isChecked)
+                currentPost = updatedPost
+                postsViewModel.toggleActive(currentPost.postId)
+                val message = if (isChecked) "Đã mở nhận đơn cho món ăn" else "Đã tắt nhận đơn cho món ăn"
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Comment Button Click
+        binding.btnComment.setOnClickListener {
+            val commentSheet = QuickCommentFragment.newInstance(currentPost.postId)
+            commentSheet.setOnCommentAddedListener {
+                val newCommentCount = CommentViewModel.mockCommentsMap[currentPost.postId]?.size ?: currentPost.commentCount
+                val updatedPost = currentPost.copy(commentCount = newCommentCount)
+                currentPost = updatedPost
+                binding.tvCommentCount.text = newCommentCount.toString()
+                
+                // Update in local database too
+                val index = PostsViewModel.allPosts.indexOfFirst { it.postId == currentPost.postId }
+                if (index != -1) {
+                    PostsViewModel.allPosts[index] = PostsViewModel.allPosts[index].copy(commentCount = newCommentCount)
+                }
+            }
+            commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
+        }
+
+        // Delete Post Button Click
+        binding.btnDeletePost.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle("Xóa bài viết")
+                .setMessage("Bạn có chắc chắn muốn xóa bài viết này không?")
+                .setPositiveButton("Xóa") { _, _ ->
+                    postsViewModel.deletePost(currentPost.postId)
+                    Toast.makeText(requireContext(), "Đã xóa bài đăng thành công!", Toast.LENGTH_SHORT).show()
+                    findNavController().navigateUp()
+                }
+                .setNegativeButton("Hủy", null)
+                .show()
         }
 
         // Edit Post Button
@@ -174,6 +220,33 @@ class PostDetailFragment : Fragment() {
                 findNavController().navigate(R.id.createPostFragment, bundle)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+
+        // Text watcher for quick stock edit box
+        binding.tvQuickStockCount.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val input = s?.toString().orEmpty()
+                val parsed = input.toIntOrNull()
+                if (parsed != null && parsed != currentPost.stock) {
+                    val updatedPost = currentPost.copy(stock = parsed)
+                    currentPost = updatedPost
+                    // Update layout badge without setting text to input box
+                    binding.tvBadge.text = "Còn lại: ${currentPost.stock} suất"
+                    postsViewModel.updateStock(currentPost.postId, currentPost.stock)
+                }
+            }
+        })
+
+        // Reset text if left empty on focus lost
+        binding.tvQuickStockCount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val input = binding.tvQuickStockCount.text.toString()
+                if (input.isEmpty() || input.toIntOrNull() == null) {
+                    binding.tvQuickStockCount.setText(currentPost.stock.toString())
+                }
             }
         }
     }

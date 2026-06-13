@@ -43,6 +43,11 @@ class PostsFragment : Fragment(), PostsAdapter.PostActionListener {
         observeData()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.filterPosts(binding.etSearch.text?.toString().orEmpty())
+    }
+
     private fun setupRecyclerView() {
         postsAdapter = PostsAdapter(this)
         binding.rvPosts.apply {

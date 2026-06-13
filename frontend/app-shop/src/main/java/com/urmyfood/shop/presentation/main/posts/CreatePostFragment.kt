@@ -178,6 +178,56 @@ class CreatePostFragment : Fragment() {
             if (error != null) {
                 Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
             } else {
+                val dishName = viewModel.dishName.value.orEmpty()
+                val price = viewModel.price.value.orEmpty().toLongOrNull() ?: 0L
+                val originalPrice = viewModel.originalPrice.value.orEmpty().toLongOrNull()
+                val content = viewModel.description.value.orEmpty()
+                val isAvailable = viewModel.isAvailable.value ?: true
+                val isFlashSale = viewModel.isFlashSale.value ?: false
+                val stock = viewModel.stockCount.value ?: 10
+                val category = binding.spinnerCategory.selectedItem?.toString() ?: "Món chính"
+                
+                val imageUrl = selectedImageUri?.toString() ?: (if (viewModel.isEditMode) {
+                    PostsViewModel.allPosts.find { it.postId == viewModel.editingPostId }?.imageUrl ?: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
+                } else {
+                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
+                })
+
+                if (viewModel.isEditMode) {
+                    val index = PostsViewModel.allPosts.indexOfFirst { it.postId == viewModel.editingPostId }
+                    if (index != -1) {
+                        val existing = PostsViewModel.allPosts[index]
+                        PostsViewModel.allPosts[index] = existing.copy(
+                            dishName = dishName,
+                            price = price,
+                            originalPrice = originalPrice,
+                            content = content,
+                            imageUrl = imageUrl,
+                            stock = stock,
+                            isActive = isAvailable,
+                            isFlashSale = isFlashSale,
+                            category = category
+                        )
+                    }
+                } else {
+                    val newPost = ShopPost(
+                        postId = "post_${System.currentTimeMillis()}",
+                        dishName = dishName,
+                        price = price,
+                        originalPrice = originalPrice,
+                        content = content,
+                        imageUrl = imageUrl,
+                        stock = stock,
+                        maxStock = stock,
+                        isActive = isAvailable,
+                        isFlashSale = isFlashSale,
+                        category = category,
+                        likeCount = 0,
+                        commentCount = 0
+                    )
+                    PostsViewModel.allPosts.add(newPost)
+                }
+
                 val message = if (viewModel.isEditMode) "Cập nhật bài đăng thành công!" else "Tạo bài đăng thành công!"
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
@@ -187,11 +237,38 @@ class CreatePostFragment : Fragment() {
         binding.btnAddImage.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
+
+        // Text watcher for stock edit box
+        binding.tvStockCount.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                val input = s?.toString().orEmpty()
+                val parsed = input.toIntOrNull()
+                if (parsed != null) {
+                    viewModel.setStock(parsed)
+                }
+            }
+        })
+
+        // Reset text if left empty on focus lost
+        binding.tvStockCount.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                val input = binding.tvStockCount.text.toString()
+                if (input.isEmpty() || input.toIntOrNull() == null) {
+                    binding.tvStockCount.setText((viewModel.stockCount.value ?: 10).toString())
+                }
+            }
+        }
     }
 
     private fun observeViewModel() {
         viewModel.stockCount.observe(viewLifecycleOwner) { count ->
-            binding.tvStockCount.text = count.toString()
+            val currentInput = binding.tvStockCount.text.toString()
+            val stockStr = count.toString()
+            if (currentInput != stockStr) {
+                binding.tvStockCount.setText(stockStr)
+            }
         }
     }
 
