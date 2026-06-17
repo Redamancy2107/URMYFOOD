@@ -96,7 +96,7 @@ public class AuthService {
         if (phone != null && accountRepository.findByPhone(phone).isPresent()) {
             throw new RuntimeException("Số điện thoại đã được sử dụng bởi tài khoản khác");
         }
-        otpService.sendOtp(email);
+        otpService.sendOtp(email, "Đăng ký tài khoản");
     }
 
     public AuthResponse loginWithGoogle(String idTokenString) {
@@ -158,7 +158,7 @@ public class AuthService {
     public void forgotPassword(String email) {
         accountRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Account not found with this email"));
-        otpService.sendOtp(email);
+        otpService.sendOtp(email, "Quên mật khẩu");
     }
 
     public String verifyOtpForReset(String email, String code) {
