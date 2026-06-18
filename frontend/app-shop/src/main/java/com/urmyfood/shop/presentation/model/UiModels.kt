@@ -14,6 +14,7 @@ data class Message(
     val content: String,
     val time: String,
     val isSent: Boolean,
-    val isOrderCard: Boolean = false
+    val isOrderCard: Boolean = false,
+    val orderId: String? = null
 )
 

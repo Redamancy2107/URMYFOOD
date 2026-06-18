@@ -15,6 +15,7 @@ import java.util.Locale
 
 class OrdersAdapter(
     private val onActionClick: (ShopOrder) -> Unit,
+    private val onRejectClick: (ShopOrder) -> Unit,
     private val onItemClick: (ShopOrder) -> Unit
 ) : ListAdapter<ShopOrder, OrdersAdapter.ViewHolder>(DiffCallback()) {
 
@@ -56,18 +57,25 @@ class OrdersAdapter(
                 OrderStatus.WAITING -> {
                     binding.btnAction.visibility = View.VISIBLE
                     binding.btnAction.text = "Chuẩn bị"
+                    binding.btnReject.visibility = View.VISIBLE
                 }
                 OrderStatus.PREPARING -> {
                     binding.btnAction.visibility = View.VISIBLE
                     binding.btnAction.text = "Sẵn sàng"
+                    binding.btnReject.visibility = View.GONE
                 }
                 OrderStatus.READY -> {
                     binding.btnAction.visibility = View.GONE
+                    binding.btnReject.visibility = View.GONE
                 }
             }
 
             binding.btnAction.setOnClickListener {
                 onActionClick(order)
+            }
+
+            binding.btnReject.setOnClickListener {
+                onRejectClick(order)
             }
 
             binding.root.setOnClickListener {

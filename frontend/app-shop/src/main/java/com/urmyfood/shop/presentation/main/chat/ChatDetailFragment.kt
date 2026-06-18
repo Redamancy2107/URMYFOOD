@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentChatDetailBinding
 import com.urmyfood.shop.presentation.main.chat.adapter.MessageAdapter
 import com.urmyfood.shop.presentation.model.Message
@@ -50,12 +51,17 @@ class ChatDetailFragment : Fragment() {
             Message(2, "Dạ quán đang chuẩn bị món cho bạn rồi nhé ạ, shipper sắp tới nhận rồi.", "10:31", true),
             Message(3, "Ok shop, nhớ cho mình xin ít nước mắm ngọt nha.", "10:32", false),
             Message(4, "Dạ shop đã ghi chú lại rồi ạ, cảm ơn bạn đã ủng hộ quán!", "10:35", true),
-            Message(5, "Đơn hàng đang chuẩn bị", "10:36", false, isOrderCard = true)
+            Message(5, "Đơn hàng đang chuẩn bị", "10:36", false, isOrderCard = true, orderId = "#ORD-1001")
         )
 
         binding.rvMessages.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = MessageAdapter(dummyMessages)
+            adapter = MessageAdapter(dummyMessages) { orderId ->
+                val bundle = Bundle().apply {
+                    putString("orderId", orderId)
+                }
+                findNavController().navigate(R.id.orderDetailFragment, bundle)
+            }
         }
     }
 
