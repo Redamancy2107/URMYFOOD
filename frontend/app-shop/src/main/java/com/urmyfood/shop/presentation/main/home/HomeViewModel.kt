@@ -38,7 +38,7 @@ class HomeViewModel : ViewModel() {
     private fun loadMockData() {
         _activeOrders.value = listOf(
             ActiveOrder(
-                orderId = "#ORD-001",
+                orderId = "#ORD-1001",
                 time = "10:30",
                 customerName = "Nguyễn Văn A",
                 status = OrderStatus.WAITING,
@@ -46,36 +46,44 @@ class HomeViewModel : ViewModel() {
                 totalPrice = 85000L
             ),
             ActiveOrder(
-                orderId = "#ORD-002",
-                time = "10:45",
+                orderId = "#ORD-1002",
+                time = "10:25",
                 customerName = "Trần Thị B",
-                status = OrderStatus.PREPARING,
-                itemsSummary = "1x Phở bò tái, 1x Nước mía",
+                status = OrderStatus.WAITING,
+                itemsSummary = "1x Bún bò Huế, 1x Sữa đậu nành",
                 totalPrice = 55000L
             ),
             ActiveOrder(
-                orderId = "#ORD-003",
-                time = "11:00",
+                orderId = "#ORD-1003",
+                time = "10:15",
                 customerName = "Lê Hoàng C",
-                status = OrderStatus.WAITING,
-                itemsSummary = "3x Bánh mì thịt, 2x Cà phê sữa đá",
+                status = OrderStatus.PREPARING,
+                itemsSummary = "3x Bánh mì thịt, 2x Cà phê sữa",
                 totalPrice = 125000L
             ),
             ActiveOrder(
-                orderId = "#ORD-004",
-                time = "11:15",
+                orderId = "#ORD-1004",
+                time = "10:10",
                 customerName = "Phạm Minh D",
                 status = OrderStatus.PREPARING,
-                itemsSummary = "1x Bún bò Huế, 1x Chả giò",
+                itemsSummary = "1x Phở bò chín, 1x Quẩy",
                 totalPrice = 60000L
             ),
             ActiveOrder(
-                orderId = "#ORD-005",
-                time = "11:20",
-                customerName = "Võ Thanh E",
+                orderId = "#ORD-1007",
+                time = "09:15",
+                customerName = "Hoàng Văn G",
                 status = OrderStatus.WAITING,
-                itemsSummary = "2x Cơm gà xối mỡ, 1x Sinh tố bơ",
-                totalPrice = 95000L
+                itemsSummary = "1x Hủ tiếu Nam Vang",
+                totalPrice = 45000L
+            ),
+            ActiveOrder(
+                orderId = "#ORD-1008",
+                time = "09:00",
+                customerName = "Ngô Thị H",
+                status = OrderStatus.PREPARING,
+                itemsSummary = "2x Bún riêu cua, 2x Nước mía",
+                totalPrice = 80000L
             )
         )
     }

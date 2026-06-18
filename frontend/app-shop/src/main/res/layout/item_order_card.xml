@@ -124,6 +124,21 @@
             android:paddingTop="12dp">
 
             <TextView
+                android:id="@+id/btnReject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:layout_marginEnd="12dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:text="Từ chối" />
+
+            <TextView
                 android:id="@+id/btnAction"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

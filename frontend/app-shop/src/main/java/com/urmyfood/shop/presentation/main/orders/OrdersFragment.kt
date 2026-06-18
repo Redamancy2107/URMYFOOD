@@ -78,6 +78,11 @@ class OrdersFragment : Fragment() {
                     viewModel.advanceOrderStatus(order.orderId)
                 }
             },
+            onRejectClick = { order ->
+                showRejectConfirmation(order.orderId) {
+                    viewModel.rejectOrder(order.orderId)
+                }
+            },
             onItemClick = { order ->
                 val args = Bundle().apply {
                     putString("orderId", order.orderId)
@@ -90,6 +95,18 @@ class OrdersFragment : Fragment() {
         )
         binding.rvOrders.layoutManager = LinearLayoutManager(requireContext())
         binding.rvOrders.adapter = ordersAdapter
+    }
+
+    private fun showRejectConfirmation(orderId: String, onConfirm: () -> Unit) {
+        val reasons = arrayOf("Hết nguyên liệu / món ăn", "Quá tải đơn hàng", "Ngoài giờ phục vụ", "Lý do khác")
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Từ chối đơn hàng $orderId")
+            .setSingleChoiceItems(reasons, 0, null)
+            .setPositiveButton("Xác nhận từ chối") { _, _ ->
+                onConfirm()
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun showActionConfirmation(

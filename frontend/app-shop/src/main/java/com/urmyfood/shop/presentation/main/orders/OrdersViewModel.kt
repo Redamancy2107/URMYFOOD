@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 class OrdersViewModel : ViewModel() {
 
     enum class OrderStatus(val label: String) {
-        WAITING("Đang chờ"),
+        WAITING("Chờ xác nhận"),
         PREPARING("Đang chuẩn bị"),
         READY("Đã sẵn sàng")
     }
@@ -60,6 +60,15 @@ class OrdersViewModel : ViewModel() {
                 OrderStatus.READY -> OrderStatus.READY // already final
             }
             currentList[index] = order.copy(status = nextStatus)
+            _allOrders.value = currentList
+        }
+    }
+
+    fun rejectOrder(orderId: String) {
+        val currentList = _allOrders.value.orEmpty().toMutableList()
+        val index = currentList.indexOfFirst { it.orderId == orderId }
+        if (index != -1) {
+            currentList.removeAt(index)
             _allOrders.value = currentList
         }
     }
