@@ -10,6 +10,14 @@
 
     <style name="Theme.URMYFOOD" parent="Base.Theme.URMYFOOD" />
 
+    <!-- SplashScreen theme -->
+    <style name="Theme.URMYFOOD.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.URMYFOOD</item>
+    </style>
+
+
     <!-- Bottom Navigation Active Indicator -->
     <style name="BottomNavActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">#20D11A2A</item>
