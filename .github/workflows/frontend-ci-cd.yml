@@ -1,0 +1,104 @@
+name: Frontend Android CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-sign:
+    name: Build and Sign Android APKs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x frontend/gradlew
+
+      - name: Create local.properties for Build Config
+        run: |
+          echo "GOOGLE_SERVER_CLIENT_ID=${{ secrets.GOOGLE_SERVER_CLIENT_ID }}" >> frontend/local.properties
+          echo "base_url=${{ secrets.BASE_URL }}" >> frontend/local.properties
+
+      - name: Build Release APKs (Unsigned)
+        run: |
+          cd frontend
+          ./gradlew assembleRelease
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > frontend/keystore.jks
+
+      - name: Sign APKs with apksigner
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # Tìm công cụ apksigner trong Android SDK pre-installed của GitHub Runner
+          APKSIGNER=$(find $ANDROID_SDK_ROOT/build-tools -name apksigner | sort -r | head -n 1)
+          echo "Using apksigner at: $APKSIGNER"
+          
+          # Ký App User
+          UNSIGNED_USER_APK=$(find frontend/app-user/build/outputs/apk/release -name "*unsigned.apk" -o -name "*release.apk" | head -n 1)
+          if [ -n "$UNSIGNED_USER_APK" ]; then
+            $APKSIGNER sign --ks frontend/keystore.jks --ks-key-alias "$KEY_ALIAS" --ks-pass pass:"$KEYSTORE_PASSWORD" --key-pass pass:"$KEY_PASSWORD" --out frontend/app-user-release.apk "$UNSIGNED_USER_APK"
+            echo "Successfully signed User App APK"
+          else
+            echo "User App APK not found!"
+            exit 1
+          fi
+          
+          # Ký App Shop
+          UNSIGNED_SHOP_APK=$(find frontend/app-shop/build/outputs/apk/release -name "*unsigned.apk" -o -name "*release.apk" | head -n 1)
+          if [ -n "$UNSIGNED_SHOP_APK" ]; then
+            $APKSIGNER sign --ks frontend/keystore.jks --ks-key-alias "$KEY_ALIAS" --ks-pass pass:"$KEYSTORE_PASSWORD" --key-pass pass:"$KEY_PASSWORD" --out frontend/app-shop-release.apk "$UNSIGNED_SHOP_APK"
+            echo "Successfully signed Shop App APK"
+          else
+            echo "Shop App APK not found!"
+            exit 1
+          fi
+          
+          # Ký App Admin
+          UNSIGNED_ADMIN_APK=$(find frontend/app-admin/build/outputs/apk/release -name "*unsigned.apk" -o -name "*release.apk" | head -n 1)
+          if [ -n "$UNSIGNED_ADMIN_APK" ]; then
+            $APKSIGNER sign --ks frontend/keystore.jks --ks-key-alias "$KEY_ALIAS" --ks-pass pass:"$KEYSTORE_PASSWORD" --key-pass pass:"$KEY_PASSWORD" --out frontend/app-admin-release.apk "$UNSIGNED_ADMIN_APK"
+            echo "Successfully signed Admin App APK"
+          else
+            echo "Admin App APK not found!"
+            exit 1
+          fi
+
+      - name: Upload Signed User App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-user-release
+          path: frontend/app-user-release.apk
+
+      - name: Upload Signed Shop App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shop-release
+          path: frontend/app-shop-release.apk
+
+      - name: Upload Signed Admin App APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-admin-release
+          path: frontend/app-admin-release.apk
