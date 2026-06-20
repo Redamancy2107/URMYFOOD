@@ -25,4 +25,17 @@ class FakeTokenStore : TokenStore {
     }
 
     override fun isLoggedIn(): Boolean = loggedIn
+
+    private var firstTime = true
+    private var fullName: String? = null
+
+    override fun isFirstTime(): Boolean = firstTime
+
+    override fun setFirstTime(isFirstTime: Boolean) {
+        firstTime = isFirstTime
+    }
+
+    override fun saveFullName(fullName: String) {
+        this.fullName = fullName
+    }
 }
