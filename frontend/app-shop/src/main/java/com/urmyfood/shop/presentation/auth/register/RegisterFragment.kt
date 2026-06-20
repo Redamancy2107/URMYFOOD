@@ -36,8 +36,11 @@ class RegisterFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.tvTermsLink.setOnClickListener {
-            TermsBottomSheetFragment.newInstance()
-                .show(parentFragmentManager, TermsBottomSheetFragment.TAG)
+            val termsDialog = TermsDialogFragment()
+            termsDialog.setOnAgreeClickListener {
+                binding.cbTerms.isChecked = true
+            }
+            termsDialog.show(parentFragmentManager, TermsDialogFragment.TAG)
         }
         binding.tvLoginLink.setOnClickListener {
             findNavController().safeNavigate(R.id.action_register_to_login)
