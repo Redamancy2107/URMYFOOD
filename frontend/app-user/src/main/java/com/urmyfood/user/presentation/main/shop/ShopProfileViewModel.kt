@@ -57,6 +57,12 @@ class ShopProfileViewModel : ViewModel() {
     private val _rating = MutableLiveData<String>()
     val rating: LiveData<String> = _rating
 
+    private val _shopCategory = MutableLiveData<String>()
+    val shopCategory: LiveData<String> = _shopCategory
+
+    private val _isOpen = MutableLiveData<Boolean>()
+    val isOpen: LiveData<Boolean> = _isOpen
+
     // Filter-related states (clean architecture for BE integration)
     private val _selectedCategory = MutableLiveData<String?>()
     val selectedCategory: LiveData<String?> = _selectedCategory
@@ -72,6 +78,7 @@ class ShopProfileViewModel : ViewModel() {
             "Tiệm Trà Sữa Mây" -> "12 Cao Thắng, Phường 5, Quận 3, TP. Hồ Chí Minh"
             "Cơm Tấm Bụi" -> "378 Lê Văn Sỹ, Phường 14, Quận 3, TP. Hồ Chí Minh"
             "Quán Bà Chiểu" -> "Bùi Hữu Nghĩa, Phường 1, Quận Bình Thạnh, TP. Hồ Chí Minh"
+            "Phở Hùng - Lê Thánh Tôn" -> "58 Đ. Bùi Hữu Nghĩa, Gia Định, Hồ Chí Minh, Việt Nam"
             else -> "145 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
         }
         
@@ -79,6 +86,7 @@ class ShopProfileViewModel : ViewModel() {
             "Tiệm Trà Sữa Mây" -> "08:00 - 22:00"
             "Cơm Tấm Bụi" -> "06:30 - 21:00"
             "Quán Bà Chiểu" -> "07:00 - 22:30"
+            "Phở Hùng - Lê Thánh Tôn" -> "08:00 - 10:00"
             else -> "09:00 - 21:30"
         }
 
@@ -87,6 +95,22 @@ class ShopProfileViewModel : ViewModel() {
             "Cơm Tấm Bụi" -> "4.5"
             "Quán Bà Chiểu" -> "4.8"
             else -> "4.6"
+        }
+
+        _shopCategory.value = when (name) {
+            "Tiệm Trà Sữa Mây" -> "Trà sữa"
+            "Cơm Tấm Bụi" -> "Cơm tấm"
+            "Quán Bà Chiểu" -> "Bún bò"
+            "Phở Hùng - Lê Thánh Tôn" -> "Phở"
+            else -> "Phở"
+        }
+
+        _isOpen.value = when (name) {
+            "Tiệm Trà Sữa Mây" -> true
+            "Cơm Tấm Bụi" -> true
+            "Quán Bà Chiểu" -> true
+            "Phở Hùng - Lê Thánh Tôn" -> false
+            else -> true
         }
         
         // Generate mock shop stats based on shop name
