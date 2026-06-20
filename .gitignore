@@ -151,3 +151,5 @@ fabric.properties
 .cursorrules
 CODING_RULES.md
 antigravity_rules.txt
+.agents/
+AGENTS.md
