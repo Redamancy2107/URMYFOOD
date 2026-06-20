@@ -3,7 +3,7 @@ package com.urmyfood.shared.data.local
 import android.content.Context
 import android.content.SharedPreferences
 
-class TokenManager(context: Context, prefName: String) : TokenStore {
+open class TokenManager(context: Context, prefName: String) : TokenStore {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
@@ -13,6 +13,7 @@ class TokenManager(context: Context, prefName: String) : TokenStore {
         private const val KEY_REFRESH_TOKEN = "refresh_token"
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_ROLE = "user_role"
+        private const val KEY_IS_FIRST_TIME = "is_first_time"
     }
 
     override fun saveToken(
@@ -46,4 +47,14 @@ class TokenManager(context: Context, prefName: String) : TokenStore {
     }
 
     override fun isLoggedIn(): Boolean = getAccessToken() != null
+
+    override fun isFirstTime(): Boolean = prefs.getBoolean(KEY_IS_FIRST_TIME, true)
+
+    override fun setFirstTime(isFirstTime: Boolean) {
+        prefs.edit().putBoolean(KEY_IS_FIRST_TIME, isFirstTime).apply()
+    }
+
+    override fun saveFullName(fullName: String) {
+        prefs.edit().putString(KEY_USER_NAME, fullName).apply()
+    }
 }

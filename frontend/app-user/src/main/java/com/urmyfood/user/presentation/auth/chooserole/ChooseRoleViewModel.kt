@@ -28,8 +28,12 @@ class ChooseRoleViewModel(
         viewModelScope.launch {
             when (val result = loginWithGoogleUseCase(idToken)) {
                 is com.urmyfood.user.domain.model.Result.Success -> {
-                    saveToken(result.data)
-                    _uiState.value = ChooseRoleUiState.Success(result.data)
+                    if (result.data.role != "CUSTOMER") {
+                        _uiState.value = ChooseRoleUiState.WrongRole
+                    } else {
+                        saveToken(result.data)
+                        _uiState.value = ChooseRoleUiState.Success(result.data)
+                    }
                 }
                 is com.urmyfood.user.domain.model.Result.Error -> {
                     _uiState.value = ChooseRoleUiState.Error(result.message)
@@ -37,6 +41,8 @@ class ChooseRoleViewModel(
             }
         }
     }
+
+    fun resetState() { _uiState.value = ChooseRoleUiState.Idle }
 
     private fun saveToken(authToken: com.urmyfood.user.domain.model.AuthToken) {
         tokenManager.saveToken(
@@ -67,5 +73,6 @@ sealed class ChooseRoleUiState {
     data object Loading : ChooseRoleUiState()
     data class Success(val authToken: com.urmyfood.user.domain.model.AuthToken) : ChooseRoleUiState()
     data object GuestSuccess : ChooseRoleUiState()
+    data object WrongRole : ChooseRoleUiState()
     data class Error(val message: String) : ChooseRoleUiState()
 }

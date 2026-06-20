@@ -97,6 +97,7 @@ class AccountFragment : Fragment() {
         binding.ivShopAvatar.setImageResource(R.drawable.ic_person_placeholder)
         binding.tvShopName.text = getString(R.string.shop_profile_loading)
         binding.tvProfileStatus.text = getString(R.string.shop_profile_loading)
+        binding.tvCategory.visibility = View.VISIBLE
         binding.tvCategory.text = getString(R.string.shop_profile_loading)
         binding.tvAddress.text = getString(R.string.shop_profile_loading)
         binding.tvOpeningHours.text = getString(R.string.shop_profile_loading)
@@ -106,7 +107,16 @@ class AccountFragment : Fragment() {
     private fun renderProfile(profile: ShopProfile) {
         binding.tvShopName.text = profile.shopName.ifBlank { getString(R.string.shop_profile_default_name) }
         binding.tvProfileStatus.text = verificationText(profile.verificationStatus)
-        binding.tvCategory.text = categoryDisplayName(profile.category)
+        
+        val categoryCode = profile.category
+        val categoryEnum = ShopCategory.entries.firstOrNull { it.name == categoryCode || it.displayName == categoryCode }
+        if (categoryEnum == null || categoryEnum == ShopCategory.KHAC) {
+            binding.tvCategory.visibility = View.GONE
+        } else {
+            binding.tvCategory.visibility = View.VISIBLE
+            binding.tvCategory.text = "Món chủ đạo: ${categoryEnum.displayName}"
+        }
+
         binding.tvAddress.text = profile.address.ifBlank { getString(R.string.shop_profile_no_address) }
         binding.tvOpeningHours.text = profile.openingHours.ifBlank { getString(R.string.shop_profile_default_hours) }
         binding.tvOpenState.text = if (profile.isOpen) {
@@ -141,6 +151,7 @@ class AccountFragment : Fragment() {
         binding.ivShopAvatar.setImageResource(R.drawable.ic_person_placeholder)
         binding.tvProfileStatus.text = message
         binding.tvShopName.text = getString(R.string.shop_profile_default_name)
+        binding.tvCategory.visibility = View.VISIBLE
         binding.tvCategory.text = getString(R.string.shop_profile_unknown_category)
         binding.tvAddress.text = getString(R.string.shop_profile_no_address)
         binding.tvOpeningHours.text = getString(R.string.shop_profile_default_hours)

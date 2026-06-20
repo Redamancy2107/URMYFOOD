@@ -8,4 +8,7 @@ interface TokenStore {
     fun getRole(): String?
     fun clear()
     fun isLoggedIn(): Boolean
+    fun isFirstTime(): Boolean
+    fun setFirstTime(isFirstTime: Boolean)
+    fun saveFullName(fullName: String)
 }
