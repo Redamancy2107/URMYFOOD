@@ -46,6 +46,9 @@ public class PostResponse {
     @JsonProperty("image_url")
     private String imageUrl;
 
+    @JsonProperty("shop_account_id")
+    private Long shopAccountId;
+
     @JsonProperty("shop_name")
     private String shopName;
 

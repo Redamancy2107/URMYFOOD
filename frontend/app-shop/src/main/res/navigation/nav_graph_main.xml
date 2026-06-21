@@ -147,8 +147,12 @@
         android:label="ChatDetailFragment"
         tools:layout="@layout/fragment_chat_detail">
         <argument
+            android:name="sessionId"
+            app:argType="long" />
+        <argument
             android:name="customerName"
-            app:argType="string" />
+            app:argType="string"
+            android:defaultValue="" />
     </fragment>
 
 </navigation>

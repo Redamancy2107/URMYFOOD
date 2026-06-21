@@ -39,7 +39,15 @@
         android:id="@+id/chatDetailFragment"
         android:name="com.urmyfood.user.presentation.main.chat.ChatDetailFragment"
         android:label="Chi tiết trò chuyện"
-        tools:layout="@layout/fragment_chat_detail" />
+        tools:layout="@layout/fragment_chat_detail">
+        <argument
+            android:name="sessionId"
+            app:argType="long" />
+        <argument
+            android:name="shopName"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
 
     <fragment
         android:id="@+id/profileFragment"

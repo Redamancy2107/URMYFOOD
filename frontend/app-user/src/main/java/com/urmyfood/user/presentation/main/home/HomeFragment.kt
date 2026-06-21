@@ -259,6 +259,7 @@ class HomeFragment : Fragment() {
             val bundle = Bundle().apply {
                 putString("shopName", post.shopName)
                 putString("shopAvatarUrl", post.shopAvatarUrl)
+                putLong("shopId", post.shopAccountId)
             }
             findNavController().navigate(R.id.shopProfileFragment, bundle)
         }
