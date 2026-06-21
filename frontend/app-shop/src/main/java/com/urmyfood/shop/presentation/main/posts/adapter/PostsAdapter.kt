@@ -7,25 +7,23 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.ItemPostCardBinding
-import com.urmyfood.shop.presentation.main.posts.ShopPost
+import com.urmyfood.shop.domain.model.Post
 import com.bumptech.glide.Glide
 import java.text.NumberFormat
 import java.util.Locale
 
 class PostsAdapter(
     private val listener: PostActionListener
-) : ListAdapter<ShopPost, PostsAdapter.PostViewHolder>(PostDiffCallback()) {
+) : ListAdapter<Post, PostsAdapter.PostViewHolder>(PostDiffCallback()) {
 
     interface PostActionListener {
         fun onSwitchToggle(postId: String, isActive: Boolean)
-        fun onEditClick(post: ShopPost)
-        fun onItemClick(post: ShopPost)
+        fun onEditClick(post: Post)
+        fun onItemClick(post: Post)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostViewHolder {
-        val binding = ItemPostCardBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
+        val binding = ItemPostCardBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return PostViewHolder(binding)
     }
 
@@ -37,22 +35,20 @@ class PostsAdapter(
         private val binding: ItemPostCardBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(post: ShopPost) {
+        fun bind(post: Post) {
             val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
 
             binding.tvDishName.text = post.dishName
             binding.tvPrice.text = "${formatter.format(post.price)}₫"
             binding.tvStock.text = "Tồn kho: ${post.stock}"
 
-            // Set switch state without triggering listener
             binding.switchActive.setOnCheckedChangeListener(null)
             binding.switchActive.isChecked = post.isActive
             binding.switchActive.setOnCheckedChangeListener { _, isChecked ->
                 listener.onSwitchToggle(post.postId, isChecked)
             }
 
-            // Load dish image with Glide
-            if (post.imageUrl.isNotEmpty()) {
+            if (!post.imageUrl.isNullOrEmpty()) {
                 Glide.with(binding.ivDishImage.context)
                     .load(post.imageUrl)
                     .placeholder(R.drawable.ic_image_placeholder)
@@ -68,11 +64,11 @@ class PostsAdapter(
         }
     }
 
-    private class PostDiffCallback : DiffUtil.ItemCallback<ShopPost>() {
-        override fun areItemsTheSame(oldItem: ShopPost, newItem: ShopPost): Boolean =
+    private class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
+        override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean =
             oldItem.postId == newItem.postId
 
-        override fun areContentsTheSame(oldItem: ShopPost, newItem: ShopPost): Boolean =
+        override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean =
             oldItem == newItem
     }
 }

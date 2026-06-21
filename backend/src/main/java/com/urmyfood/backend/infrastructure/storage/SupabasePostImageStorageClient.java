@@ -43,7 +43,7 @@ public class SupabasePostImageStorageClient implements PostImageStorageClient {
         validateFile(file);
 
         String ext = toExtension(file.getContentType());
-        String objectPath = "post-images/%d/%s.%s".formatted(shopId, UUID.randomUUID(), ext);
+        String objectPath = "shop-profiles/%d/posts/%s.%s".formatted(shopId, UUID.randomUUID(), ext);
         String uploadUrl = normalizeUrl(supabaseUrl) + "/storage/v1/object/" + bucket + "/" + objectPath;
 
         try {

@@ -3,6 +3,10 @@ package com.urmyfood.shop.data.model
 import com.google.gson.annotations.SerializedName
 import com.urmyfood.shop.domain.model.Comment
 import com.urmyfood.shop.domain.model.Post
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class PostDto(
     @SerializedName("post_id") val postId: String?,
@@ -39,7 +43,7 @@ fun PostDto.toDomain() = Post(
     imageUrl = imageUrl,
     shopName = shopName.orEmpty(),
     shopAvatarUrl = shopAvatarUrl,
-    createdAt = createdAt.orEmpty(),
+    createdAt = formatPostTime(createdAt),
     likeCount = likeCount ?: 0L,
     isLiked = isLiked ?: false,
     commentCount = commentCount ?: 0L,
@@ -101,7 +105,7 @@ fun CommentDto.toDomain() = Comment(
     authorName = authorName.orEmpty(),
     authorAvatarUrl = authorAvatarUrl,
     content = content.orEmpty(),
-    createdAt = createdAt.orEmpty(),
+    createdAt = formatPostTime(createdAt),
     parentId = parentId
 )
 
@@ -115,3 +119,16 @@ data class AddCommentRequest(
     @SerializedName("content") val content: String,
     @SerializedName("parent_id") val parentId: String?
 )
+
+private val postDisplayFormatter =
+    DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy", Locale.forLanguageTag("vi-VN"))
+
+/** Chuyển timestamp ISO từ backend (UTC) sang chuỗi giờ Việt Nam dễ đọc. */
+private fun formatPostTime(value: String?): String {
+    if (value.isNullOrBlank()) return ""
+    return runCatching {
+        OffsetDateTime.parse(value)
+            .atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+            .format(postDisplayFormatter)
+    }.getOrElse { value }
+}

@@ -8,22 +8,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentMainPostsBinding
+import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shop.domain.model.Post
 import com.urmyfood.shop.presentation.common.safeNavigate
 import com.urmyfood.shop.presentation.main.posts.adapter.PostsAdapter
-
-import org.json.JSONObject
 
 class PostsFragment : Fragment(), PostsAdapter.PostActionListener {
 
     private var _binding: FragmentMainPostsBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: PostsViewModel by viewModels()
+    private lateinit var viewModel: PostsViewModel
     private lateinit var postsAdapter: PostsAdapter
 
     override fun onCreateView(
@@ -37,6 +37,8 @@ class PostsFragment : Fragment(), PostsAdapter.PostActionListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel = ViewModelProvider(this, ServiceLocator.providePostsViewModelFactory())
+            .get(PostsViewModel::class.java)
         setupRecyclerView()
         setupSearch()
         setupListeners()
@@ -45,7 +47,7 @@ class PostsFragment : Fragment(), PostsAdapter.PostActionListener {
 
     override fun onResume() {
         super.onResume()
-        viewModel.filterPosts(binding.etSearch.text?.toString().orEmpty())
+        viewModel.loadPosts()
     }
 
     private fun setupRecyclerView() {
@@ -73,46 +75,34 @@ class PostsFragment : Fragment(), PostsAdapter.PostActionListener {
     }
 
     private fun observeData() {
-        viewModel.posts.observe(viewLifecycleOwner) { posts ->
-            postsAdapter.submitList(posts)
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is PostsUiState.Loading -> { /* show shimmer if available */ }
+                is PostsUiState.Success -> postsAdapter.submitList(state.posts)
+                is PostsUiState.Error -> Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.deleteResult.observe(viewLifecycleOwner) { result ->
+            result ?: return@observe
+            if (result is com.urmyfood.shared.domain.model.Result.Error) {
+                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+            }
+            viewModel.clearDeleteResult()
         }
     }
 
-    // Helper to serialize ShopPost to String
-    private fun serializePost(post: ShopPost): String {
-        return JSONObject().apply {
-            put("postId", post.postId)
-            put("dishName", post.dishName)
-            put("price", post.price)
-            post.originalPrice?.let { put("originalPrice", it) }
-            post.content?.let { put("content", it) }
-            put("imageUrl", post.imageUrl)
-            put("stock", post.stock)
-            put("maxStock", post.maxStock)
-            put("isActive", post.isActive)
-            put("isFlashSale", post.isFlashSale)
-            put("likeCount", post.likeCount)
-            put("commentCount", post.commentCount)
-            post.category?.let { put("category", it) }
-        }.toString()
-    }
-
-    // PostActionListener callbacks
     override fun onSwitchToggle(postId: String, isActive: Boolean) {
-        viewModel.toggleActive(postId)
+        viewModel.toggleActive(postId, isActive)
     }
 
-    override fun onEditClick(post: ShopPost) {
-        val bundle = Bundle().apply {
-            putString("postJson", serializePost(post))
-        }
+    override fun onEditClick(post: Post) {
+        val bundle = Bundle().apply { putString("postId", post.postId) }
         findNavController().navigate(R.id.action_posts_to_createPost, bundle)
     }
 
-    override fun onItemClick(post: ShopPost) {
-        val bundle = Bundle().apply {
-            putString("postJson", serializePost(post))
-        }
+    override fun onItemClick(post: Post) {
+        val bundle = Bundle().apply { putString("postId", post.postId) }
         findNavController().navigate(R.id.action_posts_to_postDetail, bundle)
     }
 

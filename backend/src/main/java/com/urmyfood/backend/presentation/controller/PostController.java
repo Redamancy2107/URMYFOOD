@@ -6,19 +6,25 @@ import com.urmyfood.backend.application.dto.CreateCommentRequest;
 import com.urmyfood.backend.application.dto.CreatePostRequest;
 import com.urmyfood.backend.application.dto.LikeToggleResponse;
 import com.urmyfood.backend.application.dto.PageResponse;
+import com.urmyfood.backend.application.dto.PostImageUploadResponse;
 import com.urmyfood.backend.application.dto.PostResponse;
+import com.urmyfood.backend.application.dto.UpdatePostRequest;
+import com.urmyfood.backend.application.dto.UpdatePostStatusRequest;
 import com.urmyfood.backend.application.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -39,6 +45,15 @@ public class PostController {
         OffsetDateTime anchorDt = anchor != null ? OffsetDateTime.parse(anchor) : null;
         PageResponse<PostResponse> result = postService.getNewsfeed(page, size, anchorDt);
         return ResponseEntity.ok(ApiResponse.success("Tải bài viết thành công", result));
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getMyPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<PostResponse> result = postService.getMyPosts(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Tải bài viết của bạn thành công", result));
     }
 
     @GetMapping("/search")
@@ -63,6 +78,38 @@ public class PostController {
     public ResponseEntity<ApiResponse<PostResponse>> createPost(@Valid @RequestBody CreatePostRequest request) {
         PostResponse response = postService.createPost(request);
         return ResponseEntity.ok(ApiResponse.success("Tạo bài viết thành công", response));
+    }
+
+    @PutMapping("/{postId}")
+    public ResponseEntity<ApiResponse<PostResponse>> updatePost(
+            @PathVariable UUID postId,
+            @Valid @RequestBody UpdatePostRequest request
+    ) {
+        PostResponse response = postService.updatePost(postId, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật bài viết thành công", response));
+    }
+
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable UUID postId) {
+        postService.deletePost(postId);
+        return ResponseEntity.ok(ApiResponse.success("Xóa bài viết thành công", null));
+    }
+
+    @PatchMapping("/{postId}/status")
+    public ResponseEntity<ApiResponse<PostResponse>> updatePostStatus(
+            @PathVariable UUID postId,
+            @Valid @RequestBody UpdatePostStatusRequest request
+    ) {
+        PostResponse response = postService.updatePostStatus(postId, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật trạng thái thành công", response));
+    }
+
+    @PostMapping("/images")
+    public ResponseEntity<ApiResponse<PostImageUploadResponse>> uploadPostImage(
+            @RequestParam("file") MultipartFile file
+    ) {
+        PostImageUploadResponse response = postService.uploadPostImage(file);
+        return ResponseEntity.ok(ApiResponse.success("Tải ảnh lên thành công", response));
     }
 
     @PostMapping("/{postId}/like")
