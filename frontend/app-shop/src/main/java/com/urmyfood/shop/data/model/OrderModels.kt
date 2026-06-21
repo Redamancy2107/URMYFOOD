@@ -1,6 +1,7 @@
 package com.urmyfood.shop.data.model
 
 import com.google.gson.annotations.SerializedName
+import com.urmyfood.shared.util.OrderDateFormatter
 import com.urmyfood.shop.domain.model.Order
 import com.urmyfood.shop.domain.model.OrderItem
 
@@ -61,6 +62,6 @@ fun OrderResponse.toDomain() = Order(
     deliveryAddress = deliveryAddress.orEmpty(),
     note = note,
     cancelReason = cancelReason,
-    createdAt = createdAt.orEmpty(),
+    createdAt = OrderDateFormatter.format(createdAt),
     items = items?.map { it.toDomain() } ?: emptyList()
 )

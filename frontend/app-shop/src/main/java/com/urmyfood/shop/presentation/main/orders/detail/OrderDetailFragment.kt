@@ -83,7 +83,7 @@ class OrderDetailFragment : Fragment() {
     }
 
     private fun bindOrder(order: Order) {
-        binding.toolbar.subtitle = order.createdAt.take(16).replace("T", " ")
+        binding.toolbar.subtitle = order.createdAt
         binding.tvCustomerName.text = order.customerName
         val baseStatus = when (order.orderStatus) {
             "PENDING" -> "Chờ xác nhận"
@@ -96,7 +96,13 @@ class OrderDetailFragment : Fragment() {
             "EXPIRED" -> "Hết hạn"
             else -> order.orderStatus
         }
-        val paymentLabel = if (order.paymentStatus == "PAID") " (Đã thanh toán)" else ""
+        val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
+        val paymentLabel = when {
+            isWaitingForVietQrPayment -> " (Chờ thanh toán VietQR)"
+            order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus == PAYMENT_PAID -> " (VietQR - Đã thanh toán)"
+            order.paymentStatus == PAYMENT_PAID -> " (Đã thanh toán)"
+            else -> ""
+        }
         binding.tvOrderStatus.text = baseStatus + paymentLabel
 
         if (order.note.isNullOrBlank()) {
@@ -126,12 +132,23 @@ class OrderDetailFragment : Fragment() {
     }
 
     private fun setupActionButton(order: Order) {
+        val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
+        binding.btnAction.isEnabled = true
+        binding.btnAction.alpha = 1f
+
         when (order.orderStatus) {
             "PENDING" -> {
                 binding.btnAction.visibility = View.VISIBLE
-                binding.btnAction.text = "Xác nhận đơn hàng"
-                binding.btnAction.setOnClickListener {
-                    viewModel.updateStatus(order.orderId, "ACCEPTED")
+                if (isWaitingForVietQrPayment) {
+                    binding.btnAction.text = "Chờ thanh toán VietQR"
+                    binding.btnAction.isEnabled = false
+                    binding.btnAction.alpha = 0.6f
+                    binding.btnAction.setOnClickListener(null)
+                } else {
+                    binding.btnAction.text = "Xác nhận đơn hàng"
+                    binding.btnAction.setOnClickListener {
+                        viewModel.updateStatus(order.orderId, "ACCEPTED")
+                    }
                 }
             }
             "ACCEPTED" -> {
@@ -188,5 +205,10 @@ class OrderDetailFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val PAYMENT_VIETQR = "VIETQR"
+        private const val PAYMENT_PAID = "PAID"
     }
 }

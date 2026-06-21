@@ -36,12 +36,18 @@ class OrdersAdapter(
 
         fun bind(order: Order) {
             binding.tvOrderId.text = order.orderId.take(8).uppercase()
-            binding.tvTimestamp.text = order.createdAt.take(16).replace("T", " ")
+            binding.tvTimestamp.text = order.createdAt
             binding.tvCustomerName.text = order.customerName
             binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
             binding.tvTotalPrice.text = formatCurrency(order.finalAmount.toLong())
 
-            val paymentLabel = if (order.paymentStatus == "PAID") " (Đã thanh toán)" else ""
+            val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
+            val paymentLabel = when {
+                isWaitingForVietQrPayment -> " (Chờ thanh toán VietQR)"
+                order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus == PAYMENT_PAID -> " (VietQR - Đã thanh toán)"
+                order.paymentStatus == PAYMENT_PAID -> " (Đã thanh toán)"
+                else -> ""
+            }
             val (statusLabel, statusColorRes) = when (order.orderStatus) {
                 "PENDING" -> "Chờ xác nhận" to R.color.warning
                 "ACCEPTED" -> "Đã xác nhận" to R.color.primary
@@ -58,9 +64,14 @@ class OrdersAdapter(
 
             when (order.orderStatus) {
                 "PENDING" -> {
-                    binding.btnAction.visibility = View.VISIBLE
-                    binding.btnAction.text = "Xác nhận"
-                    binding.btnAction.setOnClickListener { onAcceptClick(order) }
+                    if (isWaitingForVietQrPayment) {
+                        binding.btnAction.visibility = View.GONE
+                        binding.btnAction.setOnClickListener(null)
+                    } else {
+                        binding.btnAction.visibility = View.VISIBLE
+                        binding.btnAction.text = "Xác nhận"
+                        binding.btnAction.setOnClickListener { onAcceptClick(order) }
+                    }
                     binding.btnReject.visibility = View.VISIBLE
                 }
                 "ACCEPTED", "PICKING_UP", "DELIVERING" -> {
@@ -87,6 +98,11 @@ class OrdersAdapter(
             val formatter = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
             return formatter.format(amount)
         }
+    }
+
+    companion object {
+        private const val PAYMENT_VIETQR = "VIETQR"
+        private const val PAYMENT_PAID = "PAID"
     }
 
     private class DiffCallback : DiffUtil.ItemCallback<Order>() {
