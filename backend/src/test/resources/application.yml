@@ -3,27 +3,26 @@ spring:
     name: urmyfood-backend-test
 
   datasource:
-    url: jdbc:h2:mem:urmyfood_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
-    hikari:
-      maximum-pool-size: 5
-      minimum-idle: 1
-      connection-timeout: 30000
+    url: jdbc:postgresql://localhost:5432/urmyfood
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.H2Dialect
     open-in-view: false
 
   flyway:
-    enabled: false
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    ignore-missing-migrations: true
+    out-of-order: true
 
 supabase:
   url: "http://localhost:8080"
