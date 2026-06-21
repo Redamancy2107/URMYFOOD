@@ -26,6 +26,7 @@ import com.urmyfood.shop.domain.usecase.MarkAsReadUseCase
 import com.urmyfood.shop.domain.usecase.SendMessageUseCase
 import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
 import com.urmyfood.shop.domain.usecase.UpdateShopProfileUseCase
+import com.urmyfood.shop.domain.usecase.UploadChatImageUseCase
 import com.urmyfood.shop.domain.usecase.UploadShopProfileImageUseCase
 import com.urmyfood.shared.data.local.TokenManager
 import com.urmyfood.shared.data.remote.NetworkModule
@@ -170,7 +171,8 @@ object ServiceLocator {
             chatRepository = chatRepository,
             getMessagesUseCase = GetMessagesUseCase(chatRepository, tokenManager),
             sendMessageUseCase = SendMessageUseCase(chatRepository),
-            markAsReadUseCase = MarkAsReadUseCase(chatRepository, tokenManager)
+            markAsReadUseCase = MarkAsReadUseCase(chatRepository, tokenManager),
+            uploadChatImageUseCase = UploadChatImageUseCase(chatRepository, tokenManager)
         )
     }
 }

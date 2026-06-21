@@ -5,10 +5,13 @@ import com.urmyfood.shared.data.remote.StompClient
 import com.urmyfood.shared.domain.model.ChatMessage
 import com.urmyfood.shared.domain.model.ChatSession
 import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.GetOrCreateSessionRequest
 import com.urmyfood.user.data.model.toDomain
 import com.urmyfood.user.data.remote.ChatApiService
 import com.urmyfood.user.domain.repository.ChatRepository
+import okhttp3.MultipartBody
+import retrofit2.Response
 
 class ChatRepositoryImpl(
     private val api: ChatApiService,
@@ -16,6 +19,16 @@ class ChatRepositoryImpl(
 ) : ChatRepository {
 
     private val gson = Gson()
+
+    private fun <T> Response<T>.errorMessage(): String {
+        return try {
+            errorBody()?.charStream()?.use { reader ->
+                gson.fromJson(reader, ApiResponse::class.java)?.message
+            } ?: "Lỗi máy chủ: ${code()}"
+        } catch (_: Exception) {
+            "Lỗi máy chủ: ${code()}"
+        }
+    }
 
     override suspend fun getSessions(token: String): Result<List<ChatSession>> = try {
         val response = api.getSessions(token)
@@ -69,8 +82,25 @@ class ChatRepositoryImpl(
         stompClient.subscribe("/topic/chat/$sessionId", onMessage)
     }
 
+    override suspend fun uploadImage(token: String, sessionId: Long, file: MultipartBody.Part): Result<String> = try {
+        val response = api.uploadChatImage(token, sessionId, file)
+        val body = response.body()
+        val imageData = body?.data
+        if (response.isSuccessful && body?.success == true && imageData != null)
+            Result.Success(imageData.imageUrl)
+        else
+            Result.Error(body?.message ?: response.errorMessage(), response.code())
+    } catch (e: Exception) {
+        Result.Error(e.message ?: "Lỗi kết nối")
+    }
+
     override fun sendMessageViaWebSocket(sessionId: Long, content: String) {
-        val payload = gson.toJson(mapOf("sessionId" to sessionId, "content" to content))
+        val payload = gson.toJson(mapOf("sessionId" to sessionId, "content" to content, "messageType" to "TEXT"))
+        stompClient.send("/app/chat.send", payload)
+    }
+
+    override fun sendImageViaWebSocket(sessionId: Long, imageUrl: String) {
+        val payload = gson.toJson(mapOf("sessionId" to sessionId, "content" to "", "messageType" to "IMAGE", "imageUrl" to imageUrl))
         stompClient.send("/app/chat.send", payload)
     }
 

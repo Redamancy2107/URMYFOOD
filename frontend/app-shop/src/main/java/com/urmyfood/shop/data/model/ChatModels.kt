@@ -22,9 +22,15 @@ data class ChatMessageDto(
     @SerializedName("sessionId") val sessionId: Long,
     @SerializedName("senderId") val senderId: Long,
     @SerializedName("senderRole") val senderRole: String,
+    @SerializedName("messageType") val messageType: String = "TEXT",
     @SerializedName("content") val content: String,
+    @SerializedName("imageUrl") val imageUrl: String? = null,
     @SerializedName("read") val isRead: Boolean,
     @SerializedName("sentAt") val sentAt: String?
+)
+
+data class ChatImageUrlDto(
+    @SerializedName("imageUrl") val imageUrl: String
 )
 
 data class GetOrCreateSessionRequest(
@@ -49,7 +55,9 @@ fun ChatMessageDto.toDomain() = ChatMessage(
     sessionId = sessionId,
     senderId = senderId,
     senderRole = senderRole,
+    messageType = messageType,
     content = content,
+    imageUrl = imageUrl,
     isRead = isRead,
     sentAt = sentAt ?: ""
 )

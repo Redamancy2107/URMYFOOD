@@ -6,7 +6,9 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.urmyfood.shared.domain.model.ChatSession
+import com.urmyfood.user.R
 import com.urmyfood.user.databinding.ItemChatListBinding
 
 class ChatListAdapter(
@@ -26,6 +28,12 @@ class ChatListAdapter(
             tvChatName.text = session.shopName
             tvLastMessage.text = session.lastMessage ?: ""
             tvChatTime.text = session.lastMessageAt?.take(5) ?: ""
+            Glide.with(ivChatAvatar)
+                .load(session.shopAvatarUrl)
+                .placeholder(R.drawable.ic_person_placeholder)
+                .error(R.drawable.ic_person_placeholder)
+                .centerCrop()
+                .into(ivChatAvatar)
 
             if (session.unreadCount > 0) {
                 unreadBadge.visibility = View.VISIBLE

@@ -18,7 +18,9 @@ public class ChatMessage {
     private Long sessionId;
     private Long senderId;
     private String senderRole;
+    private String messageType;
     private String content;
+    private String imageUrl;
     private boolean isRead;
     private LocalDateTime sentAt;
 }

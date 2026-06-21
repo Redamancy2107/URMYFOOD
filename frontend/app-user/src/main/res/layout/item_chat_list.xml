@@ -20,7 +20,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/bg_food_banner"
+            android:src="@drawable/ic_person_placeholder"
             app:shapeAppearanceOverlay="@style/Rounded12"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"

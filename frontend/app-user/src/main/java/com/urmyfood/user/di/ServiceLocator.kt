@@ -319,6 +319,13 @@ object ServiceLocator {
         return TermsPoliciesViewModel.Factory()
     }
 
+    private val getChatSessionUseCase: com.urmyfood.user.domain.usecase.GetChatSessionUseCase by lazy {
+        com.urmyfood.user.domain.usecase.GetChatSessionUseCase(chatRepository, tokenManager)
+    }
+
+    fun provideShopProfileViewModelFactory() =
+        com.urmyfood.user.presentation.main.shop.ShopProfileViewModel.Factory(getChatSessionUseCase)
+
     fun provideChatViewModelFactory() = com.urmyfood.user.presentation.main.chat.ChatViewModel.Factory(
         com.urmyfood.user.domain.usecase.GetChatSessionsUseCase(chatRepository, tokenManager)
     )
@@ -333,7 +340,8 @@ object ServiceLocator {
             chatRepository = chatRepository,
             getMessagesUseCase = com.urmyfood.user.domain.usecase.GetChatMessagesUseCase(chatRepository, tokenManager),
             sendMessageUseCase = com.urmyfood.user.domain.usecase.SendChatMessageUseCase(chatRepository),
-            markAsReadUseCase = com.urmyfood.user.domain.usecase.MarkChatAsReadUseCase(chatRepository, tokenManager)
+            markAsReadUseCase = com.urmyfood.user.domain.usecase.MarkChatAsReadUseCase(chatRepository, tokenManager),
+            uploadChatImageUseCase = com.urmyfood.user.domain.usecase.UploadChatImageUseCase(chatRepository, tokenManager)
         )
     }
 }

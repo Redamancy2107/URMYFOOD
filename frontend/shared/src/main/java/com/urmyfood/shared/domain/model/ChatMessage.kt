@@ -5,7 +5,9 @@ data class ChatMessage(
     val sessionId: Long,
     val senderId: Long,
     val senderRole: String,
+    val messageType: String = "TEXT",
     val content: String,
+    val imageUrl: String? = null,
     val isRead: Boolean,
     val sentAt: String
 )

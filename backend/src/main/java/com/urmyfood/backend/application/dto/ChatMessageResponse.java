@@ -10,7 +10,9 @@ public class ChatMessageResponse {
     private Long sessionId;
     private Long senderId;
     private String senderRole;
+    private String messageType;
     private String content;
+    private String imageUrl;
     private boolean read;
     private String sentAt;
 }

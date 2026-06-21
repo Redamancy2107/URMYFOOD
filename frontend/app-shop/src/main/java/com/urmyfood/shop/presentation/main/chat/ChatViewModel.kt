@@ -23,6 +23,8 @@ class ChatViewModel(
     private val _uiState = MutableLiveData<UiState>()
     val uiState: LiveData<UiState> = _uiState
 
+    private var allSessions: List<ChatSession> = emptyList()
+
     init {
         loadSessions()
     }
@@ -31,10 +33,19 @@ class ChatViewModel(
         _uiState.value = UiState.Loading
         viewModelScope.launch {
             when (val result = getChatSessionsUseCase()) {
-                is Result.Success -> _uiState.value = UiState.Success(result.data)
+                is Result.Success -> {
+                    allSessions = result.data
+                    _uiState.value = UiState.Success(result.data)
+                }
                 is Result.Error -> _uiState.value = UiState.Error(result.message)
             }
         }
+    }
+
+    fun filterSessions(query: String) {
+        val filtered = if (query.isBlank()) allSessions
+        else allSessions.filter { it.customerName.contains(query.trim(), ignoreCase = true) }
+        _uiState.value = UiState.Success(filtered)
     }
 
     class Factory(

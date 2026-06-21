@@ -34,8 +34,14 @@ public class ChatMessageEntity {
     @Column(name = "sender_role", nullable = false)
     private String senderRole;
 
+    @Column(name = "message_type", nullable = false, length = 10)
+    private String messageType;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "image_url", columnDefinition = "TEXT")
+    private String imageUrl;
 
     @Column(name = "is_read", nullable = false)
     private boolean read;

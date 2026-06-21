@@ -1,9 +1,11 @@
 package com.urmyfood.user.data.remote
 
+import com.urmyfood.user.data.model.ChatImageUrlDto
 import com.urmyfood.user.data.model.ChatMessageDto
 import com.urmyfood.user.data.model.ChatSessionDto
 import com.urmyfood.user.data.model.GetOrCreateSessionRequest
 import com.urmyfood.user.data.model.ApiResponse
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -31,4 +33,12 @@ interface ChatApiService {
         @Header("Authorization") token: String,
         @Path("sessionId") sessionId: Long
     ): Response<ApiResponse<Void>>
+
+    @Multipart
+    @POST("api/v1/chat/sessions/{sessionId}/upload-image")
+    suspend fun uploadChatImage(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: Long,
+        @Part file: MultipartBody.Part
+    ): Response<ApiResponse<ChatImageUrlDto>>
 }

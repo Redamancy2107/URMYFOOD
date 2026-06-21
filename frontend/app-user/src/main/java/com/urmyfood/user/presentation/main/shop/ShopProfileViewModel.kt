@@ -3,7 +3,12 @@ package com.urmyfood.user.presentation.main.shop
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.user.domain.model.FoodPost
+import com.urmyfood.user.domain.usecase.GetChatSessionUseCase
+import kotlinx.coroutines.launch
 
 data class ShopVoucher(
     val voucherId: String,
@@ -12,7 +17,42 @@ data class ShopVoucher(
     val expiryDate: String
 )
 
-class ShopProfileViewModel : ViewModel() {
+class ShopProfileViewModel(
+    private val getChatSessionUseCase: GetChatSessionUseCase
+) : ViewModel() {
+
+    sealed class ChatUiState {
+        object Idle : ChatUiState()
+        object Loading : ChatUiState()
+        data class Success(val sessionId: Long) : ChatUiState()
+        data class Error(val message: String) : ChatUiState()
+    }
+
+    private val _chatState = MutableLiveData<ChatUiState>(ChatUiState.Idle)
+    val chatState: LiveData<ChatUiState> = _chatState
+
+    fun startChat(shopId: Long) {
+        if (_chatState.value is ChatUiState.Loading) return
+        _chatState.value = ChatUiState.Loading
+        viewModelScope.launch {
+            when (val result = getChatSessionUseCase(shopId)) {
+                is Result.Success -> _chatState.value = ChatUiState.Success(result.data.id)
+                is Result.Error -> _chatState.value = ChatUiState.Error(result.message)
+            }
+        }
+    }
+
+    fun resetChatState() {
+        _chatState.value = ChatUiState.Idle
+    }
+
+    class Factory(
+        private val getChatSessionUseCase: GetChatSessionUseCase
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            ShopProfileViewModel(getChatSessionUseCase) as T
+    }
 
     private val _shopName = MutableLiveData<String>()
     val shopName: LiveData<String> = _shopName

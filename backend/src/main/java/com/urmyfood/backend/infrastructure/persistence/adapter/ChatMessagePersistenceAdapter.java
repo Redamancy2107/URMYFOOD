@@ -33,7 +33,9 @@ public class ChatMessagePersistenceAdapter implements ChatMessageRepository {
                 .session(session)
                 .sender(sender)
                 .senderRole(message.getSenderRole())
+                .messageType(message.getMessageType() != null ? message.getMessageType() : "TEXT")
                 .content(message.getContent())
+                .imageUrl(message.getImageUrl())
                 .read(message.isRead())
                 .build();
         return toDomain(jpaRepository.save(entity));
@@ -67,7 +69,9 @@ public class ChatMessagePersistenceAdapter implements ChatMessageRepository {
                 .sessionId(entity.getSession().getId())
                 .senderId(entity.getSender().getId())
                 .senderRole(entity.getSenderRole())
+                .messageType(entity.getMessageType() != null ? entity.getMessageType() : "TEXT")
                 .content(entity.getContent())
+                .imageUrl(entity.getImageUrl())
                 .isRead(entity.isRead())
                 .sentAt(entity.getSentAt())
                 .build();

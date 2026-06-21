@@ -5,13 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentChatDetailBinding
 import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shared.util.ChatEmojiPicker
 import com.urmyfood.shared.util.Event
 import com.urmyfood.shop.presentation.main.chat.adapter.MessageAdapter
 
@@ -20,7 +23,13 @@ class ChatDetailFragment : Fragment() {
     private var _binding: FragmentChatDetailBinding? = null
     private val binding get() = _binding!!
 
+    private val imagePickerLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { viewModel.sendImageMessage(it, requireContext()) }
+        }
+
     private val sessionId: Long by lazy { arguments?.getLong("sessionId") ?: 0L }
+    private val otherAvatarUrl: String? by lazy { arguments?.getString("customerAvatarUrl") }
 
     private val viewModel: ChatDetailViewModel by viewModels {
         ServiceLocator.provideChatDetailViewModelFactory(sessionId)
@@ -43,27 +52,27 @@ class ChatDetailFragment : Fragment() {
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
-        viewModel.loadHistory()
     }
 
     override fun onResume() {
         super.onResume()
         viewModel.connectWebSocket()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        viewModel.disconnectWebSocket()
+        viewModel.loadHistory()
     }
 
     private fun setupToolbar() {
         binding.btnBack.setOnClickListener { findNavController().navigateUp() }
         binding.tvDetailName.text = arguments?.getString("customerName") ?: "Khách hàng"
         binding.tvDetailStatus.text = "● Đang hoạt động"
+        Glide.with(this)
+            .load(otherAvatarUrl)
+            .placeholder(R.drawable.ic_person_placeholder)
+            .circleCrop()
+            .into(binding.ivDetailAvatar)
     }
 
     private fun setupRecyclerView() {
-        messageAdapter = MessageAdapter()
+        messageAdapter = MessageAdapter(otherAvatarUrl)
         binding.rvMessages.apply {
             layoutManager = LinearLayoutManager(requireContext()).also { it.stackFromEnd = true }
             adapter = messageAdapter
@@ -89,6 +98,12 @@ class ChatDetailFragment : Fragment() {
                 scrollToBottom()
             }
         }
+
+        viewModel.uploadError.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { message ->
+                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -105,6 +120,18 @@ class ChatDetailFragment : Fragment() {
         binding.btnCall.setOnClickListener {
             Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
         }
+        listOf(binding.chipReply1, binding.chipReply2, binding.chipReply3).forEach { chip ->
+            chip.setOnClickListener {
+                binding.etMessage.setText(chip.text)
+                binding.etMessage.setSelection(binding.etMessage.length())
+            }
+        }
+        binding.btnEmoji.setOnClickListener {
+            ChatEmojiPicker.open(binding.btnEmoji, binding.etMessage)
+        }
+        binding.btnAddImage.setOnClickListener {
+            imagePickerLauncher.launch("image/*")
+        }
     }
 
     private fun scrollToBottom() {
@@ -113,8 +140,9 @@ class ChatDetailFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-        // Safety net: ensure WebSocket is disconnected if onPause was not called
-        // (e.g., programmatic fragment removal or unexpected lifecycle paths).
+        // Keep WebSocket alive through temporary overlays such as the image picker;
+        // disconnect only when leaving this chat view.
+        ChatEmojiPicker.dismiss()
         viewModel.disconnectWebSocket()
         super.onDestroyView()
         _binding = null
