@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentAuthChooseRoleBinding
@@ -42,6 +43,14 @@ class ChooseRoleFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeViewModel()
+
+        setFragmentResultListener(com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.KEY) { _, bundle ->
+            val action = bundle.getString("action")
+            if (action == "register") {
+                com.urmyfood.user.di.ServiceLocator.tokenManager.setFirstTime(false)
+                findNavController().navigate(R.id.action_chooseRoleFragment_to_signupCustomerFragment)
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -72,6 +81,11 @@ class ChooseRoleFragment : Fragment() {
                     findNavController().navigate(R.id.action_chooseRoleFragment_to_mainContainerFragment)
                 is ChooseRoleUiState.Success -> {
                     findNavController().navigate(R.id.action_chooseRoleFragment_to_mainContainerFragment)
+                }
+                is ChooseRoleUiState.WrongRole -> {
+                    viewModel.resetState()
+                    com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.newInstance()
+                        .show(parentFragmentManager, com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.TAG)
                 }
                 is ChooseRoleUiState.Error -> {
                     Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()

@@ -245,7 +245,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="12dp"
                         android:gravity="center"
                         android:background="?attr/selectableItemBackground">
 
@@ -267,12 +268,12 @@
                         </FrameLayout>
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/profile_my_orders"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:fontFamily="sans-serif-medium"
                             android:gravity="center"
                             android:lineSpacingExtra="2dp" />
@@ -295,7 +296,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="12dp"
                         android:gravity="center"
                         android:background="?attr/selectableItemBackground">
 
@@ -317,12 +319,12 @@
                         </FrameLayout>
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/profile_my_vouchers"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:fontFamily="sans-serif-medium"
                             android:gravity="center"
                             android:lineSpacingExtra="2dp" />
@@ -345,7 +347,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="12dp"
                         android:gravity="center"
                         android:background="?attr/selectableItemBackground">
 
@@ -367,12 +370,12 @@
                         </FrameLayout>
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/profile_address_book"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:fontFamily="sans-serif-medium"
                             android:gravity="center"
                             android:lineSpacingExtra="2dp" />
@@ -395,7 +398,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        android:padding="16dp"
+                        android:paddingHorizontal="4dp"
+                        android:paddingVertical="12dp"
                         android:gravity="center"
                         android:background="?attr/selectableItemBackground">
 
@@ -417,12 +421,12 @@
                         </FrameLayout>
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
                             android:text="@string/profile_my_favorites"
                             android:textColor="@color/text_primary"
-                            android:textSize="13sp"
+                            android:textSize="12sp"
                             android:fontFamily="sans-serif-medium"
                             android:gravity="center"
                             android:lineSpacingExtra="2dp" />

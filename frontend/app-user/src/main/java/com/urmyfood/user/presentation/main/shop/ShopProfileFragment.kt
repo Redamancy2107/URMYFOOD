@@ -63,7 +63,6 @@ class ShopProfileFragment : Fragment() {
         
         setupToolbarScrollAnimation()
         setupClickListeners()
-        setupTabLayout()
         observeViewModel()
 
         viewModel.initShop(shopNameArg, shopAvatarUrlArg)
@@ -101,9 +100,7 @@ class ShopProfileFragment : Fragment() {
             shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
 
-        binding.tvSeeAllVouchers.setOnClickListener {
-            showFeatureInDevelopment()
-        }
+
 
         binding.btnFollow.setOnClickListener {
             viewModel.toggleFollow()
@@ -135,31 +132,7 @@ class ShopProfileFragment : Fragment() {
         }
     }
 
-    private fun setupTabLayout() {
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> {
-                        binding.layoutTabHome.visibility = View.VISIBLE
-                        binding.layoutTabProducts.visibility = View.GONE
-                        binding.layoutTabCategories.visibility = View.GONE
-                    }
-                    1 -> {
-                        binding.layoutTabHome.visibility = View.GONE
-                        binding.layoutTabProducts.visibility = View.VISIBLE
-                        binding.layoutTabCategories.visibility = View.GONE
-                    }
-                    2 -> {
-                        binding.layoutTabHome.visibility = View.GONE
-                        binding.layoutTabProducts.visibility = View.GONE
-                        binding.layoutTabCategories.visibility = View.VISIBLE
-                    }
-                }
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
-    }
+
 
     private fun observeViewModel() {
         viewModel.shopName.observe(viewLifecycleOwner) { name ->
@@ -196,17 +169,7 @@ class ShopProfileFragment : Fragment() {
             }
         }
 
-        viewModel.productsCount.observe(viewLifecycleOwner) { count ->
-            binding.tvProductsCount.text = count.toString()
-        }
 
-        viewModel.responseRate.observe(viewLifecycleOwner) { rate ->
-            binding.tvResponseRate.text = rate
-        }
-
-        viewModel.activeDuration.observe(viewLifecycleOwner) { duration ->
-            binding.tvActiveDuration.text = duration
-        }
 
         viewModel.address.observe(viewLifecycleOwner) { address ->
             binding.tvShopAddress.text = address
@@ -216,8 +179,18 @@ class ShopProfileFragment : Fragment() {
             binding.tvShopHours.text = hours
         }
 
-        viewModel.rating.observe(viewLifecycleOwner) { rating ->
-            binding.tvShopRating.text = rating
+        viewModel.shopCategory.observe(viewLifecycleOwner) { category ->
+            binding.tvShopCategory.text = "Món chủ đạo: $category"
+        }
+
+        viewModel.isOpen.observe(viewLifecycleOwner) { isOpen ->
+            if (isOpen) {
+                binding.tvShopStatus.text = "Đang mở cửa"
+                binding.tvShopStatus.setTextColor(android.graphics.Color.parseColor("#10B981"))
+            } else {
+                binding.tvShopStatus.text = "Đang đóng cửa"
+                binding.tvShopStatus.setTextColor(android.graphics.Color.parseColor("#EF4444"))
+            }
         }
 
         // Render horizontal vouchers
@@ -235,29 +208,6 @@ class ShopProfileFragment : Fragment() {
                 adapter = shopPostsAdapter
             }
             shopPostsAdapter.submitList(postsList)
-        }
-
-        // Render Products tab list
-        viewModel.products.observe(viewLifecycleOwner) { productsList ->
-            binding.rvShopProducts.apply {
-                layoutManager = GridLayoutManager(requireContext(), 2)
-                adapter = ProductAdapter(productsList) { foodPost ->
-                    val orderSheet = OrderBottomSheetFragment(foodPost)
-                    orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
-                }
-            }
-        }
-
-        // Render Categories tab list
-        viewModel.categories.observe(viewLifecycleOwner) { categoriesList ->
-            binding.rvShopCategories.apply {
-                layoutManager = LinearLayoutManager(requireContext())
-                adapter = CategoryAdapter(categoriesList) { category ->
-                    viewModel.filterProductsByCategory(category)
-                    // Automatically switch to Products tab (index 1)
-                    binding.tabLayout.getTabAt(1)?.select()
-                }
-            }
         }
     }
 
@@ -327,85 +277,5 @@ class ShopProfileFragment : Fragment() {
         override fun getItemCount() = vouchers.size
     }
 
-    private class ProductAdapter(
-        private val products: List<FoodPost>,
-        private val onOrderClick: (FoodPost) -> Unit
-    ) : RecyclerView.Adapter<ProductAdapter.ViewHolder>() {
 
-        private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
-
-        class ViewHolder(private val binding: ItemShopProductBinding) :
-            RecyclerView.ViewHolder(binding.root) {
-            fun bind(product: FoodPost, currencyFormat: NumberFormat, onOrderClick: (FoodPost) -> Unit) {
-                binding.tvProductName.text = product.dishName
-                binding.tvProductPrice.text = "${currencyFormat.format(product.price)}đ"
-
-                if (product.isFlashSale) {
-                    binding.tvProductOriginalPrice.visibility = View.VISIBLE
-                    binding.tvProductOriginalPrice.paintFlags =
-                        binding.tvProductOriginalPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
-                    binding.tvProductOriginalPrice.text = "${currencyFormat.format(product.originalPrice)}đ"
-                } else {
-                    binding.tvProductOriginalPrice.visibility = View.GONE
-                }
-
-                Glide.with(binding.ivProductImage)
-                    .load(product.imageUrl)
-                    .placeholder(R.drawable.ic_image_placeholder)
-                    .error(R.drawable.bg_food_banner)
-                    .into(binding.ivProductImage)
-
-                binding.btnOrderProduct.setOnClickListener {
-                    onOrderClick(product)
-                }
-            }
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val binding = ItemShopProductBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false
-            )
-            return ViewHolder(binding)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(products[position], currencyFormat, onOrderClick)
-        }
-
-        override fun getItemCount() = products.size
-    }
-
-    private class CategoryAdapter(
-        private val categories: List<String>,
-        private val onCategoryClick: (String) -> Unit
-    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
-
-        class ViewHolder(private val binding: ItemShopCategoryBinding) :
-            RecyclerView.ViewHolder(binding.root) {
-            fun bind(category: String, onCategoryClick: (String) -> Unit) {
-                binding.tvCategoryName.text = category
-                itemView.setOnClickListener {
-                    Toast.makeText(
-                        itemView.context,
-                        itemView.context.getString(R.string.toast_filtered_category, category),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    onCategoryClick(category)
-                }
-            }
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val binding = ItemShopCategoryBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false
-            )
-            return ViewHolder(binding)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.bind(categories[position], onCategoryClick)
-        }
-
-        override fun getItemCount() = categories.size
-    }
 }
