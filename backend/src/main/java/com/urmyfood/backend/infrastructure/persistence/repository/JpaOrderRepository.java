@@ -13,14 +13,68 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
-    List<OrderEntity> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    @Query("SELECT DISTINCT o FROM OrderEntity o " +
+           "JOIN FETCH o.customer " +
+           "JOIN FETCH o.shop " +
+           "LEFT JOIN FETCH o.voucher " +
+           "LEFT JOIN FETCH o.items i " +
+           "LEFT JOIN FETCH i.post p " +
+           "LEFT JOIN FETCH p.author " +
+           "WHERE o.orderId = :orderId")
+    Optional<OrderEntity> findByIdWithDetails(@Param("orderId") UUID orderId);
+
+    @Query("SELECT DISTINCT o FROM OrderEntity o " +
+           "JOIN FETCH o.customer " +
+           "JOIN FETCH o.shop " +
+           "LEFT JOIN FETCH o.voucher " +
+           "LEFT JOIN FETCH o.items i " +
+           "LEFT JOIN FETCH i.post p " +
+           "LEFT JOIN FETCH p.author " +
+           "WHERE o.customer.id = :customerId ORDER BY o.createdAt DESC")
+    List<OrderEntity> findByCustomerIdOrderByCreatedAtDesc(@Param("customerId") Long customerId);
+
+    @Query("SELECT DISTINCT o FROM OrderEntity o " +
+           "JOIN FETCH o.customer " +
+           "JOIN FETCH o.shop " +
+           "LEFT JOIN FETCH o.voucher " +
+           "LEFT JOIN FETCH o.items i " +
+           "LEFT JOIN FETCH i.post p " +
+           "LEFT JOIN FETCH p.author " +
+           "WHERE o.shop.id = :shopId ORDER BY o.createdAt DESC")
+    List<OrderEntity> findByShopIdOrderByCreatedAtDesc(@Param("shopId") Long shopId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT o FROM OrderEntity o WHERE o.orderId = :orderId")
+    @Query("SELECT DISTINCT o FROM OrderEntity o " +
+           "JOIN FETCH o.customer " +
+           "JOIN FETCH o.shop " +
+           "LEFT JOIN FETCH o.voucher " +
+           "LEFT JOIN FETCH o.items i " +
+           "LEFT JOIN FETCH i.post p " +
+           "LEFT JOIN FETCH p.author " +
+           "WHERE o.orderId = :orderId")
     Optional<OrderEntity> findByIdForUpdate(@Param("orderId") UUID orderId);
 
     @Query("""
-            SELECT o FROM OrderEntity o
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            LEFT JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
+            WHERE o.orderStatus = 'PENDING'
+              AND o.createdAt < :expiredBefore
+            """)
+    List<OrderEntity> findPendingExpiredOrders(@Param("expiredBefore") OffsetDateTime expiredBefore);
+
+    @Query("""
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            LEFT JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
             WHERE o.shop.id = :shopId
               AND o.createdAt >= :startAt
               AND o.createdAt < :endAt
@@ -33,7 +87,13 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
     );
 
     @Query("""
-            SELECT o FROM OrderEntity o
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            LEFT JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
             WHERE o.shop.id = :shopId
             ORDER BY o.createdAt ASC
             """)

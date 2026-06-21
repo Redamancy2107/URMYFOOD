@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -11,7 +12,8 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentOrderDetailBinding
-import com.urmyfood.shop.presentation.main.orders.OrdersViewModel.OrderStatus
+import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shop.domain.model.Order
 import com.urmyfood.shop.presentation.main.orders.detail.adapter.DishDetailAdapter
 import java.text.NumberFormat
 import java.util.Locale
@@ -21,9 +23,12 @@ class OrderDetailFragment : Fragment() {
     private var _binding: FragmentOrderDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: OrderDetailViewModel by viewModels()
+    private val viewModel: OrderDetailViewModel by viewModels {
+        ServiceLocator.provideOrderDetailViewModelFactory()
+    }
 
     private lateinit var adapter: DishDetailAdapter
+    private var currentOrderId: String = ""
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -34,16 +39,16 @@ class OrderDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val orderId = arguments?.getString("orderId") ?: "#ORD-1000"
+        currentOrderId = arguments?.getString("orderId") ?: ""
 
-        setupToolbar(orderId)
+        setupToolbar(currentOrderId)
         setupRecyclerView()
         observeViewModel()
-        viewModel.loadOrderDetail(orderId)
+        viewModel.loadOrderDetail(currentOrderId)
     }
 
     private fun setupToolbar(orderId: String) {
-        binding.toolbar.title = "Đơn hàng $orderId"
+        binding.toolbar.title = "Đơn hàng ${orderId.take(8).uppercase()}"
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
         }
@@ -56,61 +61,121 @@ class OrderDetailFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.orderDetail.observe(viewLifecycleOwner) { detail ->
-            binding.toolbar.subtitle = detail.timestamp
-            binding.tvCustomerName.text = detail.customerName
-            binding.tvOrderStatus.text = detail.status.label
+        viewModel.orderDetail.observe(viewLifecycleOwner) { order ->
+            if (order != null) bindOrder(order)
+        }
 
-            // Buyer Note
-            if (detail.buyerNote.isNullOrBlank()) {
-                binding.llBuyerNote.visibility = View.GONE
-            } else {
-                binding.llBuyerNote.visibility = View.VISIBLE
-                binding.tvBuyerNote.text = detail.buyerNote
+        viewModel.isLoading.observe(viewLifecycleOwner) { loading ->
+            binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) { msg ->
+            if (!msg.isNullOrBlank()) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             }
+        }
 
-            // Customer Avatar (Placeholder)
-            binding.ivCustomerAvatar.setImageResource(R.drawable.ic_person)
-
-            // Calculations
-            val subtotal = viewModel.getSubtotal()
-            val platformFee = viewModel.getPlatformFee()
-            val earnings = viewModel.getEarnings()
-
-            binding.tvSubtotal.text = formatCurrency(subtotal)
-            binding.tvPlatformFee.text = formatCurrency(platformFee)
-            binding.tvEarnings.text = formatCurrency(earnings)
-
-            // Bind Dishes
-            adapter.submitList(detail.dishes)
-
-            // Bind Action Button
-            setupActionButton(detail)
+        viewModel.actionSuccess.observe(viewLifecycleOwner) { msg ->
+            if (!msg.isNullOrBlank()) {
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
-    private fun setupActionButton(detail: OrderDetailViewModel.OrderDetail) {
-        when (detail.status) {
-            OrderStatus.WAITING -> {
+    private fun bindOrder(order: Order) {
+        binding.toolbar.subtitle = order.createdAt.take(16).replace("T", " ")
+        binding.tvCustomerName.text = order.customerName
+        binding.tvOrderStatus.text = when (order.orderStatus) {
+            "PENDING" -> "Chờ xác nhận"
+            "ACCEPTED" -> "Đã xác nhận"
+            "PICKING_UP" -> "Đang lấy hàng"
+            "DELIVERING" -> "Đang giao hàng"
+            "COMPLETED" -> "Hoàn thành"
+            "CANCELLED" -> "Đã hủy"
+            "REJECTED" -> "Đã từ chối"
+            "EXPIRED" -> "Hết hạn"
+            else -> order.orderStatus
+        }
+
+        if (order.note.isNullOrBlank()) {
+            binding.llBuyerNote.visibility = View.GONE
+        } else {
+            binding.llBuyerNote.visibility = View.VISIBLE
+            binding.tvBuyerNote.text = order.note
+        }
+
+        binding.ivCustomerAvatar.setImageResource(R.drawable.ic_person)
+
+        binding.tvSubtotal.text = formatCurrency(order.totalAmount.toLong())
+        binding.tvPlatformFee.text = formatCurrency(order.discountAmount.toLong())
+        binding.tvEarnings.text = formatCurrency(order.finalAmount.toLong())
+
+        val dishItems = order.items.map { item ->
+            com.urmyfood.shop.presentation.main.orders.detail.adapter.DishDetailAdapter.DishItem(
+                name = item.dishNameSnapshot,
+                quantity = item.quantity,
+                price = item.priceAtPurchase.toLong(),
+                imageUrl = item.imageUrlSnapshot
+            )
+        }
+        adapter.submitList(dishItems)
+
+        setupActionButton(order)
+    }
+
+    private fun setupActionButton(order: Order) {
+        when (order.orderStatus) {
+            "PENDING" -> {
                 binding.btnAction.visibility = View.VISIBLE
-                binding.btnAction.text = "Bắt đầu chuẩn bị"
+                binding.btnAction.text = "Xác nhận đơn hàng"
                 binding.btnAction.setOnClickListener {
-                    viewModel.updateStatus(OrderStatus.PREPARING)
-                    Toast.makeText(requireContext(), "Đã chuyển trạng thái sang chế biến", Toast.LENGTH_SHORT).show()
+                    viewModel.updateStatus(order.orderId, "ACCEPTED")
                 }
             }
-            OrderStatus.PREPARING -> {
+            "ACCEPTED" -> {
                 binding.btnAction.visibility = View.VISIBLE
-                binding.btnAction.text = "Đã sẵn sàng"
+                binding.btnAction.text = "Bắt đầu lấy hàng"
                 binding.btnAction.setOnClickListener {
-                    viewModel.updateStatus(OrderStatus.READY)
-                    Toast.makeText(requireContext(), "Đơn hàng đã sẵn sàng giao khách", Toast.LENGTH_SHORT).show()
+                    viewModel.updateStatus(order.orderId, "PICKING_UP")
                 }
             }
-            OrderStatus.READY -> {
+            "PICKING_UP" -> {
+                binding.btnAction.visibility = View.VISIBLE
+                binding.btnAction.text = "Bắt đầu giao"
+                binding.btnAction.setOnClickListener {
+                    viewModel.updateStatus(order.orderId, "DELIVERING")
+                }
+            }
+            "DELIVERING" -> {
+                binding.btnAction.visibility = View.VISIBLE
+                binding.btnAction.text = "Hoàn thành giao hàng"
+                binding.btnAction.setOnClickListener {
+                    viewModel.updateStatus(order.orderId, "COMPLETED")
+                }
+            }
+            else -> {
                 binding.btnAction.visibility = View.GONE
             }
         }
+    }
+
+    private fun showRejectDialog(orderId: String) {
+        val input = EditText(requireContext()).apply {
+            hint = "Nhập lý do từ chối..."
+        }
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Từ chối đơn hàng")
+            .setView(input)
+            .setPositiveButton("Xác nhận từ chối") { _, _ ->
+                val reason = input.text.toString().trim()
+                if (reason.isBlank()) {
+                    Toast.makeText(requireContext(), "Vui lòng nhập lý do từ chối", Toast.LENGTH_SHORT).show()
+                } else {
+                    viewModel.updateStatus(orderId, "REJECTED", reason)
+                }
+            }
+            .setNegativeButton("Hủy", null)
+            .show()
     }
 
     private fun formatCurrency(amount: Long): String {

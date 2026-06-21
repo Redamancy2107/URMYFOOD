@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.user.data.model.OrderResponse
 import com.urmyfood.user.domain.model.Result
+import com.urmyfood.user.domain.usecase.CancelOrderUseCase
 import com.urmyfood.user.domain.usecase.GetOrdersUseCase
 import kotlinx.coroutines.launch
 
@@ -17,7 +18,8 @@ data class OrderHistoryUiState(
 )
 
 class OrderHistoryViewModel(
-    private val getOrdersUseCase: GetOrdersUseCase
+    private val getOrdersUseCase: GetOrdersUseCase,
+    private val cancelOrderUseCase: CancelOrderUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(OrderHistoryUiState(isLoading = true))
@@ -35,6 +37,22 @@ class OrderHistoryViewModel(
         }
     }
 
+    fun cancelOrder(orderId: String, reason: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isLoading = true, message = null)
+            when (val result = cancelOrderUseCase(orderId, reason)) {
+                is Result.Success -> {
+                    _uiState.value = _uiState.value?.copy(message = "Hủy đơn hàng thành công")
+                    loadOrders()
+                }
+                is Result.Error -> _uiState.value = _uiState.value?.copy(
+                    isLoading = false,
+                    message = result.message
+                )
+            }
+        }
+    }
+
     private fun OrderResponse.toDisplayOrders(): List<OrderHistoryFragment.Order> {
         val statusTab = when (orderStatus) {
             "PENDING", "ACCEPTED" -> 0
@@ -46,11 +64,14 @@ class OrderHistoryViewModel(
             listOf(null)
         }.map { item ->
             OrderHistoryFragment.Order(
+                orderId = orderId,
                 shop = shopName,
                 desc = item?.let { "${it.dishName} x${it.quantity}" } ?: "Đơn hàng ${orderId.take(8)}",
                 price = formatCurrency(item?.subtotal ?: finalAmount),
                 date = createdAt ?: "",
                 status = statusTab,
+                originalStatus = orderStatus,
+                rawCreatedAt = createdAt ?: "",
                 imageUrl = item?.imageUrl
             )
         }
@@ -61,12 +82,13 @@ class OrderHistoryViewModel(
     }
 
     class Factory(
-        private val getOrdersUseCase: GetOrdersUseCase
+        private val getOrdersUseCase: GetOrdersUseCase,
+        private val cancelOrderUseCase: CancelOrderUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(OrderHistoryViewModel::class.java)) {
-                return OrderHistoryViewModel(getOrdersUseCase) as T
+                return OrderHistoryViewModel(getOrdersUseCase, cancelOrderUseCase) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

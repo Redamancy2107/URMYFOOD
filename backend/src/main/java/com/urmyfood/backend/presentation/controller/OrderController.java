@@ -4,11 +4,13 @@ import com.urmyfood.backend.application.dto.ApiResponse;
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderResponse;
+import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.application.service.OrderService;
 import com.urmyfood.backend.infrastructure.security.CustomAccountDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,6 +73,43 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Hủy đơn hàng thành công",
                 orderService.cancelOrder(accountId, orderId, request)
+        ));
+    }
+
+    @PreAuthorize("hasRole('SHOP')")
+    @GetMapping("/shop/me")
+    public ResponseEntity<ApiResponse<List<OrderResponse>>> getShopOrders(Authentication authentication) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Lấy danh sách đơn hàng của quán thành công",
+                orderService.getShopOrders(accountId)
+        ));
+    }
+
+    @PreAuthorize("hasRole('SHOP')")
+    @GetMapping("/shop/me/{orderId}")
+    public ResponseEntity<ApiResponse<OrderResponse>> getShopOrderDetail(
+            Authentication authentication,
+            @PathVariable UUID orderId
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Lấy chi tiết đơn hàng thành công",
+                orderService.getShopOrderDetail(accountId, orderId)
+        ));
+    }
+
+    @PreAuthorize("hasRole('SHOP')")
+    @PutMapping("/shop/me/{orderId}/status")
+    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
+            Authentication authentication,
+            @PathVariable UUID orderId,
+            @Valid @RequestBody UpdateOrderStatusRequest request
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Cập nhật trạng thái đơn hàng thành công",
+                orderService.updateOrderStatus(accountId, orderId, request)
         ));
     }
 

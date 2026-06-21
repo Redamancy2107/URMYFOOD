@@ -3,73 +3,109 @@ package com.urmyfood.shop.presentation.main.orders
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.domain.model.Order
+import com.urmyfood.shop.domain.usecase.GetShopOrdersUseCase
+import com.urmyfood.shop.domain.usecase.UpdateOrderStatusUseCase
+import kotlinx.coroutines.launch
 
-class OrdersViewModel : ViewModel() {
+class OrdersViewModel(
+    private val getShopOrdersUseCase: GetShopOrdersUseCase,
+    private val updateOrderStatusUseCase: UpdateOrderStatusUseCase
+) : ViewModel() {
 
-    enum class OrderStatus(val label: String) {
-        WAITING("Chờ xác nhận"),
-        PREPARING("Đang chuẩn bị"),
-        READY("Đã sẵn sàng")
+    enum class StatusFilter(val label: String) {
+        PENDING("Chờ xác nhận"),
+        PROCESSING("Đang xử lý"),
+        DELIVERING("Đang giao"),
+        COMPLETED("Hoàn thành"),
+        CANCELLED("Đã hủy")
     }
 
-    data class ShopOrder(
-        val orderId: String,
-        val customerName: String,
-        val timestamp: String,
-        val status: OrderStatus,
-        val items: String,
-        val totalPrice: Long
-    )
+    private val _allOrders = MutableLiveData<List<Order>>(emptyList())
+    val allOrders: LiveData<List<Order>> = _allOrders
 
-    private val _allOrders = MutableLiveData<List<ShopOrder>>()
-    val allOrders: LiveData<List<ShopOrder>> = _allOrders
+    private val _selectedFilter = MutableLiveData(StatusFilter.PENDING)
+    val selectedFilter: LiveData<StatusFilter> = _selectedFilter
 
-    private val _selectedStatus = MutableLiveData(OrderStatus.WAITING)
-    val selectedStatus: LiveData<OrderStatus> = _selectedStatus
+    private val _isLoading = MutableLiveData(false)
+    val isLoading: LiveData<Boolean> = _isLoading
+
+    private val _errorMessage = MutableLiveData<String?>(null)
+    val errorMessage: LiveData<String?> = _errorMessage
 
     init {
-        loadMockOrders()
+        loadOrders()
     }
 
-    private fun loadMockOrders() {
-        // Mock data - remove when BE ready
-        _allOrders.value = listOf(
-            ShopOrder("#ORD-1001", "Nguyễn Văn A", "10:30", OrderStatus.WAITING, "2x Cơm tấm sườn, 1x Trà đá", 85_000L),
-            ShopOrder("#ORD-1002", "Trần Thị B", "10:25", OrderStatus.WAITING, "1x Bún bò Huế, 1x Sữa đậu nành", 55_000L),
-            ShopOrder("#ORD-1003", "Lê Hoàng C", "10:15", OrderStatus.PREPARING, "3x Bánh mì thịt, 2x Cà phê sữa", 125_000L),
-            ShopOrder("#ORD-1004", "Phạm Minh D", "10:10", OrderStatus.PREPARING, "1x Phở bò chín, 1x Quẩy", 60_000L),
-            ShopOrder("#ORD-1005", "Võ Thanh E", "09:55", OrderStatus.READY, "2x Mì Quảng gà, 1x Sinh tố dừa", 95_000L),
-            ShopOrder("#ORD-1006", "Đỗ Hữu F", "09:40", OrderStatus.READY, "1x Cơm chiên Dương Châu, 1x Pepsi", 50_000L),
-            ShopOrder("#ORD-1007", "Hoàng Văn G", "09:15", OrderStatus.WAITING, "1x Hủ tiếu Nam Vang", 45_000L),
-            ShopOrder("#ORD-1008", "Ngô Thị H", "09:00", OrderStatus.PREPARING, "2x Bún riêu cua, 2x Nước mía", 80_000L)
-        )
-    }
 
-    fun setStatusFilter(status: OrderStatus) {
-        _selectedStatus.value = status
-    }
-
-    fun advanceOrderStatus(orderId: String) {
-        val currentList = _allOrders.value.orEmpty().toMutableList()
-        val index = currentList.indexOfFirst { it.orderId == orderId }
-        if (index != -1) {
-            val order = currentList[index]
-            val nextStatus = when (order.status) {
-                OrderStatus.WAITING -> OrderStatus.PREPARING
-                OrderStatus.PREPARING -> OrderStatus.READY
-                OrderStatus.READY -> OrderStatus.READY // already final
+    fun loadOrders() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            when (val result = getShopOrdersUseCase()) {
+                is Result.Success -> {
+                    _allOrders.value = result.data
+                    _errorMessage.value = null
+                }
+                is Result.Error -> {
+                    _errorMessage.value = result.message
+                }
             }
-            currentList[index] = order.copy(status = nextStatus)
-            _allOrders.value = currentList
+            _isLoading.value = false
         }
     }
 
-    fun rejectOrder(orderId: String) {
-        val currentList = _allOrders.value.orEmpty().toMutableList()
-        val index = currentList.indexOfFirst { it.orderId == orderId }
-        if (index != -1) {
-            currentList.removeAt(index)
-            _allOrders.value = currentList
+    fun setStatusFilter(filter: StatusFilter) {
+        _selectedFilter.value = filter
+    }
+
+    fun acceptOrder(orderId: String) {
+        changeStatus(orderId, "ACCEPTED", null)
+    }
+
+    fun rejectOrder(orderId: String, reason: String) {
+        changeStatus(orderId, "REJECTED", reason)
+    }
+
+    fun advanceOrderStatus(orderId: String) {
+        val order = _allOrders.value?.find { it.orderId == orderId } ?: return
+        val nextStatus = when (order.orderStatus) {
+            "ACCEPTED" -> "PICKING_UP"
+            "PICKING_UP" -> "DELIVERING"
+            "DELIVERING" -> "COMPLETED"
+            else -> return
+        }
+        changeStatus(orderId, nextStatus, null)
+    }
+
+    private fun changeStatus(orderId: String, status: String, rejectReason: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            when (val result = updateOrderStatusUseCase(orderId, status, rejectReason)) {
+                is Result.Success -> {
+                    val updatedOrder = result.data
+                    _allOrders.value = _allOrders.value?.map {
+                        if (it.orderId == orderId) updatedOrder else it
+                    }
+                    _errorMessage.value = null
+                }
+                is Result.Error -> {
+                    _errorMessage.value = result.message
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
+    class Factory(
+        private val getShopOrdersUseCase: GetShopOrdersUseCase,
+        private val updateOrderStatusUseCase: UpdateOrderStatusUseCase
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return OrdersViewModel(getShopOrdersUseCase, updateOrderStatusUseCase) as T
         }
     }
 }

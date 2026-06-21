@@ -297,7 +297,7 @@ object ServiceLocator {
     }
 
     fun provideOrderHistoryViewModelFactory(): OrderHistoryViewModel.Factory {
-        return OrderHistoryViewModel.Factory(getOrdersUseCase)
+        return OrderHistoryViewModel.Factory(getOrdersUseCase, cancelOrderUseCase)
     }
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {

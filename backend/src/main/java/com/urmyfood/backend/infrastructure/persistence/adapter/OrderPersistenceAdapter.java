@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -47,12 +48,28 @@ public class OrderPersistenceAdapter implements OrderRepository {
 
     @Override
     public Optional<Order> findById(UUID orderId) {
-        return jpaOrderRepository.findById(orderId).map(this::toDomain);
+        return jpaOrderRepository.findByIdWithDetails(orderId).map(this::toDomain);
     }
 
     @Override
     public Optional<Order> findByIdForUpdate(UUID orderId) {
         return jpaOrderRepository.findByIdForUpdate(orderId).map(this::toDomain);
+    }
+
+    @Override
+    public List<Order> findByShopId(Long shopId) {
+        return jpaOrderRepository.findByShopIdOrderByCreatedAtDesc(shopId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findPendingExpiredOrders(OffsetDateTime expiredBefore) {
+        return jpaOrderRepository.findPendingExpiredOrders(expiredBefore)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     private Order toDomain(OrderEntity entity) {

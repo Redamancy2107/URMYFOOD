@@ -45,18 +45,24 @@
             android:orientation="horizontal" />
     </HorizontalScrollView>
 
-    <ScrollView
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp"
         android:layout_marginTop="12dp">
 
-        <LinearLayout
-            android:id="@+id/orderContainer"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="20dp" />
-    </ScrollView>
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="16dp">
+
+            <LinearLayout
+                android:id="@+id/orderContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="20dp" />
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>
