@@ -19,8 +19,10 @@ public record PostRanked(
         Long shopAccountId,
         String shopName,
         String shopAvatarUrl,
+        String shopAddress,
         long likeCount,
         long commentCount,
         boolean liked,
-        OffsetDateTime createdAt
+        OffsetDateTime createdAt,
+        String category
 ) {}

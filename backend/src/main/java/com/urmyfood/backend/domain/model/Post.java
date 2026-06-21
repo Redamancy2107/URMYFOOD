@@ -27,6 +27,7 @@ public class Post {
     private PostStatus status;
     private String content;
     private String imageUrl;
+    private String category;
     private Account author;
     private OffsetDateTime createdAt;
 }

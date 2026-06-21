@@ -14,17 +14,17 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.ItemFoodPostBinding
 import com.urmyfood.user.domain.model.FoodPost
 import java.text.NumberFormat
+import java.time.Duration
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCallback()) {
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
 
-    companion object {
-        private val MOCK_TIMES = listOf("Vừa xong", "5 phút trước", "1 giờ trước", "3 giờ trước")
-        private val MOCK_LOCATIONS = listOf("Hà Nội", "KTX Khu A", "Làng Đại học", "Thủ Đức")
-    }
-    
     var onCommentClick: ((String) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
@@ -44,6 +44,23 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
         holder.bind(getItem(position))
     }
 
+    /** Chuyển timestamp ISO (UTC) thành chuỗi thời gian tương đối; null nếu không parse được. */
+    private fun relativeTime(iso: String?): String? {
+        if (iso.isNullOrBlank()) return null
+        return runCatching {
+            val minutes = Duration.between(OffsetDateTime.parse(iso).toInstant(), Instant.now()).toMinutes()
+            when {
+                minutes < 1 -> "Vừa xong"
+                minutes < 60 -> "$minutes phút trước"
+                minutes < 60 * 24 -> "${minutes / 60} giờ trước"
+                minutes < 60 * 24 * 7 -> "${minutes / (60 * 24)} ngày trước"
+                else -> OffsetDateTime.parse(iso)
+                    .atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.forLanguageTag("vi-VN")))
+            }
+        }.getOrNull()
+    }
+
     inner class ViewHolder(private val binding: ItemFoodPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -53,11 +70,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 // --- Header: shop info ---
                 tvShopName.text = post.shopName
                 
-                // Stable deterministic mock metadata based on postId to prevent rendering jitters and object allocation on scroll
-                val stableHash = Math.abs(post.postId.hashCode())
-                val mockTime = MOCK_TIMES[stableHash % MOCK_TIMES.size]
-                val mockLocation = MOCK_LOCATIONS[stableHash % MOCK_LOCATIONS.size]
-                tvPostMeta.text = "$mockTime • $mockLocation"
+                // Thời gian đăng (tương đối) + địa chỉ shop thật; bỏ qua phần nào thiếu dữ liệu
+                val timeText = relativeTime(post.createdAt)
+                val locationText = post.shopAddress?.takeIf { it.isNotBlank() }
+                tvPostMeta.text = listOfNotNull(timeText, locationText).joinToString(" • ")
 
                 // --- Content description ---
                 tvContent.text = post.content ?: post.dishName

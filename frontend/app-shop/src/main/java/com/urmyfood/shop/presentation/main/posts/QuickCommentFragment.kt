@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -18,6 +18,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.urmyfood.shop.R
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.databinding.ItemCommentBinding
 import com.urmyfood.shop.databinding.LayoutQuickCommentSheetBinding
 import com.urmyfood.shop.domain.model.Comment
@@ -27,7 +28,7 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
     private var _binding: LayoutQuickCommentSheetBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: CommentViewModel by viewModels()
+    private lateinit var viewModel: CommentViewModel
 
     private var activeReplyParentId: String? = null
     private var onCommentAddedListener: (() -> Unit)? = null
@@ -59,6 +60,8 @@ class QuickCommentFragment : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         postId = arguments?.getString("POST_ID") ?: ""
+        viewModel = ViewModelProvider(this, ServiceLocator.provideCommentViewModelFactory())
+            .get(CommentViewModel::class.java)
 
         dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
 

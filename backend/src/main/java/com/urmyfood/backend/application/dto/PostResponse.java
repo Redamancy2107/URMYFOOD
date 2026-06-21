@@ -55,6 +55,9 @@ public class PostResponse {
     @JsonProperty("shop_avatar_url")
     private String shopAvatarUrl;
 
+    @JsonProperty("shop_address")
+    private String shopAddress;
+
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
 
@@ -66,4 +69,7 @@ public class PostResponse {
 
     @JsonProperty("comment_count")
     private long commentCount;
+
+    @JsonProperty("category")
+    private String category;
 }
