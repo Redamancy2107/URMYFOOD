@@ -135,6 +135,49 @@ class OrderServiceTest {
     }
 
     @Test
+    void checkoutAcceptsVietqrPaymentMethod() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID postId = UUID.randomUUID();
+        Post cartPost = post(postId, "Cơm gà", shop, 3, PostStatus.ACTIVE);
+        Post lockedPost = post(postId, "Cơm gà", shop, 3, PostStatus.ACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(cartItemRepository.findByCustomerId(customer.getId()))
+                .thenReturn(List.of(cartItem(customer, cartPost, 1)));
+        when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        orderService.checkout(customer.getId(), checkoutRequest("VIETQR"));
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        assertThat(orderCaptor.getValue().getPaymentMethod()).isEqualTo(PaymentMethod.VIETQR);
+        assertThat(orderCaptor.getValue().getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
+    }
+
+    @Test
+    void checkoutRejectsLegacyOnlineWalletPaymentMethods() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        Post cartPost = post(UUID.randomUUID(), "Cơm gà", shop, 3, PostStatus.ACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(cartItemRepository.findByCustomerId(customer.getId()))
+                .thenReturn(List.of(cartItem(customer, cartPost, 1)));
+
+        assertThatThrownBy(() -> orderService.checkout(customer.getId(), checkoutRequest("MO" + "MO")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Phương thức thanh toán không hợp lệ");
+        assertThatThrownBy(() -> orderService.checkout(customer.getId(), checkoutRequest("ZA" + "LO" + "PAY")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Phương thức thanh toán không hợp lệ");
+
+        verify(postRepository, never()).findByIdForUpdate(any(UUID.class));
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
     void cancelOrderLocksOrderAndPostBeforeRestoringStock() {
         Account customer = account(1L, "Customer");
         Account shop = account(2L, "Shop");
@@ -259,6 +302,49 @@ class OrderServiceTest {
     }
 
     @Test
+    void shopCannotAcceptUnpaidVietqrOrder() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID orderId = UUID.randomUUID();
+        UUID postId = UUID.randomUUID();
+        Post orderPost = post(postId, "Cơm tấm", shop, 3, PostStatus.ACTIVE);
+        Order order = pendingOrder(orderId, customer, shop, orderPost, 1);
+        order.setPaymentMethod(PaymentMethod.VIETQR);
+        order.setPaymentStatus(PaymentStatus.UNPAID);
+
+        when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+
+        UpdateOrderStatusRequest request = new UpdateOrderStatusRequest("ACCEPTED", null);
+        assertThatThrownBy(() -> orderService.updateOrderStatus(shop.getId(), orderId, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("VietQR");
+
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    @Test
+    void shopAcceptsPaidVietqrOrder() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID orderId = UUID.randomUUID();
+        UUID postId = UUID.randomUUID();
+        Post orderPost = post(postId, "Cơm tấm", shop, 3, PostStatus.ACTIVE);
+        Order order = pendingOrder(orderId, customer, shop, orderPost, 1);
+        order.setPaymentMethod(PaymentMethod.VIETQR);
+        order.setPaymentStatus(PaymentStatus.PAID);
+
+        when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UpdateOrderStatusRequest request = new UpdateOrderStatusRequest("ACCEPTED", null);
+        orderService.updateOrderStatus(shop.getId(), orderId, request);
+
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.ACCEPTED);
+        assertThat(order.getPaymentStatus()).isEqualTo(PaymentStatus.PAID);
+    }
+
+    @Test
     void shopRejectsOrderWithReasonAndRestoresStock() {
         Account customer = account(1L, "Customer");
         Account shop = account(2L, "Shop");
@@ -376,8 +462,12 @@ class OrderServiceTest {
     }
 
     private CheckoutRequest checkoutRequest() {
+        return checkoutRequest("COD");
+    }
+
+    private CheckoutRequest checkoutRequest(String paymentMethod) {
         CheckoutRequest request = new CheckoutRequest();
-        request.setPaymentMethod("COD");
+        request.setPaymentMethod(paymentMethod);
         request.setDeliveryAddress("123 Test");
         return request;
     }
