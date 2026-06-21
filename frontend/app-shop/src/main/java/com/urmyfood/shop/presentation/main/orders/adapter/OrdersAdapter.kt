@@ -41,6 +41,7 @@ class OrdersAdapter(
             binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
             binding.tvTotalPrice.text = formatCurrency(order.finalAmount.toLong())
 
+            val paymentLabel = if (order.paymentStatus == "PAID") " (Đã thanh toán)" else ""
             val (statusLabel, statusColorRes) = when (order.orderStatus) {
                 "PENDING" -> "Chờ xác nhận" to R.color.warning
                 "ACCEPTED" -> "Đã xác nhận" to R.color.primary
@@ -52,7 +53,7 @@ class OrdersAdapter(
                 "EXPIRED" -> "Hết hạn" to R.color.error
                 else -> order.orderStatus to R.color.text_secondary
             }
-            binding.tvStatusBadge.text = statusLabel
+            binding.tvStatusBadge.text = statusLabel + paymentLabel
             binding.tvStatusBadge.setTextColor(binding.root.context.getColor(statusColorRes))
 
             when (order.orderStatus) {

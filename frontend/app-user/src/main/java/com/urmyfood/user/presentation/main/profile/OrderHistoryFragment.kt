@@ -41,6 +41,7 @@ class OrderHistoryFragment : Fragment() {
         val status: Int,
         val originalStatus: String,
         val rawCreatedAt: String,
+        val paymentStatus: String,
         val imageUrl: String? = null
     )
 
@@ -256,7 +257,7 @@ class OrderHistoryFragment : Fragment() {
                 }
                 btnRow.addView(btnReorder)
                 content.addView(btnRow)
-            } else if (selectedTab == 0 && order.originalStatus == "PENDING") {
+            } else if (selectedTab == 0 && order.originalStatus == "PENDING" && order.paymentStatus != "PAID") {
                 try {
                     val createdAt = java.time.OffsetDateTime.parse(order.rawCreatedAt)
                     val now = java.time.OffsetDateTime.now()

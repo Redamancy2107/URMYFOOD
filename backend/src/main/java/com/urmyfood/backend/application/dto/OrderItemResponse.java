@@ -20,10 +20,10 @@ public class OrderItemResponse {
     @JsonProperty("post_id")
     private UUID postId;
 
-    @JsonProperty("dish_name")
+    @JsonProperty("dish_name_snapshot")
     private String dishName;
 
-    @JsonProperty("image_url")
+    @JsonProperty("image_url_snapshot")
     private String imageUrl;
 
     private int quantity;

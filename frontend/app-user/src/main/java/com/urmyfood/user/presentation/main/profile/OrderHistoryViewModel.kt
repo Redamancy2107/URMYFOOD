@@ -72,6 +72,7 @@ class OrderHistoryViewModel(
                 status = statusTab,
                 originalStatus = orderStatus,
                 rawCreatedAt = createdAt ?: "",
+                paymentStatus = paymentStatus,
                 imageUrl = item?.imageUrl
             )
         }

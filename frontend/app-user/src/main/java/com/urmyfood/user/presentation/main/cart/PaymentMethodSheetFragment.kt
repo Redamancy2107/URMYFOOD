@@ -161,7 +161,16 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
                 if (state.isSuccess) {
                     (parentFragment as? CartFragment)?.loadCartItems()
                     try {
-                        findNavController().navigate(R.id.orderHistoryFragment)
+                        if (state.paymentMethod == "MOMO" && !state.qrCode.isNullOrBlank()) {
+                            val bundle = Bundle().apply {
+                                putString("qrCode", state.qrCode)
+                                putLong("amount", state.finalAmount)
+                                putString("orderId", state.orderId)
+                            }
+                            findNavController().navigate(R.id.paymentQrFragment, bundle)
+                        } else {
+                            findNavController().navigate(R.id.orderHistoryFragment)
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }

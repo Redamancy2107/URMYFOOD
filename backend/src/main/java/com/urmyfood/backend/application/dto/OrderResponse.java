@@ -22,6 +22,12 @@ public class OrderResponse {
     @JsonProperty("customer_id")
     private Long customerId;
 
+    @JsonProperty("customer_name")
+    private String customerName;
+
+    @JsonProperty("customer_phone")
+    private String customerPhone;
+
     @JsonProperty("shop_id")
     private Long shopId;
 

@@ -99,11 +99,18 @@ public class OrderService {
         return toResponse(order);
     }
 
+    public Order findOrderByIdAndCustomer(UUID orderId, Long customerId) {
+        return findOwnedOrder(customerId, orderId);
+    }
+
     @Transactional
     public OrderResponse cancelOrder(Long customerId, UUID orderId, CancelOrderRequest request) {
         Order order = findOwnedOrderForUpdate(customerId, orderId);
         if (order.getOrderStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
+        }
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Không thể hủy đơn hàng đã thanh toán. Vui lòng liên hệ quán.");
         }
         if (order.getCreatedAt() != null
                 && order.getCreatedAt().plusMinutes(5).isBefore(OffsetDateTime.now())) {
@@ -153,6 +160,22 @@ public class OrderService {
 
         order.setOrderStatus(newStatus);
         return toResponse(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void savePayosOrderCode(UUID orderId, Long payosOrderCode) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        order.setPayosOrderCode(payosOrderCode);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void markOrderAsPaidByOrderCode(Long payosOrderCode) {
+        Order order = orderRepository.findByPayosOrderCode(payosOrderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng với mã PayOS: " + payosOrderCode));
+        order.setPaymentStatus(PaymentStatus.PAID);
+        orderRepository.save(order);
     }
 
     private OrderStatus parseOrderStatus(String value) {
@@ -310,6 +333,8 @@ public class OrderService {
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .customerId(order.getCustomer().getId())
+                .customerName(order.getCustomer().getFullName())
+                .customerPhone(order.getCustomer().getPhone())
                 .shopId(order.getShop().getId())
                 .shopName(order.getShop().getFullName())
                 .voucherId(order.getVoucher() == null ? null : order.getVoucher().getId())

@@ -13,5 +13,6 @@ public interface OrderRepository {
     List<Order> findByShopId(Long shopId);
     Optional<Order> findById(UUID orderId);
     Optional<Order> findByIdForUpdate(UUID orderId);
+    Optional<Order> findByPayosOrderCode(Long payosOrderCode);
     List<Order> findPendingExpiredOrders(OffsetDateTime expiredBefore);
 }

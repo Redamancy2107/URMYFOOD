@@ -51,6 +51,11 @@ google:
   client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
   refresh-token: ${GOOGLE_REFRESH_TOKEN:your-refresh-token}
 
+payos:
+  client-id: ${PAYOS_CLIENT_ID:}
+  api-key: ${PAYOS_API_KEY:}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:}
+
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
   expiration: ${JWT_EXPIRATION:86400000}

@@ -39,3 +39,13 @@ class CancelOrderUseCase(
         return orderRepository.cancelOrder("Bearer $token", orderId, cancelReason)
     }
 }
+
+class CreatePayOsPaymentUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String): Result<com.urmyfood.user.data.model.PayOsPaymentResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập")
+        return orderRepository.createPayOsPayment("Bearer $token", orderId)
+    }
+}

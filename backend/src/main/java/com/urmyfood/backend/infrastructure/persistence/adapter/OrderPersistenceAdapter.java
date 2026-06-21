@@ -91,6 +91,7 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .deliveryAddress(entity.getDeliveryAddress())
                 .note(entity.getNote())
                 .cancelReason(entity.getCancelReason())
+                .payosOrderCode(entity.getPayosOrderCode())
                 .items(items)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -134,6 +135,7 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .deliveryAddress(order.getDeliveryAddress())
                 .note(order.getNote())
                 .cancelReason(order.getCancelReason())
+                .payosOrderCode(order.getPayosOrderCode())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .items(new ArrayList<>())
@@ -158,5 +160,11 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .dishNameSnapshot(item.getDishNameSnapshot())
                 .imageUrlSnapshot(item.getImageUrlSnapshot())
                 .build();
+    }
+
+    @Override
+    public Optional<Order> findByPayosOrderCode(Long payosOrderCode) {
+        return jpaOrderRepository.findByPayosOrderCode(payosOrderCode)
+                .map(this::toDomain);
     }
 }

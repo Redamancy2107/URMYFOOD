@@ -85,7 +85,7 @@ class OrderDetailFragment : Fragment() {
     private fun bindOrder(order: Order) {
         binding.toolbar.subtitle = order.createdAt.take(16).replace("T", " ")
         binding.tvCustomerName.text = order.customerName
-        binding.tvOrderStatus.text = when (order.orderStatus) {
+        val baseStatus = when (order.orderStatus) {
             "PENDING" -> "Chờ xác nhận"
             "ACCEPTED" -> "Đã xác nhận"
             "PICKING_UP" -> "Đang lấy hàng"
@@ -96,6 +96,8 @@ class OrderDetailFragment : Fragment() {
             "EXPIRED" -> "Hết hạn"
             else -> order.orderStatus
         }
+        val paymentLabel = if (order.paymentStatus == "PAID") " (Đã thanh toán)" else ""
+        binding.tvOrderStatus.text = baseStatus + paymentLabel
 
         if (order.note.isNullOrBlank()) {
             binding.llBuyerNote.visibility = View.GONE

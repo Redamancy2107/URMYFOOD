@@ -191,6 +191,7 @@ object ServiceLocator {
     val checkoutUseCase: CheckoutUseCase by lazy { CheckoutUseCase(orderRepository, tokenManager) }
     val getOrdersUseCase: GetOrdersUseCase by lazy { GetOrdersUseCase(orderRepository, tokenManager) }
     val cancelOrderUseCase: CancelOrderUseCase by lazy { CancelOrderUseCase(orderRepository, tokenManager) }
+    val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase by lazy { CreatePayOsPaymentUseCase(orderRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -250,7 +251,7 @@ object ServiceLocator {
     }
 
     fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
-        return CheckoutViewModel.Factory(checkoutUseCase, getAddressesUseCase, getVouchersUseCase)
+        return CheckoutViewModel.Factory(checkoutUseCase, getAddressesUseCase, getVouchersUseCase, createPayOsPaymentUseCase)
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {

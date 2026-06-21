@@ -116,6 +116,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- PayOS SDK -->
+		<dependency>
+			<groupId>vn.payos</groupId>
+			<artifactId>payos-java</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
 		<!-- Dotenv support -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>

@@ -20,6 +20,15 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
            "LEFT JOIN FETCH o.items i " +
            "LEFT JOIN FETCH i.post p " +
            "LEFT JOIN FETCH p.author " +
+           "WHERE o.payosOrderCode = :payosOrderCode")
+    Optional<OrderEntity> findByPayosOrderCode(@Param("payosOrderCode") Long payosOrderCode);
+    @Query("SELECT DISTINCT o FROM OrderEntity o " +
+           "JOIN FETCH o.customer " +
+           "JOIN FETCH o.shop " +
+           "LEFT JOIN FETCH o.voucher " +
+           "LEFT JOIN FETCH o.items i " +
+           "LEFT JOIN FETCH i.post p " +
+           "LEFT JOIN FETCH p.author " +
            "WHERE o.orderId = :orderId")
     Optional<OrderEntity> findByIdWithDetails(@Param("orderId") UUID orderId);
 
