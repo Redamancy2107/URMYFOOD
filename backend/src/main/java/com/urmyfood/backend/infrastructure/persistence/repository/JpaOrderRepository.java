@@ -72,6 +72,7 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
             LEFT JOIN FETCH i.post p
             LEFT JOIN FETCH p.author
             WHERE o.orderStatus = 'PENDING'
+              AND o.paymentStatus = 'UNPAID'
               AND o.createdAt < :expiredBefore
             """)
     List<OrderEntity> findPendingExpiredOrders(@Param("expiredBefore") OffsetDateTime expiredBefore);

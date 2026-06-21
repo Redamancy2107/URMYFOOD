@@ -31,6 +31,8 @@ public class Order {
     private String note;
     private String cancelReason;
     private Long payosOrderCode;
+    private String payosCheckoutUrl;
+    private String payosQrCode;
     private List<OrderItem> items;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

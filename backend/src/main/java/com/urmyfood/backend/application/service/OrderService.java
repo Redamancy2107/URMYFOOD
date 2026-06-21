@@ -148,7 +148,7 @@ public class OrderService {
         }
 
         OrderStatus newStatus = parseOrderStatus(request.getStatus());
-        validateStatusTransition(order.getOrderStatus(), newStatus, request.getRejectReason());
+        validateStatusTransition(order, newStatus, request.getRejectReason());
 
         if (newStatus == OrderStatus.REJECTED) {
             restorePostQuantities(order.getItems());
@@ -164,9 +164,16 @@ public class OrderService {
 
     @Transactional
     public void savePayosOrderCode(UUID orderId, Long payosOrderCode) {
+        savePayosPaymentData(orderId, payosOrderCode, null, null);
+    }
+
+    @Transactional
+    public void savePayosPaymentData(UUID orderId, Long payosOrderCode, String checkoutUrl, String qrCode) {
         Order order = orderRepository.findByIdForUpdate(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
         order.setPayosOrderCode(payosOrderCode);
+        order.setPayosCheckoutUrl(checkoutUrl);
+        order.setPayosQrCode(qrCode);
         orderRepository.save(order);
     }
 
@@ -178,6 +185,11 @@ public class OrderService {
         orderRepository.save(order);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existsPayosOrderCode(Long payosOrderCode) {
+        return orderRepository.findByPayosOrderCode(payosOrderCode).isPresent();
+    }
+
     private OrderStatus parseOrderStatus(String value) {
         try {
             return OrderStatus.valueOf(value.trim().toUpperCase());
@@ -186,7 +198,8 @@ public class OrderService {
         }
     }
 
-    private void validateStatusTransition(OrderStatus current, OrderStatus next, String rejectReason) {
+    private void validateStatusTransition(Order order, OrderStatus next, String rejectReason) {
+        OrderStatus current = order.getOrderStatus();
         boolean valid = switch (current) {
             case PENDING -> next == OrderStatus.ACCEPTED || next == OrderStatus.REJECTED;
             case ACCEPTED -> next == OrderStatus.PICKING_UP;
@@ -197,6 +210,12 @@ public class OrderService {
         if (!valid) {
             throw new IllegalArgumentException(
                     "Không thể chuyển trạng thái từ " + current + " sang " + next);
+        }
+        if (current == OrderStatus.PENDING
+                && next == OrderStatus.ACCEPTED
+                && order.getPaymentMethod() == PaymentMethod.VIETQR
+                && order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Đơn VietQR chưa thanh toán");
         }
         if (next == OrderStatus.REJECTED && (rejectReason == null || rejectReason.isBlank())) {
             throw new IllegalArgumentException("Phải nhập lý do khi từ chối đơn hàng");
