@@ -12,7 +12,8 @@ object RetrofitClient {
     private val BASE_URL get() = BuildConfig.BASE_URL
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
+                else HttpLoggingInterceptor.Level.NONE
     }
 
     private val okHttpClient = OkHttpClient.Builder()
@@ -35,4 +36,5 @@ object RetrofitClient {
     val voucherApiService: VoucherApiService = retrofit.create(VoucherApiService::class.java)
     val cartApiService: CartApiService = retrofit.create(CartApiService::class.java)
     val orderApiService: OrderApiService = retrofit.create(OrderApiService::class.java)
+    val chatApiService: ChatApiService = retrofit.create(ChatApiService::class.java)
 }

@@ -33,10 +33,13 @@ class ShopProfileFragment : Fragment() {
     private var _binding: FragmentShopProfileBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: ShopProfileViewModel by viewModels()
+    private val viewModel: ShopProfileViewModel by viewModels {
+        com.urmyfood.user.di.ServiceLocator.provideShopProfileViewModelFactory()
+    }
 
     private lateinit var shopNameArg: String
     private var shopAvatarUrlArg: String? = null
+    private var shopId: Long = 0L
 
     // Adapters for the lists
     private val shopPostsAdapter = FoodPostAdapter()
@@ -46,6 +49,7 @@ class ShopProfileFragment : Fragment() {
         arguments?.let {
             shopNameArg = it.getString("shopName") ?: "Cửa hàng"
             shopAvatarUrlArg = it.getString("shopAvatarUrl")
+            shopId = it.getLong("shopId", 0L)
         }
     }
 
@@ -107,8 +111,7 @@ class ShopProfileFragment : Fragment() {
         }
 
         binding.btnChat.setOnClickListener {
-            // Navigate directly to chat detail
-            findNavController().navigate(R.id.chatDetailFragment)
+            viewModel.startChat(shopId)
         }
 
         // Setup callbacks for the feed list (Home Tab)
@@ -135,6 +138,25 @@ class ShopProfileFragment : Fragment() {
 
 
     private fun observeViewModel() {
+        viewModel.chatState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ShopProfileViewModel.ChatUiState.Success -> {
+                    val bundle = android.os.Bundle().apply {
+                        putLong("sessionId", state.sessionId)
+                        putString("shopName", shopNameArg)
+                        putString("shopAvatarUrl", shopAvatarUrlArg)
+                    }
+                    findNavController().navigate(R.id.chatDetailFragment, bundle)
+                    viewModel.resetChatState()
+                }
+                is ShopProfileViewModel.ChatUiState.Error -> {
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    viewModel.resetChatState()
+                }
+                else -> Unit
+            }
+        }
+
         viewModel.shopName.observe(viewLifecycleOwner) { name ->
             binding.tvShopName.text = name
             binding.tvToolbarTitle.text = name

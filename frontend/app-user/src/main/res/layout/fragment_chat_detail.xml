@@ -123,18 +123,21 @@
                 android:orientation="horizontal">
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipReply1"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Dạ cảm ơn cô"
                     android:layout_marginEnd="8dp" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipReply2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Thêm nước mắm ngọt"
                     android:layout_marginEnd="8dp" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipReply3"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Cho con xin ít đá" />

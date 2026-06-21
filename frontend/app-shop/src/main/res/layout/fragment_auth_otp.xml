@@ -79,18 +79,20 @@
 
         <LinearLayout
             android:id="@+id/llOtpContainer"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             android:orientation="horizontal"
+            app:layout_constraintWidth_max="340dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvEmail">
 
             <EditText
                 android:id="@+id/etOtp1"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"
@@ -103,8 +105,9 @@
 
             <EditText
                 android:id="@+id/etOtp2"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"
@@ -117,8 +120,9 @@
 
             <EditText
                 android:id="@+id/etOtp3"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"
@@ -131,8 +135,9 @@
 
             <EditText
                 android:id="@+id/etOtp4"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"
@@ -145,8 +150,9 @@
 
             <EditText
                 android:id="@+id/etOtp5"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"
@@ -159,8 +165,9 @@
 
             <EditText
                 android:id="@+id/etOtp6"
-                android:layout_width="48dp"
+                android:layout_width="0dp"
                 android:layout_height="56dp"
+                android:layout_weight="1"
                 android:layout_marginHorizontal="4dp"
                 android:background="@drawable/bg_otp_field"
                 android:gravity="center"

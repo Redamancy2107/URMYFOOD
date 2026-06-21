@@ -1,0 +1,266 @@
+package com.urmyfood.shared.data.remote
+
+import android.util.Log
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import java.util.ArrayDeque
+import java.util.concurrent.ConcurrentHashMap
+
+class StompClient(private val okHttpClient: OkHttpClient) {
+
+    enum class State { DISCONNECTED, CONNECTING, CONNECTED, ERROR }
+
+    var onStateChanged: ((State) -> Unit)? = null
+
+    private var webSocket: WebSocket? = null
+    private val subscriptions = ConcurrentHashMap<String, (String) -> Unit>()
+
+    // Destinations requested while still CONNECTING — flushed once CONNECTED frame arrives.
+    private val pendingSubscriptions = ConcurrentHashMap.newKeySet<String>()
+    private val activeSubscriptions = ConcurrentHashMap.newKeySet<String>()
+    private val pendingSends = ArrayDeque<PendingSend>()
+    private val sendQueueLock = Any()
+
+    @Volatile
+    private var currentState = State.DISCONNECTED
+
+    fun connect(wsUrl: String, token: String) {
+        if (currentState == State.CONNECTED || currentState == State.CONNECTING) {
+            Log.d(TAG, "connect() skipped — already $currentState")
+            return
+        }
+        Log.d(TAG, "connect() → $wsUrl")
+        setState(State.CONNECTING)
+        val request = Request.Builder().url(wsUrl).build()
+        webSocket = okHttpClient.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                if (!isCurrentSocket(webSocket)) {
+                    Log.d(TAG, "Ignoring onOpen from stale WebSocket")
+                    return
+                }
+                Log.d(TAG, "WebSocket onOpen — sending STOMP CONNECT")
+                webSocket.send(buildConnectFrame(token))
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                if (!isCurrentSocket(webSocket)) {
+                    Log.d(TAG, "Ignoring message from stale WebSocket")
+                    return
+                }
+                val frame = parseFrame(text)
+                Log.d(TAG, "onMessage command=${frame.command} headers=${frame.headers} bodyLen=${frame.body.length}")
+                when (frame.command) {
+                    "CONNECTED" -> {
+                        setState(State.CONNECTED)
+                        // Re-subscribe every known destination because the simple broker does not
+                        // preserve client subscriptions across reconnects.
+                        val destinations = (subscriptions.keys + pendingSubscriptions).toSet()
+                        pendingSubscriptions.clear()
+                        activeSubscriptions.clear()
+                        Log.d(TAG, "CONNECTED — sending ${destinations.size} subscriptions")
+                        destinations.forEach(::sendSubscribeIfNeeded)
+                        flushPendingSends()
+                    }
+                    "MESSAGE" -> {
+                        val destination = frame.headers["destination"] ?: run {
+                            Log.w(TAG, "MESSAGE frame missing 'destination' header")
+                            return
+                        }
+                        Log.d(TAG, "MESSAGE from $destination — body: ${frame.body.take(200)}")
+                        val callback = subscriptions[destination]
+                        if (callback != null) {
+                            Log.d(TAG, "Invoking subscription callback for $destination")
+                            try {
+                                callback.invoke(frame.body)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Subscription callback failed for $destination", e)
+                            }
+                        } else {
+                            Log.w(TAG, "No subscription callback for $destination (registered: ${subscriptions.keys})")
+                        }
+                    }
+                    "ERROR" -> {
+                        Log.e(TAG, "STOMP ERROR frame: ${frame.body}")
+                        setState(State.ERROR)
+                    }
+                    else -> Log.d(TAG, "Unknown STOMP command: '${frame.command}'")
+                }
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                if (!isCurrentSocket(webSocket)) {
+                    Log.d(TAG, "Ignoring failure from stale WebSocket: ${t.message}")
+                    return
+                }
+                Log.e(TAG, "WebSocket onFailure: ${t.message}", t)
+                activeSubscriptions.clear()
+                this@StompClient.webSocket = null
+                setState(State.ERROR)
+            }
+
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                if (!isCurrentSocket(webSocket)) {
+                    Log.d(TAG, "Ignoring close from stale WebSocket code=$code reason=$reason")
+                    return
+                }
+                Log.d(TAG, "WebSocket onClosed code=$code reason=$reason")
+                activeSubscriptions.clear()
+                this@StompClient.webSocket = null
+                setState(State.DISCONNECTED)
+            }
+        })
+    }
+
+    fun subscribe(destination: String, onMessage: (String) -> Unit) {
+        subscriptions[destination] = onMessage
+        Log.d(TAG, "subscribe($destination) state=$currentState")
+        when (currentState) {
+            State.CONNECTED -> sendSubscribeIfNeeded(destination)
+            State.CONNECTING -> {
+                Log.d(TAG, "Queuing SUBSCRIBE → $destination (pending)")
+                pendingSubscriptions.add(destination)
+            }
+            else -> {
+                pendingSubscriptions.add(destination)
+                Log.d(TAG, "subscribe() called while $currentState — stored for next connect")
+            }
+        }
+    }
+
+    fun send(destination: String, jsonBody: String) {
+        Log.d(TAG, "send($destination) bodyLen=${jsonBody.length}")
+        val pendingSend = PendingSend(destination, jsonBody)
+        if (currentState != State.CONNECTED) {
+            queueSend(pendingSend, "state=$currentState")
+            return
+        }
+
+        if (!sendNow(pendingSend)) {
+            queueSend(pendingSend, "webSocket.send failed")
+        }
+    }
+
+    fun disconnect() {
+        Log.d(TAG, "disconnect()")
+        webSocket?.send("DISCONNECT\n\n\u0000")
+        webSocket?.close(1000, null)
+        webSocket = null
+        subscriptions.clear()
+        pendingSubscriptions.clear()
+        activeSubscriptions.clear()
+        synchronized(sendQueueLock) {
+            pendingSends.clear()
+        }
+        setState(State.DISCONNECTED)
+    }
+
+    private fun sendSubscribeIfNeeded(destination: String) {
+        if (!activeSubscriptions.add(destination)) {
+            Log.d(TAG, "SUBSCRIBE already active → $destination")
+            return
+        }
+
+        Log.d(TAG, "Sending SUBSCRIBE → $destination")
+        val sent = webSocket?.send(buildSubscribeFrame(destination)) == true
+        if (!sent) {
+            activeSubscriptions.remove(destination)
+            pendingSubscriptions.add(destination)
+            Log.w(TAG, "SUBSCRIBE send failed → $destination")
+        }
+    }
+
+    private fun isCurrentSocket(ws: WebSocket): Boolean = ws == webSocket
+
+    private fun sendNow(pendingSend: PendingSend): Boolean {
+        val sent = webSocket?.send(buildSendFrame(pendingSend.destination, pendingSend.body)) == true
+        if (sent) {
+            Log.d(TAG, "SEND sent → ${pendingSend.destination}")
+        }
+        return sent
+    }
+
+    private fun queueSend(pendingSend: PendingSend, reason: String) {
+        val pendingCount = synchronized(sendQueueLock) {
+            pendingSends.addLast(pendingSend)
+            pendingSends.size
+        }
+        Log.d(TAG, "Queued SEND → ${pendingSend.destination} ($reason, pending=$pendingCount)")
+    }
+
+    private fun flushPendingSends() {
+        var flushedCount = 0
+        while (true) {
+            val pendingSend = synchronized(sendQueueLock) {
+                pendingSends.pollFirst()
+            } ?: break
+
+            if (sendNow(pendingSend)) {
+                flushedCount++
+            } else {
+                synchronized(sendQueueLock) {
+                    pendingSends.addFirst(pendingSend)
+                }
+                Log.w(TAG, "Stopped flushing SEND queue — send failed for ${pendingSend.destination}")
+                break
+            }
+        }
+
+        if (flushedCount > 0) {
+            Log.d(TAG, "Flushed $flushedCount queued SEND frame(s)")
+        }
+    }
+
+    private fun setState(state: State) {
+        Log.d(TAG, "State: $currentState → $state")
+        currentState = state
+        onStateChanged?.invoke(state)
+    }
+
+    private fun buildConnectFrame(token: String) =
+        "CONNECT\naccept-version:1.2\nAuthorization:Bearer $token\n\n\u0000"
+
+    private fun buildSubscribeFrame(destination: String) =
+        "SUBSCRIBE\nid:sub-$destination\ndestination:$destination\n\n\u0000"
+
+    private fun buildSendFrame(destination: String, body: String) =
+        "SEND\ndestination:$destination\ncontent-type:application/json\n\n$body\u0000"
+
+    private fun parseFrame(raw: String): StompFrame {
+        val lines = raw.trimEnd(' ', '\u0000').split("\n")
+        val command = lines.firstOrNull()?.trim() ?: ""
+        val headers = mutableMapOf<String, String>()
+        var bodyStart = false
+        val bodyLines = mutableListOf<String>()
+        for (i in 1 until lines.size) {
+            val line = lines[i]
+            if (!bodyStart && line.isEmpty()) { bodyStart = true; continue }
+            if (bodyStart) bodyLines.add(line)
+            else {
+                val colon = line.indexOf(':')
+                if (colon > 0) headers[line.substring(0, colon).trim()] = line.substring(colon + 1).trim()
+            }
+        }
+        return StompFrame(command, headers, bodyLines.joinToString("\n"))
+    }
+
+    private data class StompFrame(
+        val command: String,
+        val headers: Map<String, String>,
+        val body: String
+    )
+
+    private data class PendingSend(
+        val destination: String,
+        val body: String
+    )
+
+    companion object {
+        private const val TAG = "StompClient"
+
+        fun toWsUrl(base: String): String =
+            base.trimEnd('/').replace("https://", "wss://").replace("http://", "ws://") + "/ws"
+    }
+}

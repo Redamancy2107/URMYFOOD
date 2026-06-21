@@ -16,6 +16,7 @@ public record PostRanked(
         PostStatus status,
         String content,
         String imageUrl,
+        Long shopAccountId,
         String shopName,
         String shopAvatarUrl,
         long likeCount,

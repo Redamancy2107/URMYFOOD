@@ -1,6 +1,7 @@
 package com.urmyfood.user.di
 
 import android.content.Context
+import com.urmyfood.user.BuildConfig
 import com.urmyfood.user.data.local.GuestSessionManager
 import com.urmyfood.user.data.local.NotificationSettingsManager
 import com.urmyfood.user.data.local.SearchHistoryManager
@@ -148,6 +149,20 @@ object ServiceLocator {
 
     private val orderRepository: OrderRepository by lazy {
         OrderRepositoryImpl(orderApiService)
+    }
+
+    private val stompClient: com.urmyfood.shared.data.remote.StompClient by lazy {
+        com.urmyfood.shared.data.remote.StompClient(
+            okhttp3.OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+        )
+    }
+
+    private val chatRepository: com.urmyfood.user.domain.repository.ChatRepository by lazy {
+        com.urmyfood.user.data.repository.ChatRepositoryImpl(RetrofitClient.chatApiService, stompClient)
     }
 
     // ==================== USE CASES ====================
@@ -303,5 +318,31 @@ object ServiceLocator {
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {
         return TermsPoliciesViewModel.Factory()
+    }
+
+    private val getChatSessionUseCase: com.urmyfood.user.domain.usecase.GetChatSessionUseCase by lazy {
+        com.urmyfood.user.domain.usecase.GetChatSessionUseCase(chatRepository, tokenManager)
+    }
+
+    fun provideShopProfileViewModelFactory() =
+        com.urmyfood.user.presentation.main.shop.ShopProfileViewModel.Factory(getChatSessionUseCase)
+
+    fun provideChatViewModelFactory() = com.urmyfood.user.presentation.main.chat.ChatViewModel.Factory(
+        com.urmyfood.user.domain.usecase.GetChatSessionsUseCase(chatRepository, tokenManager)
+    )
+
+    fun provideChatDetailViewModelFactory(sessionId: Long): com.urmyfood.user.presentation.main.chat.ChatDetailViewModel.Factory {
+        val token = tokenManager.getAccessToken() ?: ""
+        val wsUrl = com.urmyfood.shared.data.remote.StompClient.toWsUrl(BuildConfig.BASE_URL)
+        return com.urmyfood.user.presentation.main.chat.ChatDetailViewModel.Factory(
+            sessionId = sessionId,
+            wsUrl = wsUrl,
+            accessToken = token,
+            chatRepository = chatRepository,
+            getMessagesUseCase = com.urmyfood.user.domain.usecase.GetChatMessagesUseCase(chatRepository, tokenManager),
+            sendMessageUseCase = com.urmyfood.user.domain.usecase.SendChatMessageUseCase(chatRepository),
+            markAsReadUseCase = com.urmyfood.user.domain.usecase.MarkChatAsReadUseCase(chatRepository, tokenManager),
+            uploadChatImageUseCase = com.urmyfood.user.domain.usecase.UploadChatImageUseCase(chatRepository, tokenManager)
+        )
     }
 }

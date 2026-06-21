@@ -130,6 +130,12 @@
 			<version>5.1.0</version>
 		</dependency>
 
+		<!-- WebSocket / STOMP support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 		<!-- Email support -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -1,23 +1,29 @@
 package com.urmyfood.user.presentation.main.chat
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainChatBinding
+import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.user.presentation.main.chat.adapter.ChatListAdapter
 
-/**
- * Chat List Fragment.
- * Displays a list of conversations between the user and stores/other users.
- */
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentMainChatBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: ChatViewModel by viewModels {
+        ServiceLocator.provideChatViewModelFactory()
+    }
+    private lateinit var chatListAdapter: ChatListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,26 +38,37 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun setupRecyclerView() {
-        val dummySessions = listOf(
-            com.urmyfood.user.presentation.model.ChatSession(
-                1, "The Coffee House", com.urmyfood.user.R.drawable.bg_food_banner,
-                "Dạ quán đã nhận được ghi chú ít đá của bạn ạ.", "10:45", 1
-            ),
-            com.urmyfood.user.presentation.model.ChatSession(
-                2, "Pizza Hut - Phạm Văn Đồng", com.urmyfood.user.R.drawable.bg_food_banner,
-                "Cảm ơn bạn đã ủng hộ quán nhé!", "Hôm qua", 0
-            ),
-            com.urmyfood.user.presentation.model.ChatSession(
-                3, "Linh Trần", com.urmyfood.user.R.drawable.bg_food_banner,
-                "Ê trưa nay ăn bún bò không?", "T.2", 0
-            )
-        )
+        chatListAdapter = ChatListAdapter { session ->
+            val bundle = Bundle().apply {
+                putLong("sessionId", session.id)
+                putString("shopName", session.shopName)
+                putString("shopAvatarUrl", session.shopAvatarUrl)
+            }
+            findNavController().navigate(R.id.chatDetailFragment, bundle)
+        }
+        binding.rvChatList.adapter = chatListAdapter
+    }
 
-        binding.rvChatList.adapter = com.urmyfood.user.presentation.main.chat.adapter.ChatListAdapter(dummySessions) { session ->
-            findNavController().navigate(R.id.chatDetailFragment)
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ChatViewModel.UiState.Loading -> Unit
+                is ChatViewModel.UiState.Success -> {
+                    chatListAdapter.submitList(state.sessions)
+                    val isEmpty = state.sessions.isEmpty()
+                    binding.rvChatList.visibility = if (isEmpty) View.GONE else View.VISIBLE
+                    binding.tvEmptyChat.visibility = if (isEmpty) View.VISIBLE else View.GONE
+                    binding.tvEmptyChat.text = if (binding.etSearchChat.text.isNullOrBlank())
+                        "Chưa có cuộc trò chuyện nào"
+                    else
+                        "Không tìm thấy kết quả"
+                }
+                is ChatViewModel.UiState.Error -> Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -59,12 +76,13 @@ class ChatFragment : Fragment() {
         binding.btnNotification.setOnClickListener {
             Toast.makeText(requireContext(), getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
         }
-
-        // Placeholder for search action
-        binding.etSearchChat.setOnEditorActionListener { _, _, _ ->
-            Toast.makeText(requireContext(), "Tìm kiếm: ${binding.etSearchChat.text}", Toast.LENGTH_SHORT).show()
-            true
-        }
+        binding.etSearchChat.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.filterSessions(s?.toString() ?: "")
+            }
+        })
     }
 
     override fun onDestroyView() {
