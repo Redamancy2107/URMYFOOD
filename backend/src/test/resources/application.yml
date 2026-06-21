@@ -1,0 +1,59 @@
+spring:
+  application:
+    name: urmyfood-backend-test
+
+  datasource:
+    url: jdbc:h2:mem:urmyfood_test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+
+  flyway:
+    enabled: false
+
+supabase:
+  url: "http://localhost:8080"
+  anon-key: "test-anon-key"
+  service-role-key: "test-service-key"
+  storage:
+    bucket: "shop-profile-images"
+
+payos:
+  client-id: "test"
+  api-key: "test"
+  checksum-key: "test"
+
+google:
+  client-id: "test"
+  client-secret: "test"
+  refresh-token: "test"
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+  refresh-token:
+    expiration: 604800000
+
+mail:
+  host: localhost
+  port: 587
+  username: user
+  password: pass
+
+logging:
+  level:
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
