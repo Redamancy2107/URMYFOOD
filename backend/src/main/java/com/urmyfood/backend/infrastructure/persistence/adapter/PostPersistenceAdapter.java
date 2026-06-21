@@ -48,6 +48,7 @@ public class PostPersistenceAdapter implements PostRepository {
                    p.remaining_quantity, p.end_time, p.is_flash_sale, p.status::text,
                    p.content, p.image_url, p.category, p.created_at,
                    a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
+                   sp.address AS shop_address,
                    COALESCE(COUNT(DISTINCT l.like_id), 0) AS like_count,
                    COALESCE(COUNT(DISTINCT c.comment_id), 0) AS comment_count,
                    CASE WHEN :viewerAccountId IS NOT NULL
@@ -56,6 +57,7 @@ public class PostPersistenceAdapter implements PostRepository {
                         ELSE FALSE END AS is_liked
             FROM posts p
             JOIN accounts a ON a.id = p.author_id
+            LEFT JOIN shop_profiles sp ON sp.shop_id = a.id
             LEFT JOIN likes l ON l.post_id = p.post_id
             LEFT JOIN comments c ON c.post_id = p.post_id
             """;
@@ -75,7 +77,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.post_id = :postId
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.full_name, a.avatar_url, sp.address
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("postId", postId)
@@ -111,7 +113,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.full_name, a.avatar_url, sp.address
                 ORDER BY (
                     :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
                     :w2 * COALESCE(COUNT(DISTINCT c.comment_id), 0) +
@@ -151,7 +153,7 @@ public class PostPersistenceAdapter implements PostRepository {
                     AND (
                 """ + searchPredicate(terms) + """
                     )
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.full_name, a.avatar_url, sp.address
                 ORDER BY
                 """ + relevanceExpression(terms) + """
                     DESC,
@@ -383,6 +385,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getString("image_url"),
                 rs.getString("shop_name"),
                 rs.getString("shop_avatar_url"),
+                rs.getString("shop_address"),
                 rs.getLong("like_count"),
                 rs.getLong("comment_count"),
                 rs.getBoolean("is_liked"),
@@ -406,7 +409,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public List<PostRanked> findByAuthorId(Long accountId, int page, int size) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.author_id = :authorId
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.full_name, a.avatar_url, sp.address
                 ORDER BY p.created_at DESC
                 LIMIT :size OFFSET :offset
                 """;

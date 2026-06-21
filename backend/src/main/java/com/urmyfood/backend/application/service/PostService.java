@@ -240,6 +240,7 @@ public class PostService {
                 .category(pr.category())
                 .shopName(pr.shopName())
                 .shopAvatarUrl(pr.shopAvatarUrl())
+                .shopAddress(pr.shopAddress())
                 .createdAt(pr.createdAt())
                 .likeCount(pr.likeCount())
                 .isLiked(pr.liked())

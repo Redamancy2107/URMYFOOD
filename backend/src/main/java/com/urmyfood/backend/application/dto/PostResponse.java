@@ -52,6 +52,9 @@ public class PostResponse {
     @JsonProperty("shop_avatar_url")
     private String shopAvatarUrl;
 
+    @JsonProperty("shop_address")
+    private String shopAddress;
+
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
 
