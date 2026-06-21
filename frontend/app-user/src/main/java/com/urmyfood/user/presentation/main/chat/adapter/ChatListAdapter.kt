@@ -1,16 +1,17 @@
 package com.urmyfood.user.presentation.main.chat.adapter
 
 import android.view.LayoutInflater
-import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import com.urmyfood.user.databinding.ItemChatListBinding
-import com.urmyfood.user.presentation.model.ChatSession
 import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.urmyfood.shared.domain.model.ChatSession
+import com.urmyfood.user.databinding.ItemChatListBinding
 
 class ChatListAdapter(
-    private val sessions: List<ChatSession>,
     private val onItemClick: (ChatSession) -> Unit
-) : RecyclerView.Adapter<ChatListAdapter.ChatViewHolder>() {
+) : ListAdapter<ChatSession, ChatListAdapter.ChatViewHolder>(ChatSessionDiffCallback()) {
 
     class ChatViewHolder(val binding: ItemChatListBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -20,12 +21,11 @@ class ChatListAdapter(
     }
 
     override fun onBindViewHolder(holder: ChatViewHolder, position: Int) {
-        val session = sessions[position]
+        val session = getItem(position)
         with(holder.binding) {
-            tvChatName.text = session.name
-            tvLastMessage.text = session.lastMessage
-            tvChatTime.text = session.time
-            ivChatAvatar.setImageResource(session.avatar)
+            tvChatName.text = session.shopName
+            tvLastMessage.text = session.lastMessage ?: ""
+            tvChatTime.text = session.lastMessageAt?.take(5) ?: ""
 
             if (session.unreadCount > 0) {
                 unreadBadge.visibility = View.VISIBLE
@@ -38,5 +38,11 @@ class ChatListAdapter(
         }
     }
 
-    override fun getItemCount() = sessions.size
+    private class ChatSessionDiffCallback : DiffUtil.ItemCallback<ChatSession>() {
+        override fun areItemsTheSame(oldItem: ChatSession, newItem: ChatSession): Boolean =
+            oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: ChatSession, newItem: ChatSession): Boolean =
+            oldItem == newItem
+    }
 }

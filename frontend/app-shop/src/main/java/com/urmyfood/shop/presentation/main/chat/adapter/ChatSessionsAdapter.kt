@@ -6,8 +6,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.urmyfood.shared.domain.model.ChatSession
 import com.urmyfood.shop.databinding.ItemChatSessionBinding
-import com.urmyfood.shop.presentation.main.chat.ChatViewModel.ChatSession
 
 class ChatSessionsAdapter(
     private val onSessionClick: (ChatSession) -> Unit
@@ -29,15 +29,11 @@ class ChatSessionsAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(session: ChatSession) {
-            // Avatar initial from customer name
-            binding.tvAvatarInitial.text = session.customerName
-                .firstOrNull()?.uppercase() ?: "?"
-
+            binding.tvAvatarInitial.text = session.customerName.firstOrNull()?.uppercase() ?: "?"
             binding.tvCustomerName.text = session.customerName
-            binding.tvLastMessage.text = session.lastMessage
-            binding.tvTimestamp.text = session.timestamp
+            binding.tvLastMessage.text = session.lastMessage ?: ""
+            binding.tvTimestamp.text = session.lastMessageAt?.take(5) ?: ""
 
-            // Unread badge
             if (session.unreadCount > 0) {
                 binding.tvUnreadBadge.visibility = View.VISIBLE
                 binding.tvUnreadBadge.text = session.unreadCount.toString()

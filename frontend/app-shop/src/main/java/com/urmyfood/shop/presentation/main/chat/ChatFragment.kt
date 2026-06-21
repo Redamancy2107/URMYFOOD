@@ -6,22 +6,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentMainChatBinding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.presentation.main.chat.adapter.ChatSessionsAdapter
 
-/**
- * Chat List Fragment.
- * Displays a list of conversations between the user and stores/other users.
- */
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentMainChatBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: ChatViewModel by viewModels()
+    private val viewModel: ChatViewModel by viewModels {
+        ServiceLocator.provideChatViewModelFactory()
+    }
     private lateinit var chatSessionsAdapter: ChatSessionsAdapter
 
     override fun onCreateView(
@@ -43,6 +42,7 @@ class ChatFragment : Fragment() {
     private fun setupRecyclerView() {
         chatSessionsAdapter = ChatSessionsAdapter { session ->
             val bundle = Bundle().apply {
+                putLong("sessionId", session.id)
                 putString("customerName", session.customerName)
             }
             findNavController().navigate(R.id.action_chat_to_chatDetail, bundle)
@@ -51,8 +51,12 @@ class ChatFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.chatSessions.observe(viewLifecycleOwner) { sessions ->
-            chatSessionsAdapter.submitList(sessions)
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ChatViewModel.UiState.Loading -> Unit
+                is ChatViewModel.UiState.Success -> chatSessionsAdapter.submitList(state.sessions)
+                is ChatViewModel.UiState.Error -> Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -60,8 +64,6 @@ class ChatFragment : Fragment() {
         binding.mainHeader.btnNotification.setOnClickListener {
             Toast.makeText(requireContext(), "Tính năng đang phát triển", Toast.LENGTH_SHORT).show()
         }
-
-        // Placeholder for search action
         binding.etSearchChat.setOnEditorActionListener { _, _, _ ->
             Toast.makeText(requireContext(), "Tìm kiếm: ${binding.etSearchChat.text}", Toast.LENGTH_SHORT).show()
             true

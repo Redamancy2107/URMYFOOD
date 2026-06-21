@@ -6,17 +6,27 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentChatDetailBinding
+import com.urmyfood.shop.di.ServiceLocator
+import com.urmyfood.shared.util.Event
 import com.urmyfood.shop.presentation.main.chat.adapter.MessageAdapter
-import com.urmyfood.shop.presentation.model.Message
 
 class ChatDetailFragment : Fragment() {
 
     private var _binding: FragmentChatDetailBinding? = null
     private val binding get() = _binding!!
+
+    private val sessionId: Long by lazy { arguments?.getLong("sessionId") ?: 0L }
+
+    private val viewModel: ChatDetailViewModel by viewModels {
+        ServiceLocator.provideChatDetailViewModelFactory(sessionId)
+    }
+
+    private lateinit var messageAdapter: MessageAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,35 +42,51 @@ class ChatDetailFragment : Fragment() {
         setupToolbar()
         setupRecyclerView()
         setupClickListeners()
+        observeViewModel()
+        viewModel.loadHistory()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.connectWebSocket()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.disconnectWebSocket()
     }
 
     private fun setupToolbar() {
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
-        
-        // Read custom name from args
-        val customerName = arguments?.getString("customerName") ?: "Khách hàng"
-        binding.tvDetailName.text = customerName
+        binding.btnBack.setOnClickListener { findNavController().navigateUp() }
+        binding.tvDetailName.text = arguments?.getString("customerName") ?: "Khách hàng"
         binding.tvDetailStatus.text = "● Đang hoạt động"
     }
 
     private fun setupRecyclerView() {
-        val dummyMessages = listOf(
-            Message(1, "Chào shop, đơn hàng #ORD-1001 của mình chuẩn bị đến đâu rồi ạ?", "10:30", false),
-            Message(2, "Dạ quán đang chuẩn bị món cho bạn rồi nhé ạ, shipper sắp tới nhận rồi.", "10:31", true),
-            Message(3, "Ok shop, nhớ cho mình xin ít nước mắm ngọt nha.", "10:32", false),
-            Message(4, "Dạ shop đã ghi chú lại rồi ạ, cảm ơn bạn đã ủng hộ quán!", "10:35", true),
-            Message(5, "Đơn hàng đang chuẩn bị", "10:36", false, isOrderCard = true, orderId = "#ORD-1001")
-        )
-
+        messageAdapter = MessageAdapter()
         binding.rvMessages.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = MessageAdapter(dummyMessages) { orderId ->
-                val bundle = Bundle().apply {
-                    putString("orderId", orderId)
+            layoutManager = LinearLayoutManager(requireContext()).also { it.stackFromEnd = true }
+            adapter = messageAdapter
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ChatDetailViewModel.UiState.Loading -> Unit
+                is ChatDetailViewModel.UiState.Success -> {
+                    messageAdapter.submitList(state.messages)
+                    scrollToBottom()
                 }
-                findNavController().navigate(R.id.orderDetailFragment, bundle)
+                is ChatDetailViewModel.UiState.Error ->
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.incomingMessage.observe(viewLifecycleOwner) { event ->
+            event.getContentIfNotHandled()?.let { message ->
+                messageAdapter.appendMessage(message)
+                scrollToBottom()
             }
         }
     }
@@ -69,7 +95,7 @@ class ChatDetailFragment : Fragment() {
         binding.btnSend.setOnClickListener {
             val text = binding.etMessage.text.toString()
             if (text.isNotBlank()) {
-                Toast.makeText(requireContext(), "Gửi: $text", Toast.LENGTH_SHORT).show()
+                viewModel.sendMessage(text)
                 binding.etMessage.text?.clear()
             }
         }
@@ -81,7 +107,15 @@ class ChatDetailFragment : Fragment() {
         }
     }
 
+    private fun scrollToBottom() {
+        val count = messageAdapter.itemCount
+        if (count > 0) binding.rvMessages.scrollToPosition(count - 1)
+    }
+
     override fun onDestroyView() {
+        // Safety net: ensure WebSocket is disconnected if onPause was not called
+        // (e.g., programmatic fragment removal or unexpected lifecycle paths).
+        viewModel.disconnectWebSocket()
         super.onDestroyView()
         _binding = null
     }

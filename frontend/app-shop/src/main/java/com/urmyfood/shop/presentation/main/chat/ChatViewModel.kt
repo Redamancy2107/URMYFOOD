@@ -3,63 +3,45 @@ package com.urmyfood.shop.presentation.main.chat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.urmyfood.shared.domain.model.ChatSession
+import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.domain.usecase.GetChatSessionsUseCase
+import kotlinx.coroutines.launch
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    private val getChatSessionsUseCase: GetChatSessionsUseCase
+) : ViewModel() {
 
-    // Mock data - remove when BE ready
-    data class ChatSession(
-        val id: String,
-        val customerName: String,
-        val lastMessage: String,
-        val timestamp: String,
-        val unreadCount: Int
-    )
-
-    private val _chatSessions = MutableLiveData<List<ChatSession>>()
-    val chatSessions: LiveData<List<ChatSession>> = _chatSessions
-
-    init {
-        loadMockData()
+    sealed class UiState {
+        object Loading : UiState()
+        data class Success(val sessions: List<ChatSession>) : UiState()
+        data class Error(val message: String) : UiState()
     }
 
-    // Mock data - remove when BE ready
-    private fun loadMockData() {
-        _chatSessions.value = listOf(
-            ChatSession(
-                id = "chat_1",
-                customerName = "Nguyễn Văn A",
-                lastMessage = "Cho mình hỏi còn cơm tấm không?",
-                timestamp = "10:30",
-                unreadCount = 2
-            ),
-            ChatSession(
-                id = "chat_2",
-                customerName = "Trần Thị B",
-                lastMessage = "Dạ mình đã nhận được đơn rồi, cảm ơn shop!",
-                timestamp = "09:45",
-                unreadCount = 0
-            ),
-            ChatSession(
-                id = "chat_3",
-                customerName = "Lê Hoàng C",
-                lastMessage = "Ship tới ký túc xá được không ạ?",
-                timestamp = "Hôm qua",
-                unreadCount = 1
-            ),
-            ChatSession(
-                id = "chat_4",
-                customerName = "Phạm Minh D",
-                lastMessage = "Mình muốn đặt 5 phần cho nhóm",
-                timestamp = "Hôm qua",
-                unreadCount = 3
-            ),
-            ChatSession(
-                id = "chat_5",
-                customerName = "Võ Thanh E",
-                lastMessage = "Cảm ơn shop nhiều nha!",
-                timestamp = "T2",
-                unreadCount = 0
-            )
-        )
+    private val _uiState = MutableLiveData<UiState>()
+    val uiState: LiveData<UiState> = _uiState
+
+    init {
+        loadSessions()
+    }
+
+    fun loadSessions() {
+        _uiState.value = UiState.Loading
+        viewModelScope.launch {
+            when (val result = getChatSessionsUseCase()) {
+                is Result.Success -> _uiState.value = UiState.Success(result.data)
+                is Result.Error -> _uiState.value = UiState.Error(result.message)
+            }
+        }
+    }
+
+    class Factory(
+        private val getChatSessionsUseCase: GetChatSessionsUseCase
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            ChatViewModel(getChatSessionsUseCase) as T
     }
 }
