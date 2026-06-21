@@ -46,7 +46,7 @@ public class PostPersistenceAdapter implements PostRepository {
             SELECT p.post_id, p.dish_name, p.price, p.original_price, p.max_quantity,
                    p.remaining_quantity, p.end_time, p.is_flash_sale, p.status::text,
                    p.content, p.image_url, p.created_at,
-                   a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
+                   a.id AS shop_account_id, a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
                    COALESCE(COUNT(DISTINCT l.like_id), 0) AS like_count,
                    COALESCE(COUNT(DISTINCT c.comment_id), 0) AS comment_count,
                    CASE WHEN :viewerAccountId IS NOT NULL
@@ -74,7 +74,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.post_id = :postId
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("postId", postId)
@@ -105,7 +105,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url
                 ORDER BY (
                     :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
                     :w2 * COALESCE(COUNT(DISTINCT c.comment_id), 0) +
@@ -145,7 +145,7 @@ public class PostPersistenceAdapter implements PostRepository {
                     AND (
                 """ + searchPredicate(terms) + """
                     )
-                GROUP BY p.post_id, a.full_name, a.avatar_url
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url
                 ORDER BY
                 """ + relevanceExpression(terms) + """
                     DESC,
@@ -375,6 +375,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 PostStatus.valueOf(rs.getString("status")),
                 rs.getString("content"),
                 rs.getString("image_url"),
+                rs.getLong("shop_account_id"),
                 rs.getString("shop_name"),
                 rs.getString("shop_avatar_url"),
                 rs.getLong("like_count"),

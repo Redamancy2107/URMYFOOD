@@ -20,9 +20,9 @@ import com.urmyfood.shop.databinding.FragmentShopProfileEditBinding
 import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.domain.model.ShopCategory
 import com.urmyfood.shop.domain.model.ShopProfile
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class ShopProfileEditFragment : Fragment() {
 
@@ -257,7 +257,7 @@ class ShopProfileEditFragment : Fragment() {
             val mimeType = requireContext().contentResolver.getType(this) ?: "image/jpeg"
             val bytes = requireContext().contentResolver.openInputStream(this)?.use { it.readBytes() }
                 ?: return null
-            val body = RequestBody.create(MediaType.parse(mimeType), bytes)
+            val body = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
             MultipartBody.Part.createFormData(fieldName, "profile-image", body)
         } catch (e: Exception) {
             Toast.makeText(requireContext(), "Không thể đọc ảnh đã chọn", Toast.LENGTH_SHORT).show()
