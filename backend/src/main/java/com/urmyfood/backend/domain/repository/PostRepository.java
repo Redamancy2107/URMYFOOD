@@ -1,8 +1,10 @@
 package com.urmyfood.backend.domain.repository;
 
+import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.domain.model.Post;
 import com.urmyfood.backend.domain.model.PostComment;
 import com.urmyfood.backend.domain.model.PostRanked;
+import com.urmyfood.backend.domain.model.PostStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -31,4 +33,11 @@ public interface PostRepository {
     List<PostComment> findComments(UUID postId, OffsetDateTime cursor, int size);
     long countComments(UUID postId);
     PostComment saveComment(UUID postId, Long accountId, String content, UUID parentId);
+
+    // Shop owner post management
+    List<PostRanked> findByAuthorId(Long accountId, int page, int size);
+    long countByAuthorId(Long accountId);
+    void updatePost(UUID postId, Long authorId, UpdatePostRequest req);
+    void deletePost(UUID postId, Long authorId);
+    void updatePostStatus(UUID postId, Long authorId, PostStatus status);
 }

@@ -1,6 +1,10 @@
 package com.urmyfood.backend.application.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,30 +12,28 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponse {
+public class UpdatePostRequest {
 
-    @JsonProperty("post_id")
-    private UUID postId;
-
+    @NotBlank
     @JsonProperty("dish_name")
     private String dishName;
 
+    @NotNull
+    @DecimalMin(value = "0.01", message = "Giá món ăn phải lớn hơn 0")
     private BigDecimal price;
 
+    @DecimalMin("0.0")
     @JsonProperty("original_price")
     private BigDecimal originalPrice;
 
+    @Min(1)
     @JsonProperty("max_quantity")
     private int maxQuantity;
-
-    @JsonProperty("remaining_quantity")
-    private int remainingQuantity;
 
     @JsonProperty("end_time")
     private OffsetDateTime endTime;
@@ -39,30 +41,10 @@ public class PostResponse {
     @JsonProperty("is_flash_sale")
     private boolean isFlashSale;
 
-    private String status;
-
     private String content;
 
     @JsonProperty("image_url")
     private String imageUrl;
-
-    @JsonProperty("shop_name")
-    private String shopName;
-
-    @JsonProperty("shop_avatar_url")
-    private String shopAvatarUrl;
-
-    @JsonProperty("created_at")
-    private OffsetDateTime createdAt;
-
-    @JsonProperty("like_count")
-    private long likeCount;
-
-    @JsonProperty("is_liked")
-    private boolean isLiked;
-
-    @JsonProperty("comment_count")
-    private long commentCount;
 
     @JsonProperty("category")
     private String category;

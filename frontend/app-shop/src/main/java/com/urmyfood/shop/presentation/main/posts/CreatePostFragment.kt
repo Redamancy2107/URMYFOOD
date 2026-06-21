@@ -1,5 +1,6 @@
 package com.urmyfood.shop.presentation.main.posts
 
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -8,34 +9,28 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentCreatePostBinding
-import org.json.JSONObject
+import com.urmyfood.shop.di.ServiceLocator
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class CreatePostFragment : Fragment() {
 
     private var _binding: FragmentCreatePostBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: CreatePostViewModel by viewModels()
+    private lateinit var viewModel: CreatePostViewModel
 
-    private var selectedImageUri: android.net.Uri? = null
-
-    private val pickImageLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.GetContent()
-    ) { uri: android.net.Uri? ->
-        uri?.let {
-            selectedImageUri = it
-            binding.ivPostImage.visibility = View.VISIBLE
-            com.bumptech.glide.Glide.with(this)
-                .load(it)
-                .placeholder(R.drawable.bg_food_banner)
-                .error(R.drawable.bg_food_banner)
-                .into(binding.ivPostImage)
-        }
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let { uploadImageFromUri(it) }
     }
 
     override fun onCreateView(
@@ -47,68 +42,25 @@ class CreatePostFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val postId = arguments?.getString("postId")
+        viewModel = ViewModelProvider(this, ServiceLocator.provideCreatePostViewModelFactory(postId))
+            .get(CreatePostViewModel::class.java)
+
         setupToolbar()
         setupCategorySpinner()
-        
-        // Parse editing post argument if any
-        arguments?.getString("postJson")?.let { jsonStr ->
-            try {
-                val json = JSONObject(jsonStr)
-                val post = ShopPost(
-                    postId = json.getString("postId"),
-                    dishName = json.getString("dishName"),
-                    price = json.getLong("price"),
-                    originalPrice = if (json.has("originalPrice")) json.getLong("originalPrice") else null,
-                    content = if (json.has("content")) json.getString("content") else null,
-                    imageUrl = json.getString("imageUrl"),
-                    stock = json.getInt("stock"),
-                    maxStock = json.getInt("maxStock"),
-                    isActive = json.getBoolean("isActive"),
-                    isFlashSale = json.getBoolean("isFlashSale"),
-                    likeCount = json.getInt("likeCount"),
-                    commentCount = json.getInt("commentCount"),
-                    category = if (json.has("category")) json.getString("category") else null
-                )
-                viewModel.setupForEdit(post)
-                if (post.imageUrl.isNotEmpty()) {
-                    binding.ivPostImage.visibility = View.VISIBLE
-                    com.bumptech.glide.Glide.with(this)
-                        .load(post.imageUrl)
-                        .placeholder(R.drawable.bg_food_banner)
-                        .error(R.drawable.bg_food_banner)
-                        .into(binding.ivPostImage)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
         setupTextWatchers()
         setupListeners()
         observeViewModel()
-        
-        // Populate inputs if in edit mode
+
         if (viewModel.isEditMode) {
             binding.toolbar.title = "Chỉnh sửa bài đăng"
             binding.btnSave.text = "Lưu thay đổi"
-            binding.etDishName.setText(viewModel.dishName.value)
-            binding.etPrice.setText(viewModel.price.value)
-            binding.etOriginalPrice.setText(viewModel.originalPrice.value)
-            binding.etDescription.setText(viewModel.description.value)
-            binding.switchAvailable.isChecked = viewModel.isAvailable.value == true
-            binding.switchFlashSale.isChecked = viewModel.isFlashSale.value == true
-            
-            val categoryPos = viewModel.categories.indexOf(viewModel.category.value)
-            if (categoryPos != -1) {
-                binding.spinnerCategory.setSelection(categoryPos)
-            }
         }
     }
 
     private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            findNavController().navigateUp()
-        }
+        binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
     }
 
     private fun setupCategorySpinner() {
@@ -116,142 +68,42 @@ class CreatePostFragment : Fragment() {
             requireContext(),
             android.R.layout.simple_spinner_item,
             viewModel.categories
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
+        ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
         binding.spinnerCategory.adapter = adapter
     }
 
     private fun setupTextWatchers() {
-        binding.etDishName.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setDishName(s?.toString().orEmpty())
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+        binding.etDishName.addTextChangedListener(simpleWatcher { viewModel.setDishName(it) })
+        binding.etPrice.addTextChangedListener(simpleWatcher { viewModel.setPrice(it) })
+        binding.etOriginalPrice.addTextChangedListener(simpleWatcher { viewModel.setOriginalPrice(it) })
+        binding.etDescription.addTextChangedListener(simpleWatcher { viewModel.setDescription(it) })
+    }
 
-        binding.etPrice.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setPrice(s?.toString().orEmpty())
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        binding.etOriginalPrice.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setOriginalPrice(s?.toString().orEmpty())
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
-
-        binding.etDescription.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                viewModel.setDescription(s?.toString().orEmpty())
-            }
-            override fun afterTextChanged(s: Editable?) {}
-        })
+    private fun simpleWatcher(action: (String) -> Unit) = object : TextWatcher {
+        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { action(s?.toString().orEmpty()) }
+        override fun afterTextChanged(s: Editable?) {}
     }
 
     private fun setupListeners() {
-        binding.switchAvailable.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setAvailable(isChecked)
-        }
-
-        binding.switchFlashSale.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setFlashSale(isChecked)
-        }
-
-        binding.btnDecrement.setOnClickListener {
-            viewModel.decrementStock()
-        }
-
-        binding.btnIncrement.setOnClickListener {
-            viewModel.incrementStock()
-        }
+        binding.switchFlashSale.setOnCheckedChangeListener { _, isChecked -> viewModel.setFlashSale(isChecked) }
+        binding.btnDecrement.setOnClickListener { viewModel.decrementStock() }
+        binding.btnIncrement.setOnClickListener { viewModel.incrementStock() }
+        binding.btnAddImage.setOnClickListener { pickImageLauncher.launch("image/*") }
 
         binding.btnSave.setOnClickListener {
-            val error = viewModel.validate()
-            if (error != null) {
-                Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show()
-            } else {
-                val dishName = viewModel.dishName.value.orEmpty()
-                val price = viewModel.price.value.orEmpty().toLongOrNull() ?: 0L
-                val originalPrice = viewModel.originalPrice.value.orEmpty().toLongOrNull()
-                val content = viewModel.description.value.orEmpty()
-                val isAvailable = viewModel.isAvailable.value ?: true
-                val isFlashSale = viewModel.isFlashSale.value ?: false
-                val stock = viewModel.stockCount.value ?: 10
-                val category = binding.spinnerCategory.selectedItem?.toString() ?: "Món chính"
-                
-                val imageUrl = selectedImageUri?.toString() ?: (if (viewModel.isEditMode) {
-                    PostsViewModel.allPosts.find { it.postId == viewModel.editingPostId }?.imageUrl ?: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
-                } else {
-                    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
-                })
-
-                if (viewModel.isEditMode) {
-                    val index = PostsViewModel.allPosts.indexOfFirst { it.postId == viewModel.editingPostId }
-                    if (index != -1) {
-                        val existing = PostsViewModel.allPosts[index]
-                        PostsViewModel.allPosts[index] = existing.copy(
-                            dishName = dishName,
-                            price = price,
-                            originalPrice = originalPrice,
-                            content = content,
-                            imageUrl = imageUrl,
-                            stock = stock,
-                            isActive = isAvailable,
-                            isFlashSale = isFlashSale,
-                            category = category
-                        )
-                    }
-                } else {
-                    val newPost = ShopPost(
-                        postId = "post_${System.currentTimeMillis()}",
-                        dishName = dishName,
-                        price = price,
-                        originalPrice = originalPrice,
-                        content = content,
-                        imageUrl = imageUrl,
-                        stock = stock,
-                        maxStock = stock,
-                        isActive = isAvailable,
-                        isFlashSale = isFlashSale,
-                        category = category,
-                        likeCount = 0,
-                        commentCount = 0
-                    )
-                    PostsViewModel.allPosts.add(newPost)
-                }
-
-                val message = if (viewModel.isEditMode) "Cập nhật bài đăng thành công!" else "Tạo bài đăng thành công!"
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-                findNavController().navigateUp()
-            }
+            viewModel.setCategory(binding.spinnerCategory.selectedItem?.toString() ?: "Món chính")
+            viewModel.savePost()
         }
 
-        binding.btnAddImage.setOnClickListener {
-            pickImageLauncher.launch("image/*")
-        }
-
-        // Text watcher for stock edit box
-        binding.tvStockCount.addTextChangedListener(object : android.text.TextWatcher {
+        binding.tvStockCount.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) {
-                val input = s?.toString().orEmpty()
-                val parsed = input.toIntOrNull()
-                if (parsed != null) {
-                    viewModel.setStock(parsed)
-                }
+            override fun afterTextChanged(s: Editable?) {
+                s?.toString()?.toIntOrNull()?.let { viewModel.setStock(it) }
             }
         })
 
-        // Reset text if left empty on focus lost
         binding.tvStockCount.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {
                 val input = binding.tvStockCount.text.toString()
@@ -262,12 +114,89 @@ class CreatePostFragment : Fragment() {
         }
     }
 
+    private fun uploadImageFromUri(uri: Uri) {
+        val contentResolver = requireContext().contentResolver
+        val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
+        val bytes = contentResolver.openInputStream(uri)?.readBytes() ?: return
+        val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("file", "post_image.jpg", requestBody)
+        viewModel.uploadImage(part)
+
+        Glide.with(this)
+            .load(uri)
+            .placeholder(R.drawable.bg_food_banner)
+            .into(binding.ivPostImage)
+        binding.ivPostImage.visibility = View.VISIBLE
+    }
+
     private fun observeViewModel() {
         viewModel.stockCount.observe(viewLifecycleOwner) { count ->
-            val currentInput = binding.tvStockCount.text.toString()
             val stockStr = count.toString()
-            if (currentInput != stockStr) {
+            if (binding.tvStockCount.text.toString() != stockStr) {
                 binding.tvStockCount.setText(stockStr)
+            }
+        }
+
+        viewModel.imageUrl.observe(viewLifecycleOwner) { url ->
+            if (!url.isNullOrEmpty() && binding.ivPostImage.tag != url) {
+                binding.ivPostImage.tag = url
+                binding.ivPostImage.visibility = View.VISIBLE
+                Glide.with(this).load(url).placeholder(R.drawable.bg_food_banner).into(binding.ivPostImage)
+            }
+        }
+
+        viewModel.category.observe(viewLifecycleOwner) { cat ->
+            val pos = viewModel.categories.indexOf(cat)
+            if (pos != -1 && binding.spinnerCategory.selectedItemPosition != pos) {
+                binding.spinnerCategory.setSelection(pos)
+            }
+        }
+
+        viewModel.dishName.observe(viewLifecycleOwner) { name ->
+            if (binding.etDishName.text.toString() != name) binding.etDishName.setText(name)
+        }
+
+        viewModel.price.observe(viewLifecycleOwner) { p ->
+            if (binding.etPrice.text.toString() != p) binding.etPrice.setText(p)
+        }
+
+        viewModel.originalPrice.observe(viewLifecycleOwner) { p ->
+            if (binding.etOriginalPrice.text.toString() != p) binding.etOriginalPrice.setText(p)
+        }
+
+        viewModel.description.observe(viewLifecycleOwner) { d ->
+            if (binding.etDescription.text.toString() != d) binding.etDescription.setText(d)
+        }
+
+        viewModel.isFlashSale.observe(viewLifecycleOwner) { b ->
+            if (binding.switchFlashSale.isChecked != b) binding.switchFlashSale.isChecked = b
+        }
+
+        viewModel.imageUploadState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is ImageUploadState.Uploading -> binding.btnAddImage.isEnabled = false
+                is ImageUploadState.Success -> binding.btnAddImage.isEnabled = true
+                is ImageUploadState.Error -> {
+                    binding.btnAddImage.isEnabled = true
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
+                else -> binding.btnAddImage.isEnabled = true
+            }
+        }
+
+        viewModel.saveResult.observe(viewLifecycleOwner) { result ->
+            result ?: return@observe
+            when (result) {
+                is Result.Success -> {
+                    val msg = if (viewModel.isEditMode) "Cập nhật bài đăng thành công!" else "Tạo bài đăng thành công!"
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                    viewModel.clearSaveResult()
+                    findNavController().navigateUp()
+                }
+                is Result.Error -> {
+                    Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    viewModel.clearSaveResult()
+                }
             }
         }
     }

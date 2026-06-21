@@ -1,5 +1,6 @@
 package com.urmyfood.backend.infrastructure.persistence.adapter;
 
+import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.domain.model.Post;
 import com.urmyfood.backend.domain.model.PostComment;
 import com.urmyfood.backend.domain.model.PostRanked;
@@ -45,7 +46,7 @@ public class PostPersistenceAdapter implements PostRepository {
     private static final String SELECT_FRAGMENT = """
             SELECT p.post_id, p.dish_name, p.price, p.original_price, p.max_quantity,
                    p.remaining_quantity, p.end_time, p.is_flash_sale, p.status::text,
-                   p.content, p.image_url, p.created_at,
+                   p.content, p.image_url, p.category, p.created_at,
                    a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
                    COALESCE(COUNT(DISTINCT l.like_id), 0) AS like_count,
                    COALESCE(COUNT(DISTINCT c.comment_id), 0) AS comment_count,
@@ -380,7 +381,8 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getLong("like_count"),
                 rs.getLong("comment_count"),
                 rs.getBoolean("is_liked"),
-                rs.getObject("created_at", OffsetDateTime.class)
+                rs.getObject("created_at", OffsetDateTime.class),
+                rs.getString("category")
         );
     }
 
@@ -393,6 +395,78 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getObject("created_at", OffsetDateTime.class),
                 rs.getObject("parent_id", UUID.class)
         );
+    }
+
+    @Override
+    public List<PostRanked> findByAuthorId(Long accountId, int page, int size) {
+        String sql = SELECT_FRAGMENT + """
+                WHERE p.author_id = :authorId
+                GROUP BY p.post_id, a.full_name, a.avatar_url
+                ORDER BY p.created_at DESC
+                LIMIT :size OFFSET :offset
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("viewerAccountId", accountId, Types.BIGINT)
+                .addValue("authorId", accountId)
+                .addValue("size", size)
+                .addValue("offset", (long) page * size);
+        return jdbc.query(sql, params, this::mapRow);
+    }
+
+    @Override
+    public long countByAuthorId(Long accountId) {
+        String sql = "SELECT COUNT(*) FROM posts WHERE author_id = :authorId";
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("authorId", accountId), Long.class);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public void updatePost(UUID postId, Long authorId, UpdatePostRequest req) {
+        String sql = """
+                UPDATE posts SET
+                    dish_name = :dishName,
+                    price = :price,
+                    original_price = :originalPrice,
+                    max_quantity = :maxQuantity,
+                    remaining_quantity = LEAST(remaining_quantity, :maxQuantity),
+                    end_time = :endTime,
+                    is_flash_sale = :isFlashSale,
+                    content = :content,
+                    image_url = :imageUrl,
+                    category = :category
+                WHERE post_id = :postId AND author_id = :authorId
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("dishName", req.getDishName())
+                .addValue("price", req.getPrice())
+                .addValue("originalPrice", req.getOriginalPrice())
+                .addValue("maxQuantity", req.getMaxQuantity())
+                .addValue("endTime", req.getEndTime() != null
+                        ? Timestamp.from(req.getEndTime().toInstant()) : null, Types.TIMESTAMP)
+                .addValue("isFlashSale", req.isFlashSale())
+                .addValue("content", req.getContent())
+                .addValue("imageUrl", req.getImageUrl())
+                .addValue("category", req.getCategory())
+                .addValue("postId", postId)
+                .addValue("authorId", authorId);
+        jdbc.update(sql, params);
+    }
+
+    @Override
+    public void deletePost(UUID postId, Long authorId) {
+        String sql = "DELETE FROM posts WHERE post_id = :postId AND author_id = :authorId";
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("authorId", authorId));
+    }
+
+    @Override
+    public void updatePostStatus(UUID postId, Long authorId, PostStatus status) {
+        String sql = "UPDATE posts SET status = :status WHERE post_id = :postId AND author_id = :authorId";
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("status", status.name())
+                .addValue("postId", postId)
+                .addValue("authorId", authorId));
     }
 
     Post toDomain(PostEntity entity) {
@@ -408,6 +482,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 .status(entity.getStatus())
                 .content(entity.getContent())
                 .imageUrl(entity.getImageUrl())
+                .category(entity.getCategory())
                 .author(accountAdapter.toDomain(entity.getAuthor()))
                 .createdAt(entity.getCreatedAt())
                 .build();
@@ -428,6 +503,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 .status(post.getStatus())
                 .content(post.getContent())
                 .imageUrl(post.getImageUrl())
+                .category(post.getCategory())
                 .author(authorEntity)
                 .createdAt(post.getCreatedAt())
                 .build();

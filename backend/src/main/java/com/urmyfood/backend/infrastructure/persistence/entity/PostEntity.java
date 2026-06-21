@@ -69,6 +69,9 @@ public class PostEntity {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "category")
+    private String category;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private AccountEntity author;
