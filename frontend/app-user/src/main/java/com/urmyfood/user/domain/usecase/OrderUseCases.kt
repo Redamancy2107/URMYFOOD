@@ -49,3 +49,13 @@ class CreatePayOsPaymentUseCase(
         return orderRepository.createPayOsPayment("Bearer $token", orderId)
     }
 }
+
+class CheckPayOsStatusUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String): Result<OrderResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập")
+        return orderRepository.checkPayOsStatus("Bearer $token", orderId)
+    }
+}

@@ -86,7 +86,7 @@ class CheckoutViewModel(
             when (val result = checkoutUseCase(paymentMethod, address, finalNote, finalVoucher)) {
                 is Result.Success -> {
                     val order = result.data
-                    if (paymentMethod == "MOMO") {
+                    if (paymentMethod == PAYMENT_VIETQR) {
                         when (val payOsResult = createPayOsPaymentUseCase(order.orderId)) {
                             is Result.Success -> {
                                 _uiState.value = CheckoutUiState(
@@ -99,7 +99,13 @@ class CheckoutViewModel(
                                 )
                             }
                             is Result.Error -> {
-                                _uiState.value = CheckoutUiState(message = "Tạo mã QR thất bại: ${payOsResult.message}")
+                                _uiState.value = CheckoutUiState(
+                                    isSuccess = true,
+                                    message = "Đã tạo đơn, chưa tạo được mã VietQR. Bạn có thể thanh toán lại trong lịch sử đơn hàng.",
+                                    orderId = order.orderId,
+                                    finalAmount = order.finalAmount.toLong(),
+                                    paymentMethod = paymentMethod
+                                )
                             }
                         }
                     } else {
@@ -139,5 +145,6 @@ class CheckoutViewModel(
     companion object {
         private const val DEFAULT_DELIVERY_ADDRESS = "KTX Khu A, ĐHQG TP.HCM"
         private const val DEFAULT_NOTE = "Đặt từ app URMYFOOD"
+        private const val PAYMENT_VIETQR = "VIETQR"
     }
 }

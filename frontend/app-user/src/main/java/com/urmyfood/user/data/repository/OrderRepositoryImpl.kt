@@ -47,6 +47,10 @@ class OrderRepositoryImpl(
         return safeApiCall { orderApiService.createPayOsPayment(token, orderId) }
     }
 
+    override suspend fun checkPayOsStatus(token: String, orderId: String): Result<OrderResponse> {
+        return safeApiCall { orderApiService.checkPayOsStatus(token, orderId) }
+    }
+
     private suspend fun <T> safeApiCall(call: suspend () -> Response<ApiResponse<T>>): Result<T> {
         return try {
             val response = call()

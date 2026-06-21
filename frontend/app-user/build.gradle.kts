@@ -92,6 +92,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.shimmer)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.zxing.core)
 
     // Auth & Google Services
     implementation(libs.play.services.auth)

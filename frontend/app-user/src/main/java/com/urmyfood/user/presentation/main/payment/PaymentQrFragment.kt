@@ -1,16 +1,16 @@
 package com.urmyfood.user.presentation.main.payment
 
-import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.bumptech.glide.Glide
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentPaymentQrBinding
 import com.urmyfood.user.di.ServiceLocator
@@ -34,7 +34,7 @@ class PaymentQrFragment : Fragment() {
     private var amount: Long = 0
     private var orderId: String? = null
 
-    private val getOrdersUseCase = ServiceLocator.getOrdersUseCase
+    private val checkPayOsStatusUseCase = ServiceLocator.checkPayOsStatusUseCase
     private var pollingJob: Job? = null
 
     override fun onCreateView(
@@ -64,10 +64,11 @@ class PaymentQrFragment : Fragment() {
         }
 
         if (!qrCodeString.isNullOrBlank()) {
-            val qrUrl = "https://quickchart.io/qr?text=" + Uri.encode(qrCodeString) + "&size=400"
-            Glide.with(this)
-                .load(qrUrl)
-                .into(binding.ivQrCode)
+            runCatching {
+                binding.ivQrCode.setImageBitmap(createQrBitmap(qrCodeString.orEmpty()))
+            }.onFailure {
+                Toast.makeText(requireContext(), "Không thể hiển thị mã QR", Toast.LENGTH_SHORT).show()
+            }
             binding.pbQrLoading.visibility = View.GONE
         } else {
             binding.pbQrLoading.visibility = View.GONE
@@ -75,25 +76,35 @@ class PaymentQrFragment : Fragment() {
         }
     }
 
+    private fun createQrBitmap(payload: String): Bitmap {
+        val matrix = QRCodeWriter().encode(payload, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE)
+        val bitmap = Bitmap.createBitmap(QR_SIZE, QR_SIZE, Bitmap.Config.RGB_565)
+        val pixels = IntArray(QR_SIZE * QR_SIZE) { index ->
+            val x = index % QR_SIZE
+            val y = index / QR_SIZE
+            if (matrix[x, y]) Color.BLACK else Color.WHITE
+        }
+        bitmap.setPixels(pixels, 0, QR_SIZE, 0, 0, QR_SIZE, QR_SIZE)
+        return bitmap
+    }
+
     private fun startPollingPaymentStatus() {
         if (orderId == null) return
         
+        val currentOrderId = orderId ?: return
         pollingJob = CoroutineScope(Dispatchers.IO).launch {
             while (true) {
-                delay(3000) // Poll every 3 seconds
+                delay(3000) 
                 try {
-                    val result = getOrdersUseCase()
-                    if (result is Result.Success) {
-                        val order = result.data.find { it.orderId == orderId }
-                        if (order != null && order.paymentStatus == "PAID") {
-                            withContext(Dispatchers.Main) {
-                                handlePaymentSuccess()
-                            }
-                            break
+                    val result = checkPayOsStatusUseCase(currentOrderId)
+                    if (result is Result.Success && result.data.paymentStatus == "PAID") {
+                        withContext(Dispatchers.Main) {
+                            handlePaymentSuccess()
                         }
+                        break
                     }
                 } catch (e: Exception) {
-                    // Ignore errors during polling
+                    // Bỏ qua lỗi tạm thời khi polling
                 }
             }
         }
@@ -101,7 +112,6 @@ class PaymentQrFragment : Fragment() {
 
     private fun handlePaymentSuccess() {
         Toast.makeText(requireContext(), "Thanh toán thành công!", Toast.LENGTH_LONG).show()
-        // Navigate to Order History
         findNavController().navigate(R.id.orderHistoryFragment)
     }
 
@@ -109,5 +119,9 @@ class PaymentQrFragment : Fragment() {
         super.onDestroyView()
         pollingJob?.cancel()
         _binding = null
+    }
+
+    companion object {
+        private const val QR_SIZE = 400
     }
 }

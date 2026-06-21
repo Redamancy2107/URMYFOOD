@@ -207,6 +207,7 @@ object ServiceLocator {
     val getOrdersUseCase: GetOrdersUseCase by lazy { GetOrdersUseCase(orderRepository, tokenManager) }
     val cancelOrderUseCase: CancelOrderUseCase by lazy { CancelOrderUseCase(orderRepository, tokenManager) }
     val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase by lazy { CreatePayOsPaymentUseCase(orderRepository, tokenManager) }
+    val checkPayOsStatusUseCase: CheckPayOsStatusUseCase by lazy { CheckPayOsStatusUseCase(orderRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -313,7 +314,7 @@ object ServiceLocator {
     }
 
     fun provideOrderHistoryViewModelFactory(): OrderHistoryViewModel.Factory {
-        return OrderHistoryViewModel.Factory(getOrdersUseCase, cancelOrderUseCase)
+        return OrderHistoryViewModel.Factory(getOrdersUseCase, cancelOrderUseCase, createPayOsPaymentUseCase)
     }
 
     fun provideTermsPoliciesViewModelFactory(): TermsPoliciesViewModel.Factory {

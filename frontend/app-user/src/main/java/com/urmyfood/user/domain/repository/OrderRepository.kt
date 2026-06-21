@@ -17,4 +17,5 @@ interface OrderRepository {
     suspend fun getOrderDetail(token: String, orderId: String): Result<OrderResponse>
     suspend fun cancelOrder(token: String, orderId: String, cancelReason: String): Result<OrderResponse>
     suspend fun createPayOsPayment(token: String, orderId: String): Result<com.urmyfood.user.data.model.PayOsPaymentResponse>
+    suspend fun checkPayOsStatus(token: String, orderId: String): Result<OrderResponse>
 }

@@ -20,7 +20,7 @@ import com.urmyfood.user.di.ServiceLocator
 
 /**
  * Màn hình Đơn hàng của tôi.
- * 4 tab lọc trạng thái + danh sách đơn hàng mẫu.
+ * 5 tab lọc trạng thái + danh sách đơn hàng.
  */
 class OrderHistoryFragment : Fragment() {
 
@@ -39,9 +39,12 @@ class OrderHistoryFragment : Fragment() {
         val price: String,
         val date: String,
         val status: Int,
+        val statusLabel: String,
         val originalStatus: String,
         val rawCreatedAt: String,
+        val paymentMethod: String,
         val paymentStatus: String,
+        val finalAmount: Long,
         val imageUrl: String? = null
     )
 
@@ -49,9 +52,10 @@ class OrderHistoryFragment : Fragment() {
 
     private val tabTitles by lazy {
         listOf(
+            getString(R.string.order_tab_pending),
             getString(R.string.order_tab_processing),
             getString(R.string.order_tab_delivering),
-            getString(R.string.order_tab_delivered),
+            getString(R.string.order_tab_completed),
             getString(R.string.order_tab_cancelled)
         )
     }
@@ -67,6 +71,7 @@ class OrderHistoryFragment : Fragment() {
         buildTabs()
         setupSwipeRefresh()
         observeOrders()
+        observePaymentQrNavigation()
         viewModel.loadOrders()
     }
 
@@ -150,6 +155,19 @@ class OrderHistoryFragment : Fragment() {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
+                    bottomMargin = dp(4)
+                }
+            })
+
+            content.addView(TextView(ctx).apply {
+                text = order.statusLabel
+                textSize = 12f
+                setTextColor(ctx.getColor(R.color.primary))
+                setTypeface(typeface, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
                     bottomMargin = dp(10)
                 }
             })
@@ -225,7 +243,7 @@ class OrderHistoryFragment : Fragment() {
             content.addView(bodyRow)
 
             // Action buttons for "Đã giao" tab
-            if (selectedTab == 2) {
+            if (selectedTab == OrderHistoryStatusMapper.TAB_COMPLETED) {
                 val btnRow = LinearLayout(ctx).apply {
                     orientation = LinearLayout.HORIZONTAL
                     gravity = Gravity.END
@@ -257,7 +275,32 @@ class OrderHistoryFragment : Fragment() {
                 }
                 btnRow.addView(btnReorder)
                 content.addView(btnRow)
-            } else if (selectedTab == 0 && order.originalStatus == "PENDING" && order.paymentStatus != "PAID") {
+            } else if (selectedTab == OrderHistoryStatusMapper.TAB_PENDING
+                && order.originalStatus == "PENDING"
+                && order.paymentStatus != PAYMENT_PAID
+            ) {
+                if (order.paymentMethod == PAYMENT_VIETQR) {
+                    val btnRow = LinearLayout(ctx).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        gravity = Gravity.END
+                        setPadding(0, dp(12), 0, 0)
+                    }
+
+                    val btnPay = TextView(ctx).apply {
+                        text = "Thanh toán VietQR"
+                        textSize = 14f
+                        setTextColor(Color.WHITE)
+                        setTypeface(typeface, Typeface.BOLD)
+                        setPadding(dp(20), dp(10), dp(20), dp(10))
+                        setBackgroundResource(R.drawable.bg_btn_primary)
+                        setOnClickListener {
+                            viewModel.createVietQrPayment(order.orderId, order.finalAmount)
+                        }
+                    }
+                    btnRow.addView(btnPay)
+                    content.addView(btnRow)
+                }
+
                 try {
                     val createdAt = java.time.OffsetDateTime.parse(order.rawCreatedAt)
                     val now = java.time.OffsetDateTime.now()
@@ -306,6 +349,19 @@ class OrderHistoryFragment : Fragment() {
         }
     }
 
+    private fun observePaymentQrNavigation() {
+        viewModel.paymentQrNavigation.observe(viewLifecycleOwner) { payment ->
+            payment ?: return@observe
+            val bundle = Bundle().apply {
+                putString("qrCode", payment.qrCode)
+                putLong("amount", payment.amount)
+                putString("orderId", payment.orderId)
+            }
+            findNavController().navigate(R.id.paymentQrFragment, bundle)
+            viewModel.clearPaymentQrNavigation()
+        }
+    }
+
     private fun showCancelDialog(orderId: String) {
         val ctx = requireContext()
         val input = android.widget.EditText(ctx).apply {
@@ -337,5 +393,10 @@ class OrderHistoryFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val PAYMENT_VIETQR = "VIETQR"
+        private const val PAYMENT_PAID = "PAID"
     }
 }

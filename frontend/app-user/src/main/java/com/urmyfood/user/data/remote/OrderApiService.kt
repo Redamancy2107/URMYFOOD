@@ -42,4 +42,10 @@ interface OrderApiService {
         @Header("Authorization") token: String,
         @Path("orderId") orderId: String
     ): Response<ApiResponse<com.urmyfood.user.data.model.PayOsPaymentResponse>>
+
+    @GET("api/v1/payments/payos/status/{orderId}")
+    suspend fun checkPayOsStatus(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String
+    ): Response<ApiResponse<OrderResponse>>
 }
