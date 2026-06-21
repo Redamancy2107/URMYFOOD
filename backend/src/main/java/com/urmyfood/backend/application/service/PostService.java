@@ -26,6 +26,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -123,6 +124,7 @@ public class PostService {
         return PageResponse.ofAnchored(content, page, clampedSize, total, null);
     }
 
+    @Transactional
     public PostResponse updatePost(UUID postId, UpdatePostRequest request) {
         Account account = requireCurrentAccount();
         Post post = postRepository.findById(postId)
@@ -136,6 +138,7 @@ public class PostService {
         return toResponse(updated);
     }
 
+    @Transactional
     public void deletePost(UUID postId) {
         Account account = requireCurrentAccount();
         Post post = postRepository.findById(postId)
@@ -146,6 +149,7 @@ public class PostService {
         postRepository.deletePost(postId, account.getId());
     }
 
+    @Transactional
     public PostResponse updatePostStatus(UUID postId, UpdatePostStatusRequest request) {
         Account account = requireCurrentAccount();
         Post post = postRepository.findById(postId)
@@ -264,7 +268,7 @@ public class PostService {
     }
 
     private void ensurePostExists(UUID postId) {
-        if (postRepository.findById(postId).isEmpty()) {
+        if (!postRepository.existsById(postId)) {
             throw new RuntimeException("Post not found");
         }
     }

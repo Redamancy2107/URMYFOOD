@@ -90,6 +90,11 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
+    public boolean existsById(UUID postId) {
+        return jpaPostRepository.existsById(postId);
+    }
+
+    @Override
     public Optional<Post> findByIdForUpdate(UUID postId) {
         return jpaPostRepository.findByIdForUpdate(postId).map(this::toDomain);
     }

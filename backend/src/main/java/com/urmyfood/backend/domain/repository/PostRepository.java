@@ -15,6 +15,7 @@ public interface PostRepository {
     Post save(Post post);
     Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId);
     Optional<Post> findById(UUID postId);
+    boolean existsById(UUID postId);
     Optional<Post> findByIdForUpdate(UUID postId);
     List<Post> findAllOrderedByCreatedAt();
 
