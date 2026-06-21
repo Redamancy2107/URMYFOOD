@@ -22,10 +22,15 @@ class SplashFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.lifecycleScope.launch {
             delay(1500)
-            val dest = if (ServiceLocator.tokenManager.isLoggedIn()) {
+            val tokenManager = ServiceLocator.tokenManager
+            val dest = if (tokenManager.isLoggedIn()) {
                 R.id.action_splash_to_main
             } else {
-                R.id.action_splash_to_landing
+                if (tokenManager.isFirstTime()) {
+                    R.id.action_splash_to_landing
+                } else {
+                    R.id.action_splash_to_login
+                }
             }
             findNavController().let { nav ->
                 if (nav.currentDestination?.id == R.id.splashFragment) {

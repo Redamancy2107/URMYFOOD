@@ -139,9 +139,9 @@
     <string name="profile_change_password">Đổi mật khẩu</string>
     <string name="profile_logout">Đăng xuất</string>
     <string name="profile_default_name">Người dùng</string>
-    <string name="profile_my_orders">Đơn hàng\ncủa tôi</string>
-    <string name="profile_my_vouchers">Voucher\ncủa tôi</string>
-    <string name="profile_address_book">Sổ\nđịa chỉ</string>
+    <string name="profile_my_orders">Đơn hàng</string>
+    <string name="profile_my_vouchers">Voucher</string>
+    <string name="profile_address_book">Địa chỉ</string>
     <string name="profile_account_settings">Cài đặt tài khoản</string>
     <string name="profile_personal_info">Thông tin cá nhân</string>
     <string name="profile_notification_settings">Cài đặt thông báo</string>
@@ -149,7 +149,13 @@
     <string name="profile_terms_policies">Điều khoản &amp; Chính sách</string>
     <string name="profile_student_verified">Sinh viên đã xác thực</string>
     <string name="profile_student_unverified">Chưa xác thực sinh viên</string>
-    <string name="profile_my_favorites">Yêu\nthích</string>
+    <string name="profile_my_favorites">Yêu thích</string>
+
+    <!-- Wrong Role Bottom Sheet -->
+    <string name="wrong_role_title">Tài khoản không hợp lệ</string>
+    <string name="wrong_role_description">Tài khoản này hiện đang là tài khoản Chủ quán. Mỗi số điện thoại chỉ được đăng ký một vai trò duy nhất. Bạn không thể sử dụng tài khoản này để đăng nhập vào ứng dụng Sinh viên (Người mua).</string>
+    <string name="wrong_role_btn_register">Đăng ký tài khoản Sinh viên mới</string>
+    <string name="wrong_role_btn_back">Quay lại Đăng nhập</string>
 
     <!-- Profile Edit Screen -->
     <string name="profile_edit_title">Thông tin cá nhân</string>

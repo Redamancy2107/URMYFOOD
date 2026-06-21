@@ -33,8 +33,12 @@ class LoginViewModel(
         viewModelScope.launch {
             when (val result = loginUseCase(emailOrPhone, password)) {
                 is Result.Success -> {
-                    saveToken(result.data)
-                    _loginState.value = LoginUiState.Success(result.data)
+                    if (result.data.role != "CUSTOMER") {
+                        _loginState.value = LoginUiState.WrongRole
+                    } else {
+                        saveToken(result.data)
+                        _loginState.value = LoginUiState.Success(result.data)
+                    }
                 }
                 is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
@@ -60,13 +64,19 @@ class LoginViewModel(
         viewModelScope.launch {
             when (val result = loginWithGoogleUseCase(idToken)) {
                 is Result.Success -> {
-                    saveToken(result.data)
-                    _loginState.value = LoginUiState.Success(result.data)
+                    if (result.data.role != "CUSTOMER") {
+                        _loginState.value = LoginUiState.WrongRole
+                    } else {
+                        saveToken(result.data)
+                        _loginState.value = LoginUiState.Success(result.data)
+                    }
                 }
                 is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
             }
         }
     }
+
+    fun resetState() { _loginState.value = LoginUiState.Idle }
 
     class Factory(
         private val loginUseCase: LoginUseCase,
@@ -99,5 +109,6 @@ sealed class LoginUiState {
     data object Loading : LoginUiState()
     data class Success(val authToken: AuthToken) : LoginUiState()
     data object GuestSuccess : LoginUiState()
+    data object WrongRole : LoginUiState()
     data class Error(val message: String) : LoginUiState()
 }

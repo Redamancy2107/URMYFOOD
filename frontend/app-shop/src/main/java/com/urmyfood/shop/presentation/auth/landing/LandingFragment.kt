@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentAuthLandingBinding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.presentation.common.safeNavigate
 
 class LandingFragment : Fragment() {
@@ -26,13 +27,12 @@ class LandingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.btnLogin.setOnClickListener {
+            ServiceLocator.tokenManager.setFirstTime(false)
             findNavController().safeNavigate(R.id.action_landing_to_login)
         }
         binding.btnRegister.setOnClickListener {
+            ServiceLocator.tokenManager.setFirstTime(false)
             findNavController().safeNavigate(R.id.action_landing_to_register)
-        }
-        binding.btnGoogleLogin.setOnClickListener {
-            Toast.makeText(requireContext(), R.string.landing_google_unavailable, Toast.LENGTH_SHORT).show()
         }
     }
 
