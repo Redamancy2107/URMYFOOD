@@ -12,7 +12,6 @@ import com.urmyfood.user.domain.usecase.CheckoutUseCase
 import com.urmyfood.user.domain.usecase.DirectCheckoutUseCase
 import com.urmyfood.user.domain.usecase.GetAddressesUseCase
 import com.urmyfood.user.domain.usecase.GetVouchersUseCase
-import com.urmyfood.user.domain.usecase.CreatePayOsPaymentUseCase
 import kotlinx.coroutines.launch
 
 data class CheckoutUiState(
@@ -29,8 +28,7 @@ class CheckoutViewModel(
     private val checkoutUseCase: CheckoutUseCase,
     private val directCheckoutUseCase: DirectCheckoutUseCase,
     private val getAddressesUseCase: GetAddressesUseCase,
-    private val getVouchersUseCase: GetVouchersUseCase,
-    private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
+    private val getVouchersUseCase: GetVouchersUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(CheckoutUiState())
@@ -117,37 +115,18 @@ class CheckoutViewModel(
         order: com.urmyfood.user.data.model.OrderResponse,
         paymentMethod: String
     ) {
-        if (paymentMethod == PAYMENT_VIETQR) {
-            when (val payOsResult = createPayOsPaymentUseCase(order.orderId)) {
-                is Result.Success -> {
-                    _uiState.value = CheckoutUiState(
-                        isSuccess = true,
-                        message = "Tạo mã thanh toán thành công!",
-                        orderId = order.orderId,
-                        finalAmount = order.finalAmount.toLong(),
-                        qrCode = payOsResult.data.qrCode,
-                        paymentMethod = paymentMethod
-                    )
-                }
-                is Result.Error -> {
-                    _uiState.value = CheckoutUiState(
-                        isSuccess = true,
-                        message = "Đã tạo đơn, chưa tạo được mã VietQR. Bạn có thể thanh toán lại trong lịch sử đơn hàng.",
-                        orderId = order.orderId,
-                        finalAmount = order.finalAmount.toLong(),
-                        paymentMethod = paymentMethod
-                    )
-                }
-            }
+        val messageText = if (paymentMethod == PAYMENT_VIETQR) {
+            "Đặt hàng thành công! Vui lòng chờ quán xác nhận trước khi thanh toán."
         } else {
-            _uiState.value = CheckoutUiState(
-                isSuccess = true,
-                message = "Đặt hàng thành công!",
-                orderId = order.orderId,
-                finalAmount = order.finalAmount.toLong(),
-                paymentMethod = paymentMethod
-            )
+            "Đặt hàng thành công! Vui lòng chờ quán xác nhận."
         }
+        _uiState.value = CheckoutUiState(
+            isSuccess = true,
+            message = messageText,
+            orderId = order.orderId,
+            finalAmount = order.finalAmount.toLong(),
+            paymentMethod = paymentMethod
+        )
     }
 
     fun clearMessage() {
@@ -158,8 +137,7 @@ class CheckoutViewModel(
         private val checkoutUseCase: CheckoutUseCase,
         private val directCheckoutUseCase: DirectCheckoutUseCase,
         private val getAddressesUseCase: GetAddressesUseCase,
-        private val getVouchersUseCase: GetVouchersUseCase,
-        private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
+        private val getVouchersUseCase: GetVouchersUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -168,8 +146,7 @@ class CheckoutViewModel(
                     checkoutUseCase,
                     directCheckoutUseCase,
                     getAddressesUseCase,
-                    getVouchersUseCase,
-                    createPayOsPaymentUseCase
+                    getVouchersUseCase
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
