@@ -31,7 +31,6 @@ class ChatSessionsAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(session: ChatSession) {
-            binding.tvAvatarInitial.text = session.customerName.firstOrNull()?.uppercase() ?: "?"
             binding.tvCustomerName.text = session.customerName
             binding.tvLastMessage.text = session.lastMessage ?: ""
             val timeStr = session.lastMessageAt?.let { at ->
@@ -53,21 +52,13 @@ class ChatSessionsAdapter(
                 binding.tvLastMessage.setTextColor(itemView.context.getColor(com.urmyfood.shop.R.color.text_secondary))
             }
 
-            // Customer Avatar Image Load with fallback
-            if (!session.customerAvatarUrl.isNullOrEmpty()) {
-                binding.ivCustomerAvatar.visibility = View.VISIBLE
-                binding.viewAvatar.visibility = View.GONE
-                binding.tvAvatarInitial.visibility = View.GONE
-                Glide.with(itemView.context)
-                    .load(session.customerAvatarUrl)
-                    .placeholder(com.urmyfood.shop.R.drawable.ic_person_placeholder)
-                    .circleCrop()
-                    .into(binding.ivCustomerAvatar)
-            } else {
-                binding.ivCustomerAvatar.visibility = View.GONE
-                binding.viewAvatar.visibility = View.VISIBLE
-                binding.tvAvatarInitial.visibility = View.VISIBLE
-            }
+            // Customer avatar (đồng nhất với app-user: placeholder/error, không dùng chữ-cái)
+            Glide.with(itemView.context)
+                .load(session.customerAvatarUrl)
+                .placeholder(com.urmyfood.shop.R.drawable.ic_person_placeholder)
+                .error(com.urmyfood.shop.R.drawable.ic_person_placeholder)
+                .circleCrop()
+                .into(binding.ivCustomerAvatar)
 
             if (session.unreadCount > 0) {
                 binding.tvUnreadBadge.visibility = View.VISIBLE

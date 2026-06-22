@@ -7,36 +7,16 @@
     android:layout_height="wrap_content"
     android:paddingVertical="12dp">
 
-    <!-- Avatar Circle -->
-    <View
-        android:id="@+id/viewAvatar"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_status_badge"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
+    <!-- Customer Avatar -->
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivCustomerAvatar"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:scaleType="centerCrop"
-        android:visibility="gone"
+        android:src="@drawable/ic_person_placeholder"
         app:shapeAppearanceOverlay="@style/CircleImage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tvAvatarInitial"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:gravity="center"
-        android:textColor="@color/text_secondary"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        tools:text="N"
-        app:layout_constraintStart_toStartOf="@id/viewAvatar"
-        app:layout_constraintTop_toTopOf="@id/viewAvatar" />
 
     <!-- Customer Name -->
     <TextView
@@ -51,8 +31,8 @@
         android:textStyle="bold"
         tools:text="Nguyễn Văn A"
         app:layout_constraintEnd_toStartOf="@id/tvTimestamp"
-        app:layout_constraintStart_toEndOf="@id/viewAvatar"
-        app:layout_constraintTop_toTopOf="@id/viewAvatar" />
+        app:layout_constraintStart_toEndOf="@id/ivCustomerAvatar"
+        app:layout_constraintTop_toTopOf="@id/ivCustomerAvatar" />
 
     <!-- Timestamp -->
     <TextView
@@ -78,7 +58,7 @@
         android:textSize="13sp"
         tools:text="Cho mình hỏi còn cơm tấm không?"
         app:layout_constraintEnd_toStartOf="@id/tvUnreadBadge"
-        app:layout_constraintStart_toEndOf="@id/viewAvatar"
+        app:layout_constraintStart_toEndOf="@id/ivCustomerAvatar"
         app:layout_constraintTop_toBottomOf="@id/tvCustomerName" />
 
     <!-- Unread Badge -->
