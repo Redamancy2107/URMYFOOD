@@ -114,16 +114,34 @@ class CreatePostFragment : Fragment() {
         }
     }
 
+    private fun copyUriToCacheFile(uri: Uri): java.io.File? {
+        val context = requireContext()
+        val contentResolver = context.contentResolver
+        val tempFile = java.io.File(context.cacheDir, "temp_post_image_${System.currentTimeMillis()}.jpg")
+        return try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                java.io.FileOutputStream(tempFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+            tempFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     private fun uploadImageFromUri(uri: Uri) {
-        val contentResolver = requireContext().contentResolver
-        val mimeType = contentResolver.getType(uri) ?: "image/jpeg"
-        val bytes = contentResolver.openInputStream(uri)?.readBytes() ?: return
+        val cacheFile = copyUriToCacheFile(uri) ?: return
+        val cacheFileUri = Uri.fromFile(cacheFile)
+        val mimeType = requireContext().contentResolver.getType(uri) ?: "image/jpeg"
+        val bytes = cacheFile.readBytes()
         val requestBody = bytes.toRequestBody(mimeType.toMediaTypeOrNull())
-        val part = MultipartBody.Part.createFormData("file", "post_image.jpg", requestBody)
+        val part = MultipartBody.Part.createFormData("file", cacheFile.name, requestBody)
         viewModel.uploadImage(part)
 
         Glide.with(this)
-            .load(uri)
+            .load(cacheFileUri)
             .placeholder(R.drawable.bg_food_banner)
             .into(binding.ivPostImage)
         binding.ivPostImage.visibility = View.VISIBLE
@@ -191,6 +209,7 @@ class CreatePostFragment : Fragment() {
                     val msg = if (viewModel.isEditMode) "Cập nhật bài đăng thành công!" else "Tạo bài đăng thành công!"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     viewModel.clearSaveResult()
+                    findNavController().previousBackStackEntry?.savedStateHandle?.set("post_updated", true)
                     findNavController().navigateUp()
                 }
                 is Result.Error -> {

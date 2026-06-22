@@ -87,6 +87,10 @@ data class UpdatePostStatusRequest(
     @SerializedName("status") val status: String
 )
 
+data class UpdateRemainingQuantityRequest(
+    @SerializedName("remaining_quantity") val remainingQuantity: Int
+)
+
 data class PostImageUploadResponse(
     @SerializedName("image_url") val imageUrl: String?
 )

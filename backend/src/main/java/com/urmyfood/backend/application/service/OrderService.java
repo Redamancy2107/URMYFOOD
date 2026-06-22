@@ -2,6 +2,7 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderItemResponse;
 import com.urmyfood.backend.application.dto.OrderResponse;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
@@ -20,6 +21,8 @@ import com.urmyfood.backend.domain.repository.CartItemRepository;
 import com.urmyfood.backend.domain.repository.OrderRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import com.urmyfood.backend.domain.repository.VoucherRepository;
+import com.urmyfood.backend.domain.repository.ShopProfileRepository;
+import com.urmyfood.backend.domain.model.ShopProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +46,7 @@ public class OrderService {
     private final PostRepository postRepository;
     private final AccountRepository accountRepository;
     private final VoucherRepository voucherRepository;
+    private final ShopProfileRepository shopProfileRepository;
 
     @org.springframework.beans.factory.annotation.Value("${app.order.payment-timeout-minutes:15}")
     private int paymentExpireMinutes;
@@ -88,6 +92,38 @@ public class OrderService {
         cartItemRepository.deleteByCustomerId(customerId);
 
         return toResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse directCheckout(Long customerId, DirectCheckoutRequest request) {
+        Account customer = accountRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay tai khoan"));
+
+        PaymentMethod paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        Post post = lockPostsById(List.of(request.getPostId())).get(request.getPostId());
+        Account shop = validatePostForCheckout(post, request.getQuantity());
+        BigDecimal totalAmount = post.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        Voucher voucher = resolveVoucher(request.getVoucherId(), request.getVoucherCode(), totalAmount);
+        BigDecimal discountAmount = voucher == null ? BigDecimal.ZERO : voucher.getDiscountValue().min(totalAmount);
+        BigDecimal finalAmount = totalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
+
+        Order order = Order.builder()
+                .customer(customer)
+                .shop(shop)
+                .voucher(voucher)
+                .totalAmount(totalAmount)
+                .discountAmount(discountAmount)
+                .finalAmount(finalAmount)
+                .orderStatus(OrderStatus.PENDING)
+                .paymentMethod(paymentMethod)
+                .paymentStatus(PaymentStatus.UNPAID)
+                .deliveryAddress(request.getDeliveryAddress())
+                .note(request.getNote())
+                .items(List.of(toOrderItemSnapshot(post, request.getQuantity())))
+                .build();
+
+        decreasePostQuantity(post, request.getQuantity());
+        return toResponse(orderRepository.save(order));
     }
 
     public List<OrderResponse> getMyOrders(Long customerId) {
@@ -258,6 +294,13 @@ public class OrderService {
 
     private Account validateCartForCheckout(List<CartItem> cartItems) {
         Account shop = cartItems.get(0).getPost().getAuthor();
+        
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin cửa hàng"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hiện đang không hoạt động");
+        }
+
         for (CartItem item : cartItems) {
             Post post = item.getPost();
             if (!post.getAuthor().getId().equals(shop.getId())) {
@@ -271,6 +314,50 @@ public class OrderService {
             }
         }
         return shop;
+    }
+
+    private Account validatePostForCheckout(Post post, int quantity) {
+        Account shop = post.getAuthor();
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin cua hang"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hien dang khong hoat dong");
+        }
+        if (post.getStatus() != PostStatus.ACTIVE) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " hien khong the dat");
+        }
+        if (quantity > post.getRemainingQuantity()) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " khong con du so luong");
+        }
+        return shop;
+    }
+
+    private boolean isWithinOpeningHours(String openingHours) {
+        if (openingHours == null || openingHours.trim().isEmpty()) {
+            return true;
+        }
+        try {
+            String[] parts = openingHours.split("-");
+            if (parts.length != 2) {
+                return true;
+            }
+            String startStr = parts[0].trim();
+            String endStr = parts[1].trim();
+
+            java.time.ZonedDateTime nowVietnam = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            java.time.LocalTime nowTime = nowVietnam.toLocalTime();
+
+            java.time.LocalTime startTime = java.time.LocalTime.parse(startStr);
+            java.time.LocalTime endTime = java.time.LocalTime.parse(endStr);
+
+            if (startTime.isBefore(endTime)) {
+                return !nowTime.isBefore(startTime) && !nowTime.isAfter(endTime);
+            } else {
+                return !nowTime.isBefore(startTime) || !nowTime.isAfter(endTime);
+            }
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     private Voucher resolveVoucher(Long voucherId, String voucherCode, BigDecimal totalAmount) {
@@ -329,13 +416,17 @@ public class OrderService {
     private void decreasePostQuantities(List<CartItem> cartItems) {
         cartItems.forEach(item -> {
             Post post = item.getPost();
-            int remainingQuantity = post.getRemainingQuantity() - item.getQuantity();
-            post.setRemainingQuantity(remainingQuantity);
-            if (remainingQuantity == 0) {
-                post.setStatus(PostStatus.SOLD_OUT);
-            }
-            postRepository.save(post);
+            decreasePostQuantity(post, item.getQuantity());
         });
+    }
+
+    private void decreasePostQuantity(Post post, int quantity) {
+        int remainingQuantity = post.getRemainingQuantity() - quantity;
+        post.setRemainingQuantity(remainingQuantity);
+        if (remainingQuantity == 0) {
+            post.setStatus(PostStatus.SOLD_OUT);
+        }
+        postRepository.save(post);
     }
 
     private void restorePostQuantities(List<OrderItem> orderItems) {

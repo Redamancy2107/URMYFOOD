@@ -27,7 +27,7 @@ class PostRepositoryImplTest {
         maxQuantity = 200, remainingQuantity = 150, endTime = null, isFlashSale = false,
         status = "ACTIVE", content = "Cơm tấm sườn bì chả",
         imageUrl = "https://example.com/image.jpg", shopName = "Quán Cơm Ngon",
-        shopAvatarUrl = null, createdAt = "2024-01-01T00:00:00Z"
+        shopAvatarUrl = null, shopAddress = null, createdAt = "2024-01-01T00:00:00Z"
     )
 
     private fun fakePageResponse(vararg posts: PostResponse, hasNext: Boolean = false) = PageResponse(

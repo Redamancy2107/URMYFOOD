@@ -52,6 +52,8 @@ class SearchFragment : Fragment() {
         observeRecentSearches()
         observeLoadingMore()
         observeLikeError()
+        observeFollowError()
+        observeFollowEvents()
     }
 
     private fun setupRecentRecyclerView() {
@@ -82,6 +84,9 @@ class SearchFragment : Fragment() {
         }
         searchAdapter.onLikeClick = { post ->
             viewModel.toggleLike(post.postId, post.isLiked)
+        }
+        searchAdapter.onFollowClick = { post ->
+            viewModel.toggleFollow(post.shopAccountId, post.isFollowingShop)
         }
         searchAdapter.onSaveClick = { showFeatureInDevelopment() }
         searchAdapter.checkIsBookmarked = { false }
@@ -200,6 +205,21 @@ class SearchFragment : Fragment() {
             msg ?: return@observe
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             viewModel.clearLikeError()
+        }
+    }
+
+    private fun observeFollowError() {
+        viewModel.followError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearFollowError()
+        }
+    }
+
+    private fun observeFollowEvents() {
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
+            val (shopId, isFollowing) = event
+            viewModel.updateFollowStateForShop(shopId, isFollowing)
         }
     }
 

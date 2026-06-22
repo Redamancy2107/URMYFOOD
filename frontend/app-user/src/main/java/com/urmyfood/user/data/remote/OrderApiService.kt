@@ -3,6 +3,7 @@ package com.urmyfood.user.data.remote
 import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CancelOrderRequest
 import com.urmyfood.user.data.model.CheckoutRequest
+import com.urmyfood.user.data.model.DirectCheckoutRequest
 import com.urmyfood.user.data.model.OrderResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -17,6 +18,12 @@ interface OrderApiService {
     suspend fun checkout(
         @Header("Authorization") token: String,
         @Body request: CheckoutRequest
+    ): Response<ApiResponse<OrderResponse>>
+
+    @POST("api/v1/orders/direct-checkout")
+    suspend fun directCheckout(
+        @Header("Authorization") token: String,
+        @Body request: DirectCheckoutRequest
     ): Response<ApiResponse<OrderResponse>>
 
     @GET("api/v1/orders")

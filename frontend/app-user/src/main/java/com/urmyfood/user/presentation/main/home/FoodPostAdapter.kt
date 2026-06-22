@@ -30,6 +30,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
     var onLikeClick: ((FoodPost) -> Unit)? = null
+    var onFollowClick: ((FoodPost) -> Unit)? = null
     var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
     var onShopClick: ((FoodPost) -> Unit)? = null
 
@@ -128,17 +129,15 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 tvLikeCount.text = "${post.likeCount}"
                 btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
 
-                // Follow toggle
-                var isFollowing = false
+                if (post.isFollowingShop) {
+                    btnFollow.text = ctx.getString(R.string.following)
+                    btnFollow.setTextColor(ctx.getColor(R.color.text_secondary))
+                } else {
+                    btnFollow.text = ctx.getString(R.string.follow)
+                    btnFollow.setTextColor(ctx.getColor(R.color.primary))
+                }
                 btnFollow.setOnClickListener {
-                    isFollowing = !isFollowing
-                    if (isFollowing) {
-                        btnFollow.text = ctx.getString(R.string.following)
-                        btnFollow.setTextColor(ctx.getColor(R.color.text_secondary))
-                    } else {
-                        btnFollow.text = ctx.getString(R.string.follow)
-                        btnFollow.setTextColor(ctx.getColor(R.color.primary))
-                    }
+                    onFollowClick?.invoke(post)
                 }
 
                 // Like toggle

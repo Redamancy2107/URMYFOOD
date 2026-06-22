@@ -1,6 +1,7 @@
 package com.urmyfood.user.presentation.main.home
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.urmyfood.user.data.model.ShopFollowResponse
 import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.LikeToggleResult
@@ -9,8 +10,11 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.TokenProvider
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.ShopRepository
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -39,7 +43,22 @@ class HomeViewModelTest {
     fun tearDown() { Dispatchers.resetMain() }
 
     private fun fakePosts(count: Int = 1) = (1..count).map {
-        FoodPost("$it", "Post $it", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "Shop", null)
+        FoodPost(
+            postId = "$it",
+            dishName = "Post $it",
+            price = 50000.0,
+            originalPrice = 60000.0,
+            maxQuantity = 50,
+            remainingQuantity = 40,
+            endTime = null,
+            isFlashSale = false,
+            status = "ACTIVE",
+            content = null,
+            imageUrl = null,
+            shopAccountId = 1L,
+            shopName = "Shop",
+            shopAvatarUrl = null
+        )
     }
 
     private val fakeGuestRepo = object : GuestRepository {
@@ -49,6 +68,16 @@ class HomeViewModelTest {
     }
 
     private val fakeToken = object : TokenProvider { override fun getAccessToken() = "tok" }
+
+    private val fakeShopRepository = object : ShopRepository {
+        override suspend fun getProfile(token: String, shopId: Long) = Result.Error("unused")
+        override suspend fun getFollowState(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, false, 0))
+        override suspend fun follow(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, true, 1))
+        override suspend fun unfollow(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, false, 0))
+    }
 
     private fun makeFullFakeRepo(
         getPostsResult: (Int) -> Result<PageResult<FoodPost>> = { Result.Success(PageResult(emptyList(), it, false)) }
@@ -68,6 +97,8 @@ class HomeViewModelTest {
         return HomeViewModel(
             GetPostsUseCase(repo, fakeToken),
             ToggleLikeUseCase(repo, fakeToken),
+            FollowShopUseCase(fakeShopRepository, fakeToken),
+            UnfollowShopUseCase(fakeShopRepository, fakeToken),
             fakeGuestRepo
         )
     }
@@ -104,14 +135,20 @@ class HomeViewModelTest {
     @Test
     fun `loadMore appends next page posts to existing list`() = runTest(testDispatcher) {
         val page0Posts = fakePosts(2)
-        val page1Posts = listOf(FoodPost("3", "Post 3", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "Shop", null))
+        val page1Posts = fakePosts(3).takeLast(1)
         var callCount = 0
         val repo = makeFullFakeRepo { page ->
             callCount++
             if (page == 0) Result.Success(PageResult(page0Posts, 0, hasNext = true))
             else Result.Success(PageResult(page1Posts, 1, hasNext = false))
         }
-        val vm = HomeViewModel(GetPostsUseCase(repo, fakeToken), ToggleLikeUseCase(repo, fakeToken), fakeGuestRepo)
+        val vm = HomeViewModel(
+            GetPostsUseCase(repo, fakeToken),
+            ToggleLikeUseCase(repo, fakeToken),
+            FollowShopUseCase(fakeShopRepository, fakeToken),
+            UnfollowShopUseCase(fakeShopRepository, fakeToken),
+            fakeGuestRepo
+        )
         testDispatcher.scheduler.advanceUntilIdle()
 
         vm.loadMore()
@@ -128,7 +165,13 @@ class HomeViewModelTest {
             callCount++
             Result.Success(PageResult(fakePosts(), page, hasNext = false))
         }
-        val vm = HomeViewModel(GetPostsUseCase(repo, fakeToken), ToggleLikeUseCase(repo, fakeToken), fakeGuestRepo)
+        val vm = HomeViewModel(
+            GetPostsUseCase(repo, fakeToken),
+            ToggleLikeUseCase(repo, fakeToken),
+            FollowShopUseCase(fakeShopRepository, fakeToken),
+            UnfollowShopUseCase(fakeShopRepository, fakeToken),
+            fakeGuestRepo
+        )
         testDispatcher.scheduler.advanceUntilIdle()
         val countAfterLoad = callCount
 
@@ -140,7 +183,26 @@ class HomeViewModelTest {
 
     @Test
     fun `toggleLike updates isLiked optimistically`() = runTest(testDispatcher) {
-        val posts = listOf(FoodPost("p1", "Post", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "S", null, likeCount = 5, isLiked = false))
+        val posts = listOf(
+            FoodPost(
+                postId = "p1",
+                dishName = "Post",
+                price = 50000.0,
+                originalPrice = 60000.0,
+                maxQuantity = 50,
+                remainingQuantity = 40,
+                endTime = null,
+                isFlashSale = false,
+                status = "ACTIVE",
+                content = null,
+                imageUrl = null,
+                shopAccountId = 1L,
+                shopName = "S",
+                shopAvatarUrl = null,
+                likeCount = 5,
+                isLiked = false
+            )
+        )
         val vm = makeViewModel(Result.Success(PageResult(posts, 0, false)))
         testDispatcher.scheduler.advanceUntilIdle()
 

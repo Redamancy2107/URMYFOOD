@@ -5,6 +5,7 @@ import com.urmyfood.shop.data.model.ChangePasswordRequest
 import com.urmyfood.shop.data.model.UpdateProfileRequest
 import com.urmyfood.shop.data.model.toDomain
 import com.urmyfood.shop.data.remote.UserApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.UserProfile
 import com.urmyfood.shop.domain.repository.UserRepository
 
@@ -24,7 +25,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -49,7 +50,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -72,7 +73,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 }

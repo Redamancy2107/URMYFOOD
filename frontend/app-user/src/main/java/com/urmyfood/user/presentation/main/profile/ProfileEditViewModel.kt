@@ -9,7 +9,9 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.UserProfile
 import com.urmyfood.user.domain.usecase.GetUserProfileUseCase
 import com.urmyfood.user.domain.usecase.UpdateUserProfileUseCase
+import com.urmyfood.user.domain.usecase.UploadUserAvatarUseCase
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 
 sealed class ProfileEditUiState {
     object Idle : ProfileEditUiState()
@@ -20,7 +22,8 @@ sealed class ProfileEditUiState {
 
 class ProfileEditViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
-    private val updateUserProfileUseCase: UpdateUserProfileUseCase
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private val uploadUserAvatarUseCase: UploadUserAvatarUseCase
 ) : ViewModel() {
 
     private val _loadState = MutableLiveData<ProfileUiState>(ProfileUiState.Idle)
@@ -39,24 +42,47 @@ class ProfileEditViewModel(
         }
     }
 
-    fun updateProfile(fullName: String?, phone: String?, avatarUrl: String?) {
+    /**
+     * Lưu hồ sơ: cập nhật tên/SĐT trước (không đụng avatar), sau đó nếu người dùng chọn ảnh mới
+     * thì upload ảnh lên Supabase qua backend để lấy URL HTTPS thật.
+     */
+    fun saveProfile(fullName: String?, phone: String?, avatarPart: MultipartBody.Part?) {
         _updateState.value = ProfileEditUiState.Loading
         viewModelScope.launch {
-            when (val result = updateUserProfileUseCase(fullName, phone, avatarUrl)) {
-                is Result.Success -> _updateState.value = ProfileEditUiState.Success(result.data)
-                is Result.Error -> _updateState.value = ProfileEditUiState.Error(result.message)
+            val profileResult = updateUserProfileUseCase(fullName, phone, null)
+            if (profileResult is Result.Error) {
+                _updateState.value = ProfileEditUiState.Error(profileResult.message)
+                return@launch
             }
+            var profile = (profileResult as Result.Success).data
+
+            if (avatarPart != null) {
+                when (val avatarResult = uploadUserAvatarUseCase(avatarPart)) {
+                    is Result.Success -> profile = avatarResult.data
+                    is Result.Error -> {
+                        _updateState.value = ProfileEditUiState.Error(avatarResult.message)
+                        return@launch
+                    }
+                }
+            }
+
+            _updateState.value = ProfileEditUiState.Success(profile)
         }
     }
 
     class Factory(
         private val getUserProfileUseCase: GetUserProfileUseCase,
-        private val updateUserProfileUseCase: UpdateUserProfileUseCase
+        private val updateUserProfileUseCase: UpdateUserProfileUseCase,
+        private val uploadUserAvatarUseCase: UploadUserAvatarUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ProfileEditViewModel::class.java)) {
-                return ProfileEditViewModel(getUserProfileUseCase, updateUserProfileUseCase) as T
+                return ProfileEditViewModel(
+                    getUserProfileUseCase,
+                    updateUserProfileUseCase,
+                    uploadUserAvatarUseCase
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

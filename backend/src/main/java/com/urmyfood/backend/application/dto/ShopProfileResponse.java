@@ -31,4 +31,8 @@ public class ShopProfileResponse {
     private Boolean isOpen;
     @JsonProperty("verification_status")
     private String verificationStatus;
+    @JsonProperty("is_following")
+    private boolean isFollowing;
+    @JsonProperty("follower_count")
+    private long followerCount;
 }

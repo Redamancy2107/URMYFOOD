@@ -12,6 +12,7 @@ import com.urmyfood.user.domain.repository.OrderRepository
 import com.urmyfood.user.domain.repository.VoucherRepository
 import com.urmyfood.user.domain.usecase.CheckoutUseCase
 import com.urmyfood.user.domain.usecase.CreatePayOsPaymentUseCase
+import com.urmyfood.user.domain.usecase.DirectCheckoutUseCase
 import com.urmyfood.user.domain.usecase.GetAddressesUseCase
 import com.urmyfood.user.domain.usecase.GetVouchersUseCase
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +111,7 @@ class CheckoutViewModelTest {
         }
         return CheckoutViewModel(
             CheckoutUseCase(orderRepository, tokenProvider),
+            DirectCheckoutUseCase(orderRepository, tokenProvider),
             GetAddressesUseCase(addressRepository, tokenProvider),
             GetVouchersUseCase(voucherRepository),
             CreatePayOsPaymentUseCase(orderRepository, tokenProvider)
@@ -148,6 +150,17 @@ class CheckoutViewModelTest {
             voucherCode: String?
         ): Result<OrderResponse> = checkoutResult
 
+        override suspend fun directCheckout(
+            token: String,
+            postId: String,
+            quantity: Int,
+            paymentMethod: String,
+            deliveryAddress: String,
+            voucherId: Long?,
+            note: String?,
+            voucherCode: String?
+        ): Result<OrderResponse> = checkoutResult
+
         override suspend fun getOrders(token: String): Result<List<OrderResponse>> =
             Result.Success(emptyList())
 
@@ -164,5 +177,8 @@ class CheckoutViewModelTest {
             token: String,
             orderId: String
         ): Result<PayOsPaymentResponse> = createPaymentResult
+
+        override suspend fun checkPayOsStatus(token: String, orderId: String): Result<OrderResponse> =
+            Result.Error("unused")
     }
 }

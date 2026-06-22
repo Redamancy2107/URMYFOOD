@@ -14,10 +14,12 @@ import com.urmyfood.user.data.remote.AddressApiService
 import com.urmyfood.user.data.remote.VoucherApiService
 import com.urmyfood.user.data.remote.CartApiService
 import com.urmyfood.user.data.remote.OrderApiService
+import com.urmyfood.user.data.remote.ShopApiService
 import com.urmyfood.user.data.repository.AuthRepositoryImpl
 import com.urmyfood.user.data.repository.CartRepositoryImpl
 import com.urmyfood.user.data.repository.OrderRepositoryImpl
 import com.urmyfood.user.data.repository.PostRepositoryImpl
+import com.urmyfood.user.data.repository.ShopRepositoryImpl
 import com.urmyfood.user.data.repository.UserRepositoryImpl
 import com.urmyfood.user.data.repository.AddressRepositoryImpl
 import com.urmyfood.user.data.repository.VoucherRepositoryImpl
@@ -25,6 +27,7 @@ import com.urmyfood.user.domain.repository.AuthRepository
 import com.urmyfood.user.domain.repository.CartRepository
 import com.urmyfood.user.domain.repository.OrderRepository
 import com.urmyfood.user.domain.repository.PostRepository
+import com.urmyfood.user.domain.repository.ShopRepository
 import com.urmyfood.user.domain.repository.SearchHistoryRepository
 import com.urmyfood.user.domain.repository.UserRepository
 import com.urmyfood.user.domain.repository.AddressRepository
@@ -64,6 +67,7 @@ object ServiceLocator {
 
     val postCommentEvent = androidx.lifecycle.MutableLiveData<String>()
     val postLikeEvent = androidx.lifecycle.MutableLiveData<Pair<String, Pair<Boolean, Int>>>()
+    val shopFollowEvent = androidx.lifecycle.MutableLiveData<Pair<Long, Boolean>>()
 
     private lateinit var applicationContext: Context
 
@@ -121,6 +125,10 @@ object ServiceLocator {
         RetrofitClient.orderApiService
     }
 
+    private val shopApiService: ShopApiService by lazy {
+        RetrofitClient.shopApiService
+    }
+
     // ==================== DOMAIN LAYER ====================
 
     private val authRepository: AuthRepository by lazy {
@@ -149,6 +157,10 @@ object ServiceLocator {
 
     private val orderRepository: OrderRepository by lazy {
         OrderRepositoryImpl(orderApiService)
+    }
+
+    private val shopRepository: ShopRepository by lazy {
+        ShopRepositoryImpl(shopApiService)
     }
 
     private val stompClient: com.urmyfood.shared.data.remote.StompClient by lazy {
@@ -188,6 +200,7 @@ object ServiceLocator {
     val loginAsGuestUseCase: LoginAsGuestUseCase by lazy { LoginAsGuestUseCase(guestSessionManager) }
     val getUserProfileUseCase: GetUserProfileUseCase by lazy { GetUserProfileUseCase(userRepository, tokenManager) }
     val updateUserProfileUseCase: UpdateUserProfileUseCase by lazy { UpdateUserProfileUseCase(userRepository, tokenManager) }
+    val uploadUserAvatarUseCase: com.urmyfood.user.domain.usecase.UploadUserAvatarUseCase by lazy { com.urmyfood.user.domain.usecase.UploadUserAvatarUseCase(userRepository, tokenManager) }
     val changePasswordUseCase: ChangePasswordUseCase by lazy { ChangePasswordUseCase(userRepository, tokenManager) }
 
     // Address use cases
@@ -204,10 +217,14 @@ object ServiceLocator {
     val updateCartItemUseCase: UpdateCartItemUseCase by lazy { UpdateCartItemUseCase(cartRepository, tokenManager) }
     val deleteCartItemUseCase: DeleteCartItemUseCase by lazy { DeleteCartItemUseCase(cartRepository, tokenManager) }
     val checkoutUseCase: CheckoutUseCase by lazy { CheckoutUseCase(orderRepository, tokenManager) }
+    val directCheckoutUseCase: DirectCheckoutUseCase by lazy { DirectCheckoutUseCase(orderRepository, tokenManager) }
     val getOrdersUseCase: GetOrdersUseCase by lazy { GetOrdersUseCase(orderRepository, tokenManager) }
     val cancelOrderUseCase: CancelOrderUseCase by lazy { CancelOrderUseCase(orderRepository, tokenManager) }
     val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase by lazy { CreatePayOsPaymentUseCase(orderRepository, tokenManager) }
     val checkPayOsStatusUseCase: CheckPayOsStatusUseCase by lazy { CheckPayOsStatusUseCase(orderRepository, tokenManager) }
+    val getShopProfileUseCase: GetShopProfileUseCase by lazy { GetShopProfileUseCase(shopRepository, tokenManager) }
+    val followShopUseCase: FollowShopUseCase by lazy { FollowShopUseCase(shopRepository, tokenManager) }
+    val unfollowShopUseCase: UnfollowShopUseCase by lazy { UnfollowShopUseCase(shopRepository, tokenManager) }
 
     // ==================== VIEW MODEL FACTORIES ====================
 
@@ -245,13 +262,15 @@ object ServiceLocator {
     }
 
     fun provideHomeViewModelFactory(): HomeViewModel.Factory {
-        return HomeViewModel.Factory(getPostsUseCase, toggleLikeUseCase)
+        return HomeViewModel.Factory(getPostsUseCase, toggleLikeUseCase, followShopUseCase, unfollowShopUseCase)
     }
 
     fun provideSearchViewModelFactory(): SearchViewModel.Factory {
         return SearchViewModel.Factory(
             searchPostsUseCase,
             toggleLikeUseCase,
+            followShopUseCase,
+            unfollowShopUseCase,
             getSearchHistoryUseCase,
             addSearchHistoryUseCase,
             removeSearchHistoryUseCase,
@@ -267,7 +286,13 @@ object ServiceLocator {
     }
 
     fun provideCheckoutViewModelFactory(): CheckoutViewModel.Factory {
-        return CheckoutViewModel.Factory(checkoutUseCase, getAddressesUseCase, getVouchersUseCase, createPayOsPaymentUseCase)
+        return CheckoutViewModel.Factory(
+            checkoutUseCase,
+            directCheckoutUseCase,
+            getAddressesUseCase,
+            getVouchersUseCase,
+            createPayOsPaymentUseCase
+        )
     }
 
     fun provideFavoritesViewModelFactory(): FavoritesViewModel.Factory {
@@ -285,7 +310,8 @@ object ServiceLocator {
     fun provideProfileEditViewModelFactory(): ProfileEditViewModel.Factory {
         return ProfileEditViewModel.Factory(
             getUserProfileUseCase,
-            updateUserProfileUseCase
+            updateUserProfileUseCase,
+            uploadUserAvatarUseCase
         )
     }
 
@@ -326,7 +352,12 @@ object ServiceLocator {
     }
 
     fun provideShopProfileViewModelFactory() =
-        com.urmyfood.user.presentation.main.shop.ShopProfileViewModel.Factory(getChatSessionUseCase)
+        com.urmyfood.user.presentation.main.shop.ShopProfileViewModel.Factory(
+            getChatSessionUseCase,
+            getShopProfileUseCase,
+            followShopUseCase,
+            unfollowShopUseCase
+        )
 
     fun provideChatViewModelFactory() = com.urmyfood.user.presentation.main.chat.ChatViewModel.Factory(
         com.urmyfood.user.domain.usecase.GetChatSessionsUseCase(chatRepository, tokenManager)

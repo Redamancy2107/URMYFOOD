@@ -10,6 +10,7 @@ import com.urmyfood.backend.application.dto.PostImageUploadResponse;
 import com.urmyfood.backend.application.dto.PostResponse;
 import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.application.dto.UpdatePostStatusRequest;
+import com.urmyfood.backend.application.dto.UpdateRemainingQuantityRequest;
 import com.urmyfood.backend.application.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -87,6 +88,15 @@ public class PostController {
     ) {
         PostResponse response = postService.updatePost(postId, request);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật bài viết thành công", response));
+    }
+
+    @PatchMapping("/{postId}/remaining-quantity")
+    public ResponseEntity<ApiResponse<PostResponse>> updateRemainingQuantity(
+            @PathVariable UUID postId,
+            @Valid @RequestBody UpdateRemainingQuantityRequest request
+    ) {
+        PostResponse response = postService.updateRemainingQuantity(postId, request);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật số suất còn lại thành công", response));
     }
 
     @DeleteMapping("/{postId}")

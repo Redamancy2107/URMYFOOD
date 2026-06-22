@@ -41,6 +41,11 @@ class ChatFragment : Fragment() {
         observeViewModel()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadSessions()
+    }
+
     private fun setupRecyclerView() {
         chatSessionsAdapter = ChatSessionsAdapter { session ->
             val bundle = Bundle().apply {

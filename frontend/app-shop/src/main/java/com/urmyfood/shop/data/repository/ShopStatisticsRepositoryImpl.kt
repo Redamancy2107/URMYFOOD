@@ -5,6 +5,7 @@ import com.urmyfood.shared.data.model.ApiResponse
 import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.data.model.toDomain
 import com.urmyfood.shop.data.remote.ShopStatisticsApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.ShopStatistics
 import com.urmyfood.shop.domain.model.ShopStatisticsPeriod
 import com.urmyfood.shop.domain.repository.ShopStatisticsRepository
@@ -36,7 +37,7 @@ class ShopStatisticsRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 

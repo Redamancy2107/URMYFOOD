@@ -88,7 +88,7 @@
                             android:textSize="16sp"
                             android:textStyle="bold"
                             app:layout_constraintStart_toEndOf="@id/ivShopAvatar"
-                            app:layout_constraintEnd_toStartOf="@id/tagFlashSale"
+                            app:layout_constraintEnd_toStartOf="@id/llFollowAndFlash"
                             app:layout_constraintTop_toTopOf="@id/ivShopAvatar"
                             tools:text="Tiệm Trà Sữa Mây" />
 
@@ -100,22 +100,44 @@
                             android:textSize="12sp"
                             app:layout_constraintStart_toStartOf="@id/tvShopName"
                             app:layout_constraintTop_toBottomOf="@id/tvShopName"
+                            app:layout_constraintEnd_toStartOf="@id/llFollowAndFlash"
                             tools:text="Vừa xong • KTX Khu A" />
 
-                        <TextView
-                            android:id="@+id/tagFlashSale"
+                        <LinearLayout
+                            android:id="@+id/llFollowAndFlash"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:background="@drawable/bg_flash_sale_badge"
-                            android:paddingHorizontal="8dp"
-                            android:paddingVertical="3dp"
-                            android:text="⚡ Flash Sale"
-                            android:textColor="@android:color/white"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:visibility="gone"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintTop_toTopOf="@id/tvShopName" />
+                            android:orientation="vertical"
+                            android:gravity="end"
+                            app:layout_constraintTop_toTopOf="@id/ivShopAvatar"
+                            app:layout_constraintBottom_toBottomOf="@id/ivShopAvatar"
+                            app:layout_constraintEnd_toEndOf="parent">
+
+                            <TextView
+                                android:id="@+id/btnFollow"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Theo dõi"
+                                android:textColor="@color/primary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:paddingHorizontal="4dp" />
+
+                            <TextView
+                                android:id="@+id/tagFlashSale"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:background="@drawable/bg_flash_sale_badge"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="3dp"
+                                android:text="⚡ Flash Sale"
+                                android:textColor="@android:color/white"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:visibility="gone"
+                                tools:visibility="visible" />
+                        </LinearLayout>
 
                     </androidx.constraintlayout.widget.ConstraintLayout>
 

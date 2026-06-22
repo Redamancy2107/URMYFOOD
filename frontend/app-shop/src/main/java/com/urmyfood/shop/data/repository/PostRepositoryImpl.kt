@@ -9,6 +9,7 @@ import com.urmyfood.shop.data.model.UpdatePostRequest
 import com.urmyfood.shop.data.model.UpdatePostStatusRequest
 import com.urmyfood.shop.data.model.toDomain
 import com.urmyfood.shop.data.remote.PostApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.Comment
 import com.urmyfood.shop.domain.model.Post
 import com.urmyfood.shop.domain.repository.PostRepository
@@ -35,7 +36,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -54,7 +55,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -73,7 +74,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -92,7 +93,29 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
+        }
+    }
+
+    override suspend fun updateRemainingQuantity(token: String, postId: String, remainingQuantity: Int): Result<Post> {
+        return try {
+            val response = apiService.updateRemainingQuantity(
+                token, postId,
+                com.urmyfood.shop.data.model.UpdateRemainingQuantityRequest(remainingQuantity)
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                val data = body?.data
+                if (body?.success == true && data != null) {
+                    Result.Success(data.toDomain())
+                } else {
+                    Result.Error(body?.message ?: "Không thể cập nhật số suất còn lại")
+                }
+            } else {
+                Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -110,7 +133,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -129,7 +152,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -148,7 +171,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -167,7 +190,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -186,7 +209,7 @@ class PostRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 

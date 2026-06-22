@@ -8,6 +8,7 @@ import com.urmyfood.backend.domain.model.ShopProfile;
 import com.urmyfood.backend.domain.model.ShopProfileImageType;
 import com.urmyfood.backend.domain.model.ShopVerification;
 import com.urmyfood.backend.domain.repository.AccountRepository;
+import com.urmyfood.backend.domain.repository.ShopFollowRepository;
 import com.urmyfood.backend.domain.repository.ShopProfileRepository;
 import com.urmyfood.backend.domain.repository.ShopVerificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class ShopProfileService {
     private final AccountRepository accountRepository;
     private final ShopProfileRepository shopProfileRepository;
     private final ShopVerificationRepository shopVerificationRepository;
+    private final ShopFollowRepository shopFollowRepository;
     private final ProfileImageStorageClient profileImageStorageClient;
 
     @Transactional(readOnly = true)
@@ -47,7 +49,7 @@ public class ShopProfileService {
         ShopProfile profile = shopProfileRepository.findByShopId(shopId)
                 .orElseGet(() -> buildFallbackProfile(shop, verification));
         profile.setVerificationStatus(statusOf(verification));
-        return toResponse(profile);
+        return toResponse(profile, false, shopFollowRepository.countByShopId(shopId));
     }
 
     @Transactional(readOnly = true)
@@ -57,7 +59,19 @@ public class ShopProfileService {
         ShopProfile profile = shopProfileRepository.findByShopId(shopId)
                 .orElseGet(() -> buildFallbackProfile(shop, verification));
         profile.setVerificationStatus(statusOf(verification));
-        return toResponse(profile);
+        return toResponse(profile, false, shopFollowRepository.countByShopId(shopId));
+    }
+
+    @Transactional(readOnly = true)
+    public ShopProfileResponse getProfileForViewer(Long shopId, Long viewerId) {
+        Account shop = requireShopAccount(shopId);
+        ShopVerification verification = shopVerificationRepository.findByShopId(shopId).orElse(null);
+        ShopProfile profile = shopProfileRepository.findByShopId(shopId)
+                .orElseGet(() -> buildFallbackProfile(shop, verification));
+        profile.setVerificationStatus(statusOf(verification));
+        boolean following = shopFollowRepository.isFollowing(viewerId, shopId);
+        long followerCount = shopFollowRepository.countByShopId(shopId);
+        return toResponse(profile, following, followerCount);
     }
 
     @Transactional
@@ -100,10 +114,13 @@ public class ShopProfileService {
                 .build();
 
         ShopProfile saved = shopProfileRepository.save(profile);
+        shop.setFullName(shopName);
+        shop.setAvatarUrl(saved.getLogoUrl());
+        accountRepository.save(shop);
         deleteReplacedProfileImages(shopId, oldLogoUrl, saved.getLogoUrl(), oldCoverUrl, saved.getCoverUrl());
         log.info("Updated shop profile successfully. shopId={}, profileId={}", shopId, saved.getId());
         saved.setVerificationStatus(statusOf(verification));
-        return toResponse(saved);
+        return toResponse(saved, false, shopFollowRepository.countByShopId(shopId));
     }
 
     public ProfileImageUploadResponse uploadProfileImage(Long shopId, ShopProfileImageType type, MultipartFile file) {
@@ -153,7 +170,7 @@ public class ShopProfileService {
                 .build();
     }
 
-    private ShopProfileResponse toResponse(ShopProfile profile) {
+    private ShopProfileResponse toResponse(ShopProfile profile, boolean isFollowing, long followerCount) {
         return ShopProfileResponse.builder()
                 .id(profile.getId())
                 .shopId(profile.getShop().getId())
@@ -168,6 +185,8 @@ public class ShopProfileService {
                 .openingHours(profile.getOpeningHours())
                 .isOpen(profile.getIsOpen())
                 .verificationStatus(profile.getVerificationStatus())
+                .isFollowing(isFollowing)
+                .followerCount(followerCount)
                 .build();
     }
 

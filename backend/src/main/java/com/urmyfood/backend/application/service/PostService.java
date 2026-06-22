@@ -9,6 +9,7 @@ import com.urmyfood.backend.application.dto.PostImageUploadResponse;
 import com.urmyfood.backend.application.dto.PostResponse;
 import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.application.dto.UpdatePostStatusRequest;
+import com.urmyfood.backend.application.dto.UpdateRemainingQuantityRequest;
 import com.urmyfood.backend.application.service.PostImageStorageClient;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.Post;
@@ -80,6 +81,10 @@ public class PostService {
     public PostResponse createPost(CreatePostRequest request) {
         Account author = requireCurrentAccount();
 
+        if (request.getOriginalPrice() == null) {
+            request.setOriginalPrice(request.getPrice());
+        }
+
         Post post = Post.builder()
                 .dishName(request.getDishName())
                 .price(request.getPrice())
@@ -113,6 +118,7 @@ public class PostService {
                 .shopName(saved.getAuthor().getFullName())
                 .shopAvatarUrl(saved.getAuthor().getAvatarUrl())
                 .createdAt(saved.getCreatedAt())
+                .isFollowingShop(false)
                 .build();
     }
 
@@ -128,12 +134,29 @@ public class PostService {
     @Transactional
     public PostResponse updatePost(UUID postId, UpdatePostRequest request) {
         Account account = requireCurrentAccount();
+        if (request.getOriginalPrice() == null) {
+            request.setOriginalPrice(request.getPrice());
+        }
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
         if (!post.getAuthor().getId().equals(account.getId())) {
             throw new AccessDeniedException("Không có quyền chỉnh sửa bài viết này");
         }
         postRepository.updatePost(postId, account.getId(), request);
+        PostRanked updated = postRepository.findRankedPostById(postId, account.getId())
+                .orElseThrow(() -> new RuntimeException("Không thể tải bài viết sau khi cập nhật"));
+        return toResponse(updated);
+    }
+
+    @Transactional
+    public PostResponse updateRemainingQuantity(UUID postId, UpdateRemainingQuantityRequest request) {
+        Account account = requireCurrentAccount();
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
+        if (!post.getAuthor().getId().equals(account.getId())) {
+            throw new AccessDeniedException("Không có quyền chỉnh sửa bài viết này");
+        }
+        postRepository.updateRemainingQuantity(postId, account.getId(), request.getRemainingQuantity());
         PostRanked updated = postRepository.findRankedPostById(postId, account.getId())
                 .orElseThrow(() -> new RuntimeException("Không thể tải bài viết sau khi cập nhật"));
         return toResponse(updated);
@@ -247,6 +270,7 @@ public class PostService {
                 .likeCount(pr.likeCount())
                 .isLiked(pr.liked())
                 .commentCount(pr.commentCount())
+                .isFollowingShop(pr.followingShop())
                 .build();
     }
 

@@ -21,5 +21,6 @@ data class PostResponse(
     @SerializedName("created_at") val createdAt: String?,
     @SerializedName("like_count") val likeCount: Int = 0,
     @SerializedName("is_liked") val isLiked: Boolean = false,
+    @SerializedName("is_following_shop") val isFollowingShop: Boolean = false,
     @SerializedName("comment_count") val commentCount: Int = 0
 )

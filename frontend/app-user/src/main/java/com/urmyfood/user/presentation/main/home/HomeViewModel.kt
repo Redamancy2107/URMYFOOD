@@ -8,8 +8,10 @@ import androidx.lifecycle.viewModelScope
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.GuestRepository
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -22,6 +24,8 @@ sealed class NewsfeedUiState {
 class HomeViewModel(
     private val getPostsUseCase: GetPostsUseCase,
     private val toggleLikeUseCase: ToggleLikeUseCase,
+    private val followShopUseCase: FollowShopUseCase,
+    private val unfollowShopUseCase: UnfollowShopUseCase,
     private val guestRepository: GuestRepository
 ) : ViewModel() {
 
@@ -36,8 +40,14 @@ class HomeViewModel(
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
 
+    private val _followError = MutableLiveData<String?>()
+    val followError: LiveData<String?> = _followError
+
     private val _sortOrder = MutableLiveData<String?>(null)
     val sortOrder: LiveData<String?> = _sortOrder
+
+    private val _isFlashSaleFilterActive = MutableLiveData<Boolean>(false)
+    val isFlashSaleFilterActive: LiveData<Boolean> = _isFlashSaleFilterActive
 
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
@@ -54,11 +64,22 @@ class HomeViewModel(
         applySortingAndEmit()
     }
 
+    fun toggleFlashSaleFilter() {
+        _isFlashSaleFilterActive.value = !(_isFlashSaleFilterActive.value ?: false)
+        applySortingAndEmit()
+    }
+
     private fun applySortingAndEmit() {
+        var baseList = loadedPosts.toList()
+        if (_isFlashSaleFilterActive.value == true) {
+            baseList = baseList.filter { it.isFlashSale }
+        }
         val sortedList = when (_sortOrder.value) {
-            "LOW_TO_HIGH" -> loadedPosts.sortedBy { it.price }
-            "HIGH_TO_LOW" -> loadedPosts.sortedByDescending { it.price }
-            else -> loadedPosts.toList()
+            "LOW_TO_HIGH" -> baseList.sortedBy { it.price }
+            "HIGH_TO_LOW" -> baseList.sortedByDescending { it.price }
+            "NEWEST" -> baseList.sortedByDescending { it.createdAt ?: "" }
+            "OLDEST" -> baseList.sortedBy { it.createdAt ?: "" }
+            else -> baseList
         }
         _uiState.value = NewsfeedUiState.Success(sortedList)
     }
@@ -130,6 +151,7 @@ class HomeViewModel(
     }
 
     fun clearLikeError() { _likeError.value = null }
+    fun clearFollowError() { _followError.value = null }
 
     private fun updatePostLike(postId: String, isLiked: Boolean, likeCount: Int) {
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
@@ -137,7 +159,6 @@ class HomeViewModel(
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
             applySortingAndEmit()
             
-            // Dispatch to favorites screen or other listeners
             com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(postId, Pair(isLiked, likeCount)))
         }
     }
@@ -146,6 +167,46 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0 && (loadedPosts[idx].isLiked != isLiked || loadedPosts[idx].likeCount != likeCount)) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+        }
+    }
+
+    fun toggleFollow(shopId: Long, isCurrentlyFollowing: Boolean) {
+        if (shopId <= 0L) return
+        updateFollowStateForShop(shopId, !isCurrentlyFollowing)
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, !isCurrentlyFollowing))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlyFollowing) {
+                unfollowShopUseCase(shopId)
+            } else {
+                followShopUseCase(shopId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateFollowStateForShop(result.data.shopId, result.data.isFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                        Pair(result.data.shopId, result.data.isFollowing)
+                    )
+                }
+                is Result.Error -> {
+                    updateFollowStateForShop(shopId, isCurrentlyFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, isCurrentlyFollowing))
+                    _followError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateFollowStateForShop(shopId: Long, isFollowing: Boolean) {
+        var changed = false
+        for (index in loadedPosts.indices) {
+            if (loadedPosts[index].shopAccountId == shopId && loadedPosts[index].isFollowingShop != isFollowing) {
+                loadedPosts[index] = loadedPosts[index].copy(isFollowingShop = isFollowing)
+                changed = true
+            }
+        }
+        if (changed) {
             applySortingAndEmit()
         }
     }
@@ -160,7 +221,9 @@ class HomeViewModel(
 
     class Factory(
         private val getPostsUseCase: GetPostsUseCase,
-        private val toggleLikeUseCase: ToggleLikeUseCase
+        private val toggleLikeUseCase: ToggleLikeUseCase,
+        private val followShopUseCase: FollowShopUseCase,
+        private val unfollowShopUseCase: UnfollowShopUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -168,6 +231,8 @@ class HomeViewModel(
                 return HomeViewModel(
                     getPostsUseCase,
                     toggleLikeUseCase,
+                    followShopUseCase,
+                    unfollowShopUseCase,
                     com.urmyfood.user.di.ServiceLocator.guestSessionManager
                 ) as T
             }

@@ -70,6 +70,9 @@ public class PostResponse {
     @JsonProperty("comment_count")
     private long commentCount;
 
+    @JsonProperty("is_following_shop")
+    private boolean isFollowingShop;
+
     @JsonProperty("category")
     private String category;
 }

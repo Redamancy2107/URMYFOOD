@@ -95,28 +95,21 @@
                 android:orientation="horizontal"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-            <!-- Filter Row 1 (Scrollable Buttons - New Design) -->
+            <!-- Simplified Filter Row -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
                 android:paddingHorizontal="20dp"
                 android:clipToPadding="false"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="16dp">
                 
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-                    <Button
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Gần tôi"
-                        app:backgroundTint="@color/white"
-                        android:layout_marginEnd="8dp" />
-
+                    <!-- Filter Price -->
                     <Button
                         android:id="@+id/btnFilterPrice"
                         style="@style/Widget.Material3.Button.OutlinedButton"
@@ -129,68 +122,29 @@
                         app:iconTint="@color/primary"
                         android:layout_marginEnd="8dp" />
 
+                    <!-- Filter Date -->
                     <Button
+                        android:id="@+id/btnFilterDate"
                         style="@style/Widget.Material3.Button.OutlinedButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Đánh giá cao"
+                        android:text="Ngày đăng"
                         app:backgroundTint="@color/white"
+                        app:icon="@drawable/ic_arrow_drop_down"
+                        app:iconGravity="end"
+                        app:iconTint="@color/primary"
                         android:layout_marginEnd="8dp" />
 
+                    <!-- Filter Flash Sale -->
                     <Button
+                        android:id="@+id/btnFilterFlash"
                         style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bán chạy"
-                        app:backgroundTint="@color/white"
-                        android:layout_marginEnd="8dp" />
-                    
-                    <Button
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Giao nhanh"
-                        app:backgroundTint="@color/white" />
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- Filter Row 2 (Flash Sale - New Design) -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none"
-                android:paddingHorizontal="20dp"
-                android:clipToPadding="false"
-                android:layout_marginBottom="24dp">
-                
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="⚡ Flash Sale"
-                        android:backgroundTint="@color/primary"
-                        android:textColor="@android:color/white"
-                        app:cornerRadius="28dp"
-                        android:layout_marginEnd="8dp" />
-
-                    <Button
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ưu đãi hôm nay"
                         app:backgroundTint="@color/white"
+                        android:textColor="@color/primary"
                         android:layout_marginEnd="8dp" />
-
-                    <Button
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Món mới"
-                        app:backgroundTint="@color/white" />
                 </LinearLayout>
             </HorizontalScrollView>
 

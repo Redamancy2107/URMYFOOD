@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -52,6 +54,18 @@ class ChatDetailFragment : Fragment() {
         setupRecyclerView()
         setupClickListeners()
         observeViewModel()
+        setupWindowInsets()
+    }
+
+    private fun setupWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomContainer) { v, insets ->
+            val imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime())
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, imeInsets.bottom)
+            if (imeInsets.bottom > 0) {
+                scrollToBottom()
+            }
+            insets
+        }
     }
 
     override fun onResume() {
@@ -113,12 +127,6 @@ class ChatDetailFragment : Fragment() {
                 viewModel.sendMessage(text)
                 binding.etMessage.text?.clear()
             }
-        }
-        binding.btnMenu.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
-        }
-        binding.btnCall.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
         }
         listOf(binding.chipReply1, binding.chipReply2, binding.chipReply3).forEach { chip ->
             chip.setOnClickListener {
