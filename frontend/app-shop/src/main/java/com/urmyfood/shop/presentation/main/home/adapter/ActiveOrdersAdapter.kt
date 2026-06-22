@@ -41,6 +41,11 @@ class ActiveOrdersAdapter(
             binding.tvItemsSummary.text = order.itemsSummary
             binding.tvTotalPrice.text = formatCurrency(order.totalPrice)
 
+            com.bumptech.glide.Glide.with(binding.root.context)
+                .load(order.imageUrl ?: R.drawable.bg_food_banner)
+                .centerCrop()
+                .into(binding.ivOrderImage)
+
             // Set status badge color
             val badgeColor = when (order.status) {
                 OrderStatus.WAITING -> R.color.warning

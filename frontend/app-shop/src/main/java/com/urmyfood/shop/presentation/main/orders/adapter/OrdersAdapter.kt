@@ -41,6 +41,12 @@ class OrdersAdapter(
             binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
             binding.tvTotalPrice.text = formatCurrency(order.finalAmount.toLong())
 
+            val imageUrl = order.items.firstOrNull()?.imageUrlSnapshot
+            com.bumptech.glide.Glide.with(binding.root.context)
+                .load(imageUrl ?: R.drawable.bg_food_banner)
+                .centerCrop()
+                .into(binding.ivOrderImage)
+
             val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
             val paymentLabel = when {
                 isWaitingForVietQrPayment -> " (Chờ thanh toán VietQR)"
