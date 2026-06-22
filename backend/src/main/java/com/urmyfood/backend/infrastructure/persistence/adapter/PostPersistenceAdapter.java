@@ -189,6 +189,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 SELECT COUNT(DISTINCT p.post_id)
                 FROM posts p
                 JOIN accounts a ON a.id = p.author_id
+                LEFT JOIN shop_profiles sp ON sp.shop_id = a.id
                 WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
                     AND (
                 """ + searchPredicate(terms) + """
