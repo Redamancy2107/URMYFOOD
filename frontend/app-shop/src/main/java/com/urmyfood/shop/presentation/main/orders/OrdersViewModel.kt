@@ -61,6 +61,10 @@ class OrdersViewModel(
         _selectedFilter.value = filter
     }
 
+    fun clearErrorMessage() {
+        _errorMessage.value = null
+    }
+
     fun acceptOrder(orderId: String) {
         changeStatus(orderId, "ACCEPTED", null)
     }

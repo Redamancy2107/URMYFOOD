@@ -72,6 +72,14 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .toList();
     }
 
+    @Override
+    public List<Order> findAcceptedUnpaidExpiredOrders(OffsetDateTime expiredBefore) {
+        return jpaOrderRepository.findAcceptedUnpaidExpiredOrders(expiredBefore)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private Order toDomain(OrderEntity entity) {
         List<OrderItem> items = entity.getItems().stream()
                 .map(this::toDomainItem)

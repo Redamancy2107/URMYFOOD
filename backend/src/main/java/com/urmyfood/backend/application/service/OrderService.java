@@ -48,6 +48,9 @@ public class OrderService {
     private final VoucherRepository voucherRepository;
     private final ShopProfileRepository shopProfileRepository;
 
+    @org.springframework.beans.factory.annotation.Value("${app.order.payment-timeout-minutes:15}")
+    private int paymentExpireMinutes;
+
     @Transactional
     public OrderResponse checkout(Long customerId, CheckoutRequest request) {
         Account customer = accountRepository.findById(customerId)
@@ -142,15 +145,23 @@ public class OrderService {
     @Transactional
     public OrderResponse cancelOrder(Long customerId, UUID orderId, CancelOrderRequest request) {
         Order order = findOwnedOrderForUpdate(customerId, orderId);
-        if (order.getOrderStatus() != OrderStatus.PENDING) {
-            throw new IllegalArgumentException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
-        }
         if (order.getPaymentStatus() == PaymentStatus.PAID) {
-            throw new IllegalArgumentException("Không thể hủy đơn hàng đã thanh toán. Vui lòng liên hệ quán.");
+            throw new IllegalArgumentException("Không thể hủy đơn hàng đã thanh toán. Vui lòng liên hệ Tổng đài hỗ trợ.");
         }
-        if (order.getCreatedAt() != null
-                && order.getCreatedAt().plusMinutes(5).isBefore(OffsetDateTime.now())) {
-            throw new IllegalArgumentException("Đã quá thời hạn 5 phút để hủy đơn hàng");
+
+        if (order.getOrderStatus() == OrderStatus.PENDING) {
+            if (order.getCreatedAt() != null && order.getCreatedAt().plusMinutes(5).isBefore(OffsetDateTime.now())) {
+                throw new IllegalArgumentException("Đã quá thời hạn 5 phút để hủy đơn hàng chờ xác nhận");
+            }
+        } else if (order.getOrderStatus() == OrderStatus.ACCEPTED) {
+            if (order.getPaymentMethod() != PaymentMethod.VIETQR) {
+                throw new IllegalArgumentException("Chỉ đơn hàng VietQR chưa thanh toán mới có thể hủy sau khi quán đã xác nhận");
+            }
+            if (order.getUpdatedAt() != null && order.getUpdatedAt().plusMinutes(paymentExpireMinutes).isBefore(OffsetDateTime.now())) {
+                throw new IllegalArgumentException("Đã quá thời gian đếm ngược để hủy đơn hàng VietQR");
+            }
+        } else {
+            throw new IllegalArgumentException("Không thể hủy đơn hàng ở trạng thái hiện tại");
         }
 
         restorePostQuantities(order.getItems());
@@ -247,11 +258,8 @@ public class OrderService {
             throw new IllegalArgumentException(
                     "Không thể chuyển trạng thái từ " + current + " sang " + next);
         }
-        if (current == OrderStatus.PENDING
-                && next == OrderStatus.ACCEPTED
-                && order.getPaymentMethod() == PaymentMethod.VIETQR
-                && order.getPaymentStatus() != PaymentStatus.PAID) {
-            throw new IllegalArgumentException("Đơn VietQR chưa thanh toán");
+        if (next == OrderStatus.REJECTED && order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Không thể từ chối đơn hàng đã thanh toán. Vui lòng liên hệ Tổng đài hỗ trợ.");
         }
         if (next == OrderStatus.REJECTED && (rejectReason == null || rejectReason.isBlank())) {
             throw new IllegalArgumentException("Phải nhập lý do khi từ chối đơn hàng");
@@ -459,6 +467,7 @@ public class OrderService {
                 .cancelReason(order.getCancelReason())
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
+                .updatedAt(order.getUpdatedAt())
                 .build();
     }
 

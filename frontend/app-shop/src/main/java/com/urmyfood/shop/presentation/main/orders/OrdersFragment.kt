@@ -171,6 +171,7 @@ class OrdersFragment : Fragment() {
         viewModel.errorMessage.observe(viewLifecycleOwner) { msg ->
             if (!msg.isNullOrBlank()) {
                 Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                viewModel.clearErrorMessage()
             }
         }
     }
@@ -178,8 +179,9 @@ class OrdersFragment : Fragment() {
     private fun updateFilteredList(orders: List<Order>, filter: StatusFilter) {
         val filtered = orders.filter { order ->
             when (filter) {
-                StatusFilter.PENDING -> order.orderStatus == "PENDING"
-                StatusFilter.PROCESSING -> order.orderStatus == "ACCEPTED" || order.orderStatus == "PICKING_UP"
+                StatusFilter.PENDING -> order.orderStatus == "PENDING" || 
+                        (order.orderStatus == "ACCEPTED" && order.paymentMethod == "VIETQR" && order.paymentStatus != "PAID")
+                StatusFilter.PROCESSING -> (order.orderStatus == "ACCEPTED" && (order.paymentMethod != "VIETQR" || order.paymentStatus == "PAID")) || order.orderStatus == "PICKING_UP"
                 StatusFilter.DELIVERING -> order.orderStatus == "DELIVERING"
                 StatusFilter.COMPLETED -> order.orderStatus == "COMPLETED"
                 StatusFilter.CANCELLED -> order.orderStatus in listOf("CANCELLED", "REJECTED", "EXPIRED")

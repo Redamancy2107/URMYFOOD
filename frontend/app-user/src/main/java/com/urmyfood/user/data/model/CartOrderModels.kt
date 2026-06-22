@@ -114,7 +114,9 @@ data class OrderResponse(
     @SerializedName("items")
     val items: List<OrderItemResponse>,
     @SerializedName("created_at")
-    val createdAt: String?
+    val createdAt: String?,
+    @SerializedName("updated_at")
+    val updatedAt: String?
 )
 
 data class OrderItemResponse(

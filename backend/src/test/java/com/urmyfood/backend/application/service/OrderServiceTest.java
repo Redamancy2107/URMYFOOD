@@ -344,7 +344,7 @@ class OrderServiceTest {
 
         assertThatThrownBy(() -> orderService.cancelOrder(customer.getId(), orderId, new CancelOrderRequest("Đổi ý")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
+                .hasMessage("Không thể hủy đơn hàng ở trạng thái hiện tại");
 
         verify(orderRepository).findByIdForUpdate(orderId);
         verify(orderRepository, never()).findById(orderId);
@@ -390,7 +390,7 @@ class OrderServiceTest {
 
         assertThatThrownBy(() -> orderService.cancelOrder(customer.getId(), orderId, new CancelOrderRequest("Đổi ý")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Đã quá thời hạn 5 phút để hủy đơn hàng");
+                .hasMessage("Đã quá thời hạn 5 phút để hủy đơn hàng chờ xác nhận");
 
         verify(orderRepository, never()).save(any(Order.class));
         verify(postRepository, never()).save(any(Post.class));
@@ -415,7 +415,7 @@ class OrderServiceTest {
     }
 
     @Test
-    void shopCannotAcceptUnpaidVietqrOrder() {
+    void shopCanAcceptUnpaidVietqrOrder() {
         Account customer = account(1L, "Customer");
         Account shop = account(2L, "Shop");
         UUID orderId = UUID.randomUUID();
@@ -426,14 +426,13 @@ class OrderServiceTest {
         order.setPaymentStatus(PaymentStatus.UNPAID);
 
         when(orderRepository.findByIdForUpdate(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UpdateOrderStatusRequest request = new UpdateOrderStatusRequest("ACCEPTED", null);
-        assertThatThrownBy(() -> orderService.updateOrderStatus(shop.getId(), orderId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("VietQR");
+        orderService.updateOrderStatus(shop.getId(), orderId, request);
 
-        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
-        verify(orderRepository, never()).save(any(Order.class));
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.ACCEPTED);
+        assertThat(order.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
     }
 
     @Test
