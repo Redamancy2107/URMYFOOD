@@ -43,6 +43,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Cơm Tấm Bà Ghi"
             android:textColor="@color/text_primary"
             android:textSize="18sp"
@@ -53,12 +55,16 @@
 
         <TextView
             android:id="@+id/tvDetailStatus"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="● Đang hoạt động"
             android:textColor="#4CAF50"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="@id/tvDetailName"
+            app:layout_constraintEnd_toStartOf="@id/actionIcons"
             app:layout_constraintTop_toBottomOf="@id/tvDetailName" />
 
         <LinearLayout
