@@ -168,10 +168,11 @@ class PaymentControllerTest {
                 .totalAmount(BigDecimal.valueOf(50_000))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(BigDecimal.valueOf(50_000))
-                .orderStatus(OrderStatus.PENDING)
+                .orderStatus(OrderStatus.ACCEPTED)
                 .paymentMethod(PaymentMethod.VIETQR)
                 .paymentStatus(PaymentStatus.UNPAID)
                 .deliveryAddress("123 Test")
+                .updatedAt(java.time.OffsetDateTime.now())
                 .build();
     }
 }

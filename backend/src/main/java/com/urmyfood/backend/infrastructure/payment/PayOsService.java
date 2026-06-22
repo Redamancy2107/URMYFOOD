@@ -65,6 +65,29 @@ public class PayOsService {
         }
     }
 
+    public String cancelPaymentLink(Long orderCode, String reason) {
+        ensureConfigured();
+        try {
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            String url = "https://api-merchant.payos.vn/v2/payment-requests/" + orderCode + "/cancel";
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("x-client-id", clientId);
+            headers.set("x-api-key", apiKey);
+
+            String body = "{\"cancellationReason\": \"" + reason + "\"}";
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(body, headers);
+
+            org.springframework.http.ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            log.info("Đã hủy mã thanh toán PayOS (orderCode = {}), response: {}", orderCode, response.getBody());
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Lỗi hủy mã thanh toán PayOS (orderCode = {}): {}", orderCode, e.getMessage());
+            return null;
+        }
+    }
+
     private void ensureConfigured() {
         if (payOS == null) {
             throw new IllegalStateException(

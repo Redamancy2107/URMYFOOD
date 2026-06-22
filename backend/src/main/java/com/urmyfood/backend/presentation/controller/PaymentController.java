@@ -38,6 +38,9 @@ public class PaymentController {
         return details.getAccount().getId();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${app.order.payment-timeout-minutes:15}")
+    private int paymentExpireMinutes;
+
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/payos/create/{orderId}")
     public ResponseEntity<ApiResponse<CreatePaymentLinkResponse>> createPayOsPayment(
@@ -49,6 +52,9 @@ public class PaymentController {
 
         if (order.getPaymentMethod() != PaymentMethod.VIETQR) {
             throw new IllegalArgumentException("Chỉ đơn VietQR mới có thể tạo mã thanh toán.");
+        }
+        if (order.getOrderStatus() == OrderStatus.PENDING) {
+            throw new IllegalArgumentException("Vui lòng chờ quán xác nhận đơn hàng trước khi thanh toán.");
         }
         if (order.getPaymentStatus() == PaymentStatus.PAID) {
             throw new IllegalArgumentException("Đơn hàng này đã được thanh toán.");

@@ -15,35 +15,65 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.urmyfood.backend.infrastructure.payment.PayOsService;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class OrderStateTransitionScheduler {
 
-    private static final int PENDING_EXPIRE_MINUTES = 10;
+    @org.springframework.beans.factory.annotation.Value("${app.order.pending-timeout-minutes:10}")
+    private int pendingExpireMinutes;
+
+    @org.springframework.beans.factory.annotation.Value("${app.order.payment-timeout-minutes:15}")
+    private int paymentExpireMinutes;
 
     private final OrderRepository orderRepository;
     private final PostRepository postRepository;
+    private final PayOsService payOsService;
 
     @Scheduled(fixedDelay = 30000)
     @Transactional
     public void expirePendingOrders() {
-        OffsetDateTime expiredBefore = OffsetDateTime.now().minusMinutes(PENDING_EXPIRE_MINUTES);
+        OffsetDateTime expiredBefore = OffsetDateTime.now().minusMinutes(pendingExpireMinutes);
         List<Order> expiredOrders = orderRepository.findPendingExpiredOrders(expiredBefore);
 
-        if (expiredOrders.isEmpty()) {
-            return;
+        if (!expiredOrders.isEmpty()) {
+            log.info("Phát hiện {} đơn hàng PENDING quá {} phút, tiến hành tự động hủy...",
+                    expiredOrders.size(), pendingExpireMinutes);
+
+            for (Order order : expiredOrders) {
+                order.setOrderStatus(OrderStatus.EXPIRED);
+                order.setCancelReason("Quán không xác nhận trong " + pendingExpireMinutes + " phút");
+                restorePostQuantities(order);
+                orderRepository.save(order);
+                log.info("Đơn hàng {} đã tự động hết hạn", order.getOrderId());
+            }
         }
+    }
 
-        log.info("Phát hiện {} đơn hàng PENDING quá {} phút, tiến hành tự động hủy...",
-                expiredOrders.size(), PENDING_EXPIRE_MINUTES);
+    @Scheduled(fixedDelay = 30000)
+    @Transactional
+    public void expireAcceptedUnpaidOrders() {
+        OffsetDateTime expiredBefore = OffsetDateTime.now().minusMinutes(paymentExpireMinutes);
+        List<Order> expiredOrders = orderRepository.findAcceptedUnpaidExpiredOrders(expiredBefore);
 
-        for (Order order : expiredOrders) {
-            order.setOrderStatus(OrderStatus.EXPIRED);
-            order.setCancelReason("Quán không xác nhận trong " + PENDING_EXPIRE_MINUTES + " phút");
-            restorePostQuantities(order);
-            orderRepository.save(order);
-            log.info("Đơn hàng {} đã tự động hết hạn", order.getOrderId());
+        if (!expiredOrders.isEmpty()) {
+            log.info("Phát hiện {} đơn hàng ACCEPTED (chờ thanh toán VietQR) quá {} phút, tiến hành hủy...",
+                    expiredOrders.size(), paymentExpireMinutes);
+
+            for (Order order : expiredOrders) {
+                order.setOrderStatus(OrderStatus.CANCELLED);
+                order.setCancelReason("Khách hàng không thanh toán trong " + paymentExpireMinutes + " phút");
+                restorePostQuantities(order);
+                orderRepository.save(order);
+                
+                // Hủy mã QR trên PayOS
+                if (order.getPayosOrderCode() != null) {
+                    payOsService.cancelPaymentLink(order.getPayosOrderCode(), "Quá 15 phút thanh toán");
+                }
+                log.info("Đơn hàng {} đã tự động hủy do quá hạn thanh toán", order.getOrderId());
+            }
         }
     }
 

@@ -50,7 +50,7 @@ class OrdersAdapter(
             }
             val (statusLabel, statusColorRes) = when (order.orderStatus) {
                 "PENDING" -> "Chờ xác nhận" to R.color.warning
-                "ACCEPTED" -> "Đã xác nhận" to R.color.primary
+                "ACCEPTED" -> if (isWaitingForVietQrPayment) "Chờ khách thanh toán" to R.color.warning else "Đã xác nhận" to R.color.primary
                 "PICKING_UP" -> "Đang lấy hàng" to R.color.primary
                 "DELIVERING" -> "Đang giao" to R.color.primary
                 "COMPLETED" -> "Hoàn thành" to R.color.success
@@ -64,25 +64,25 @@ class OrdersAdapter(
 
             when (order.orderStatus) {
                 "PENDING" -> {
-                    if (isWaitingForVietQrPayment) {
-                        binding.btnAction.visibility = View.GONE
-                        binding.btnAction.setOnClickListener(null)
-                    } else {
-                        binding.btnAction.visibility = View.VISIBLE
-                        binding.btnAction.text = "Xác nhận"
-                        binding.btnAction.setOnClickListener { onAcceptClick(order) }
-                    }
+                    binding.btnAction.visibility = View.VISIBLE
+                    binding.btnAction.text = "Xác nhận"
+                    binding.btnAction.setOnClickListener { onAcceptClick(order) }
                     binding.btnReject.visibility = View.VISIBLE
                 }
                 "ACCEPTED", "PICKING_UP", "DELIVERING" -> {
-                    binding.btnAction.visibility = View.VISIBLE
-                    binding.btnAction.text = when (order.orderStatus) {
-                        "ACCEPTED" -> "Lấy hàng"
-                        "PICKING_UP" -> "Bắt đầu giao"
-                        else -> "Hoàn thành"
+                    if (order.orderStatus == "ACCEPTED" && isWaitingForVietQrPayment) {
+                        binding.btnAction.visibility = View.GONE
+                        binding.btnReject.visibility = View.GONE
+                    } else {
+                        binding.btnAction.visibility = View.VISIBLE
+                        binding.btnAction.text = when (order.orderStatus) {
+                            "ACCEPTED" -> "Lấy hàng"
+                            "PICKING_UP" -> "Bắt đầu giao"
+                            else -> "Hoàn thành"
+                        }
+                        binding.btnAction.setOnClickListener { onActionClick(order) }
+                        binding.btnReject.visibility = View.GONE
                     }
-                    binding.btnAction.setOnClickListener { onActionClick(order) }
-                    binding.btnReject.visibility = View.GONE
                 }
                 else -> {
                     binding.btnAction.visibility = View.GONE
