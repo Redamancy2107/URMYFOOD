@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentMainHomeBinding
+import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.presentation.common.safeNavigate
 import com.urmyfood.shop.presentation.main.home.adapter.ActiveOrdersAdapter
 
@@ -20,7 +22,9 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentMainHomeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: HomeViewModel by viewModels {
+        ServiceLocator.provideHomeViewModelFactory()
+    }
 
     private lateinit var activeOrdersAdapter: ActiveOrdersAdapter
 
@@ -97,6 +101,12 @@ class HomeFragment : Fragment() {
         viewModel.activeOrders.observe(viewLifecycleOwner) { orders ->
             activeOrdersAdapter.submitList(orders)
         }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+            message ?: return@observe
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            viewModel.clearError()
+        }
     }
 
     private fun setupClickListeners() {
@@ -117,5 +127,10 @@ class HomeFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadOrders()
     }
 }
