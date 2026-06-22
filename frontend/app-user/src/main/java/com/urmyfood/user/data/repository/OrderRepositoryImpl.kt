@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken
 import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CancelOrderRequest
 import com.urmyfood.user.data.model.CheckoutRequest
+import com.urmyfood.user.data.model.DirectCheckoutRequest
 import com.urmyfood.user.data.model.OrderResponse
 import com.urmyfood.user.data.remote.OrderApiService
 import com.urmyfood.user.domain.model.Result
@@ -28,6 +29,24 @@ class OrderRepositoryImpl(
     ): Result<OrderResponse> {
         return safeApiCall {
             orderApiService.checkout(token, CheckoutRequest(paymentMethod, deliveryAddress, voucherId, note, voucherCode))
+        }
+    }
+
+    override suspend fun directCheckout(
+        token: String,
+        postId: String,
+        quantity: Int,
+        paymentMethod: String,
+        deliveryAddress: String,
+        voucherId: Long?,
+        note: String?,
+        voucherCode: String?
+    ): Result<OrderResponse> {
+        return safeApiCall {
+            orderApiService.directCheckout(
+                token,
+                DirectCheckoutRequest(postId, quantity, paymentMethod, deliveryAddress, voucherId, note, voucherCode)
+            )
         }
     }
 

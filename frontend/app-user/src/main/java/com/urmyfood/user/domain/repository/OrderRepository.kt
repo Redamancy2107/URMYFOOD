@@ -13,6 +13,17 @@ interface OrderRepository {
         voucherCode: String? = null
     ): Result<OrderResponse>
 
+    suspend fun directCheckout(
+        token: String,
+        postId: String,
+        quantity: Int,
+        paymentMethod: String,
+        deliveryAddress: String,
+        voucherId: Long?,
+        note: String?,
+        voucherCode: String? = null
+    ): Result<OrderResponse>
+
     suspend fun getOrders(token: String): Result<List<OrderResponse>>
     suspend fun getOrderDetail(token: String, orderId: String): Result<OrderResponse>
     suspend fun cancelOrder(token: String, orderId: String, cancelReason: String): Result<OrderResponse>

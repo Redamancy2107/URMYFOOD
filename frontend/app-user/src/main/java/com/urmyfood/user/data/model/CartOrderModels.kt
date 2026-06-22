@@ -60,6 +60,23 @@ data class CheckoutRequest(
     val voucherCode: String? = null
 )
 
+data class DirectCheckoutRequest(
+    @SerializedName("post_id")
+    val postId: String,
+    @SerializedName("quantity")
+    val quantity: Int,
+    @SerializedName("paymentMethod")
+    val paymentMethod: String,
+    @SerializedName("deliveryAddress")
+    val deliveryAddress: String,
+    @SerializedName("voucherId")
+    val voucherId: Long? = null,
+    @SerializedName("note")
+    val note: String? = null,
+    @SerializedName("voucher_code")
+    val voucherCode: String? = null
+)
+
 data class CancelOrderRequest(
     @SerializedName("cancelReason")
     val cancelReason: String

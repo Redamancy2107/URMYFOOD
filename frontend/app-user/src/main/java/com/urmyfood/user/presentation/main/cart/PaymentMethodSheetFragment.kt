@@ -33,6 +33,9 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
     private var isPayCardSelected = false
 
     private val subtotal: Long by lazy { arguments?.getLong(ARG_SUBTOTAL) ?: 0L }
+    private val directPostId: String? by lazy { arguments?.getString(ARG_POST_ID) }
+    private val directQuantity: Int by lazy { arguments?.getInt(ARG_QUANTITY, 0) ?: 0 }
+    private val isDirectCheckout: Boolean get() = !directPostId.isNullOrBlank() && directQuantity > 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -116,12 +119,23 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
             val note = binding.etNote.text?.toString()?.trim()
             val voucherCode = binding.etVoucherCode.text?.toString()?.trim()
 
-            viewModel.checkout(
-                paymentMethod = paymentMethod,
-                deliveryAddress = deliveryAddress,
-                note = if (note.isNullOrBlank()) null else note,
-                voucherCode = if (voucherCode.isNullOrBlank()) null else voucherCode
-            )
+            if (isDirectCheckout) {
+                viewModel.directCheckout(
+                    postId = directPostId.orEmpty(),
+                    quantity = directQuantity,
+                    paymentMethod = paymentMethod,
+                    deliveryAddress = deliveryAddress,
+                    note = if (note.isNullOrBlank()) null else note,
+                    voucherCode = if (voucherCode.isNullOrBlank()) null else voucherCode
+                )
+            } else {
+                viewModel.checkout(
+                    paymentMethod = paymentMethod,
+                    deliveryAddress = deliveryAddress,
+                    note = if (note.isNullOrBlank()) null else note,
+                    voucherCode = if (voucherCode.isNullOrBlank()) null else voucherCode
+                )
+            }
         }
 
         // Saved Address Selection Button
@@ -168,7 +182,9 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
             state.message?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
                 if (state.isSuccess) {
-                    (parentFragment as? CartFragment)?.loadCartItems()
+                    if (!isDirectCheckout) {
+                        (parentFragment as? CartFragment)?.loadCartItems()
+                    }
                     try {
                         if (state.paymentMethod == PAYMENT_VIETQR && !state.qrCode.isNullOrBlank()) {
                             val bundle = Bundle().apply {
@@ -249,11 +265,23 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
         private const val PAYMENT_COD = "COD"
         private const val PAYMENT_VIETQR = "VIETQR"
         private const val ARG_SUBTOTAL = "subtotal"
+        private const val ARG_POST_ID = "postId"
+        private const val ARG_QUANTITY = "quantity"
 
         fun newInstance(subtotal: Long): PaymentMethodSheetFragment {
             return PaymentMethodSheetFragment().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_SUBTOTAL, subtotal)
+                }
+            }
+        }
+
+        fun newInstanceForPost(postId: String, quantity: Int, subtotal: Long): PaymentMethodSheetFragment {
+            return PaymentMethodSheetFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_SUBTOTAL, subtotal)
+                    putString(ARG_POST_ID, postId)
+                    putInt(ARG_QUANTITY, quantity)
                 }
             }
         }

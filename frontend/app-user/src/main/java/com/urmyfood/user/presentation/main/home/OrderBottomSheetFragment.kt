@@ -15,6 +15,7 @@ import com.urmyfood.user.databinding.LayoutOrderBottomSheetBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.FoodPost
+import com.urmyfood.user.presentation.main.cart.PaymentMethodSheetFragment
 import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
@@ -132,6 +133,17 @@ class OrderBottomSheetFragment(private val post: FoodPost) : BottomSheetDialogFr
                     }
                 }
             }
+        }
+
+        binding.btnBuyNow.setOnClickListener {
+            val totalPrice = (post.price * quantity).toLong()
+            val paymentSheet = PaymentMethodSheetFragment.newInstanceForPost(
+                postId = post.postId,
+                quantity = quantity,
+                subtotal = totalPrice
+            )
+            dismiss()
+            paymentSheet.show(parentFragmentManager, PaymentMethodSheetFragment.TAG)
         }
     }
 
