@@ -18,12 +18,9 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:background="@drawable/bg_logo_rounded"
-            android:padding="16dp"
-            android:src="@drawable/ic_logo"
-            app:tint="@color/dark_green" />
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_logo_admin_launcher" />
 
         <TextView
             android:layout_width="wrap_content"

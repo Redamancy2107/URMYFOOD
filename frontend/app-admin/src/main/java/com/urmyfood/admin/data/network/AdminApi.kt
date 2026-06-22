@@ -28,6 +28,11 @@ interface AdminApi {
     @GET("api/v1/admin/profile")
     suspend fun getAdminProfile(): Response<ApiResponse<AdminProfile>>
 
+    @PUT("api/v1/accounts/me/change-password")
+    suspend fun changePassword(
+        @Body request: ChangePasswordRequest
+    ): Response<ApiResponse<Void>>
+
     @PATCH("api/v1/admin/profile")
     suspend fun updateAdminProfile(
         @Body updates: Map<String, String>
