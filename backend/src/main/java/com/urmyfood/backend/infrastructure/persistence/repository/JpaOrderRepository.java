@@ -123,4 +123,30 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
             ORDER BY o.createdAt ASC
             """)
     List<OrderEntity> findShopOrdersForAllTimeStatistics(@Param("shopId") Long shopId);
+
+    @Query("""
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
+            WHERE i.post.postId = :postId
+              AND o.orderStatus IN ('PENDING', 'ACCEPTED')
+            """)
+    List<OrderEntity> findPendingOrAcceptedOrdersByPostId(@Param("postId") UUID postId);
+
+    @Query("""
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            LEFT JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
+            WHERE o.shop.id = :shopId
+              AND o.orderStatus IN ('PENDING', 'ACCEPTED')
+            """)
+    List<OrderEntity> findPendingOrAcceptedOrdersByShopId(@Param("shopId") Long shopId);
 }

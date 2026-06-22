@@ -156,23 +156,12 @@
                             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Xem tất cả" android:layout_alignParentEnd="true" android:textColor="@color/mint_green"/>
                         </RelativeLayout>
 
-                        <!-- Activity Items -->
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/sym_def_app_icon"/>
-                            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
-                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nguyễn Văn An" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Đã đăng ký tài khoản đối tác mới" android:textColor="@color/text_secondary" android:textSize="12sp"/>
-                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="ĐANG XỬ LÝ" android:textColor="@color/mint_green" android:textSize="10sp" android:background="@drawable/bg_badge_green" android:paddingHorizontal="4dp" android:layout_marginTop="4dp"/>
-                            </LinearLayout>
-                        </LinearLayout>
-                        
-                        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="16dp">
-                            <ImageView android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/sym_def_app_icon"/>
-                            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
-                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Trần Minh Khang" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Hoàn thành đơn hàng #ORD-9921" android:textColor="@color/text_secondary" android:textSize="12sp"/>
-                            </LinearLayout>
-                        </LinearLayout>
+                        <!-- Activity Items Container -->
+                        <LinearLayout
+                            android:id="@+id/ll_recent_activities"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical" />
 
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -213,27 +202,12 @@
                     
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
 
-                    <!-- Row 1 -->
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="Bún Đậu Mắm Tôm A Chanh" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Phạm Tuấn Anh" android:textColor="@color/text_secondary"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Ẩm thực Việt" android:textColor="@color/text_secondary"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="12,500,000 đ" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="● Hoạt động" android:textColor="@color/mint_green" android:textStyle="bold"/>
-                        <ImageView android:layout_width="40dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_more" app:tint="@color/text_secondary"/>
-                    </LinearLayout>
-                    
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
-
-                    <!-- Row 2 -->
-                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:gravity="center_vertical">
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="2" android:text="The Coffee House" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Nguyễn Văn B" android:textColor="@color/text_secondary"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Đồ uống" android:textColor="@color/text_secondary"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="45,800,000 đ" android:textColor="@color/text_primary" android:textStyle="bold"/>
-                        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="● Hoạt động" android:textColor="@color/mint_green" android:textStyle="bold"/>
-                        <ImageView android:layout_width="40dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_more" app:tint="@color/text_secondary"/>
-                    </LinearLayout>
+                    <!-- Latest Shops Container -->
+                    <LinearLayout
+                        android:id="@+id/ll_latest_shops"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
 
                 </LinearLayout>
 
@@ -242,16 +216,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- FAB -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="24dp"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/dark_green"
-        app:tint="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

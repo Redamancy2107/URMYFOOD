@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class AdminService {
 
     private final AdminRepository adminRepository;
@@ -28,8 +29,10 @@ public class AdminService {
     private final VoucherRepository voucherRepository;
     private final ShopVerificationRepository shopVerificationRepository;
     private final ShopProfileRepository shopProfileRepository;
+    private final AccountActionLogRepository accountActionLogRepository;
     private final ProfileImageStorageClient profileImageStorageClient;
     private final NamedParameterJdbcTemplate jdbc;
+    private final org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate;
 
     public AdminProfileDto getAdminProfile(Long accountId) {
         Account account = accountRepository.findById(accountId)
@@ -227,6 +230,15 @@ public class AdminService {
                     .build();
             shopProfileRepository.save(newProfile);
         }
+        
+        try {
+            java.util.Set<String> keys = redisTemplate.keys("shop:*");
+            if (keys != null && !keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to clear Redis cache for shops", e);
+        }
     }
 
     @Transactional
@@ -241,8 +253,8 @@ public class AdminService {
         shopVerificationRepository.save(verification);
     }
 
-    public PageResponse<AccountProfileDto> getAllAccounts(int page, int size, String role) {
-        List<Account> accounts = accountRepository.findAll(page, size, role);
+    public PageResponse<AccountProfileDto> getAllAccounts(int page, int size, String role, String sortBy, String sortDir) {
+        List<Account> accounts = accountRepository.findAll(page, size, role, sortBy, sortDir);
         long total = accountRepository.count(role);
         List<AccountProfileDto> content = accounts.stream()
                 .map(a -> AccountProfileDto.builder()
@@ -259,11 +271,38 @@ public class AdminService {
     }
 
     @Transactional
-    public void lockUnlockAccount(Long id, boolean active) {
+    public void lockUnlockAccount(Long id, boolean active, String reason) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản"));
         account.setActive(active);
         accountRepository.save(account);
+
+        AccountActionLog logEntry = AccountActionLog.builder()
+                .targetType("ACCOUNT")
+                .targetIdStr(id.toString())
+                .actionType(active ? "UNLOCK" : "LOCK")
+                .reason(reason)
+                .build();
+        accountActionLogRepository.save(logEntry);
+    }
+
+    @Transactional
+    public void deleteAccount(Long id, String reason) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài khoản"));
+        account.setActive(false);
+        // Soft delete: change email/phone to prevent conflicts later, or just mark inactive.
+        // The instructions imply we can just soft delete (mark inactive) and log it, or hard delete.
+        // Given Clean Architecture and referencing, soft delete is safer.
+        accountRepository.save(account);
+
+        AccountActionLog logEntry = AccountActionLog.builder()
+                .targetType("ACCOUNT")
+                .targetIdStr(id.toString())
+                .actionType("DELETE")
+                .reason(reason)
+                .build();
+        accountActionLogRepository.save(logEntry);
     }
 
     public List<VoucherDto> getAllVouchers() {

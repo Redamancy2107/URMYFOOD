@@ -11,6 +11,10 @@ public interface OrderRepository {
     Order save(Order order);
     List<Order> findByCustomerId(Long customerId);
     List<Order> findByShopId(Long shopId);
+    List<Order> findShopOrdersForStatistics(Long shopId, OffsetDateTime startAt, OffsetDateTime endAt);
+    List<Order> findShopOrdersForAllTimeStatistics(Long shopId);
+    List<Order> findPendingOrAcceptedOrdersByPostId(UUID postId);
+    List<Order> findPendingOrAcceptedOrdersByShopId(Long shopId);
     Optional<Order> findById(UUID orderId);
     Optional<Order> findByIdForUpdate(UUID orderId);
     Optional<Order> findByPayosOrderCode(Long payosOrderCode);
