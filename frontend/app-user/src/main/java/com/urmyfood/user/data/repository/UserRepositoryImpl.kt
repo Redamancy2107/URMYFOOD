@@ -5,6 +5,7 @@ import com.urmyfood.user.data.remote.UserApiService
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.UserProfile
 import com.urmyfood.user.domain.repository.UserRepository
+import okhttp3.MultipartBody
 
 class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepository {
     override suspend fun getMyProfile(token: String): Result<UserProfile> {
@@ -40,6 +41,24 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                     Result.Success(body.data.toDomain())
                 } else {
                     Result.Error(body?.message ?: "Không thể cập nhật thông tin tài khoản")
+                }
+            } else {
+                Result.Error("Lỗi máy chủ: ${response.code()}")
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Lỗi kết nối")
+        }
+    }
+
+    override suspend fun uploadAvatar(token: String, file: MultipartBody.Part): Result<UserProfile> {
+        return try {
+            val response = userApiService.uploadAvatar(token, file)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body?.success == true && body.data != null) {
+                    Result.Success(body.data.toDomain())
+                } else {
+                    Result.Error(body?.message ?: "Không thể tải ảnh đại diện")
                 }
             } else {
                 Result.Error("Lỗi máy chủ: ${response.code()}")

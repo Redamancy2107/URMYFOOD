@@ -11,9 +11,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.urmyfood.shared.util.ChatImageMultipartBuilder
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentProfileEditBinding
 import com.urmyfood.user.di.ServiceLocator
+import com.urmyfood.shared.domain.model.Result as SharedResult
 
 /**
  * Màn hình Chỉnh sửa thông tin cá nhân.
@@ -128,8 +130,16 @@ class ProfileEditFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val avatarUrl = selectedAvatarUri?.toString() ?: currentAvatarUrl
-            viewModel.updateProfile(name, phone, avatarUrl)
+            val avatarPart = selectedAvatarUri?.let { uri ->
+                when (val result = ChatImageMultipartBuilder.build(requireContext(), uri)) {
+                    is SharedResult.Success -> result.data
+                    is SharedResult.Error -> {
+                        Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
+            }
+            viewModel.saveProfile(name, phone, avatarPart)
         }
     }
 
