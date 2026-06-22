@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<com.urmyfood.user.util.BrandingTextView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/tvMiniBranding"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textColor="@color/primary"
-    android:textSize="34sp"
-    android:letterSpacing="0.03" />

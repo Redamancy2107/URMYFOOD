@@ -40,6 +40,18 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công", response));
     }
 
+    @PostMapping("/admin/send-otp")
+    public ResponseEntity<ApiResponse<Void>> sendAdminOtp(@RequestBody OtpRequest request) {
+        authService.sendAdminOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Mã OTP đã được gửi đến email admin", null));
+    }
+
+    @PostMapping("/admin/login-otp")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginAdminOtp(@RequestBody OtpLoginRequest request) {
+        AuthResponse response = authService.loginAdminWithOtp(request.getEmail(), request.getCode());
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập admin thành công", response));
+    }
+
     @PostMapping("/login-google")
     public ResponseEntity<ApiResponse<AuthResponse>> loginGoogle(@RequestBody GoogleLoginRequest request) {
         AuthResponse response = authService.loginWithGoogle(request.getIdToken());

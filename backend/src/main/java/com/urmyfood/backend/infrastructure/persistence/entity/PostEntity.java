@@ -7,7 +7,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -61,8 +60,7 @@ public class PostEntity {
     private boolean flashSale;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false,
-            columnDefinition = "post_status")
+    @Column(name = "status", nullable = false, length = 30)
     private PostStatus status;
 
     @Column(name = "content", columnDefinition = "TEXT")
@@ -70,6 +68,9 @@ public class PostEntity {
 
     @Column(name = "image_url")
     private String imageUrl;
+
+    @Column(name = "category")
+    private String category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_main"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.urmyfood.shop.presentation.main.home.HomeFragment"
+        android:label="HomeFragment"
+        tools:layout="@layout/fragment_main_home">
+        <action
+            android:id="@+id/action_home_to_orderDetail"
+            app:destination="@id/orderDetailFragment" />
+        <action
+            android:id="@+id/action_home_to_createPost"
+            app:destination="@id/createPostFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postsFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.PostsFragment"
+        android:label="PostsFragment"
+        tools:layout="@layout/fragment_main_posts">
+        <action
+            android:id="@+id/action_posts_to_createPost"
+            app:destination="@id/createPostFragment" />
+        <action
+            android:id="@+id/action_posts_to_postDetail"
+            app:destination="@id/postDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/createPostFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.CreatePostFragment"
+        android:label="CreatePostFragment"
+        tools:layout="@layout/fragment_create_post">
+        <argument
+            android:name="postId"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/postDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.posts.PostDetailFragment"
+        android:label="PostDetailFragment"
+        tools:layout="@layout/fragment_post_detail">
+        <argument
+            android:name="postId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_postDetail_to_createPost"
+            app:destination="@id/createPostFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/ordersFragment"
+        android:name="com.urmyfood.shop.presentation.main.orders.OrdersFragment"
+        android:label="OrdersFragment"
+        tools:layout="@layout/fragment_main_orders">
+        <action
+            android:id="@+id/action_orders_to_orderDetail"
+            app:destination="@id/orderDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/orderDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.orders.detail.OrderDetailFragment"
+        android:label="OrderDetailFragment"
+        tools:layout="@layout/fragment_order_detail">
+        <argument
+            android:name="orderId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.urmyfood.shop.presentation.main.chat.ChatFragment"
+        android:label="ChatFragment"
+        tools:layout="@layout/fragment_main_chat">
+        <action
+            android:id="@+id/action_chat_to_chatDetail"
+            app:destination="@id/chatDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/accountFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.AccountFragment"
+        android:label="AccountFragment"
+        tools:layout="@layout/fragment_main_account">
+        <action
+            android:id="@+id/action_account_to_statistics"
+            app:destination="@id/statisticsFragment" />
+        <action
+            android:id="@+id/action_account_to_shopProfileEditFragment"
+            app:destination="@id/shopProfileEditFragment" />
+        <action
+            android:id="@+id/action_account_to_termsPoliciesFragment"
+            app:destination="@id/termsPoliciesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/shopProfileEditFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.ShopProfileEditFragment"
+        android:label="ShopProfileEditFragment"
+        tools:layout="@layout/fragment_shop_profile_edit">
+        <action
+            android:id="@+id/action_shopProfileEditFragment_to_changePasswordFragment"
+            app:destination="@id/changePasswordFragment" />
+        <action
+            android:id="@+id/action_shopProfileEditFragment_to_mapPickerFragment"
+            app:destination="@id/mapPickerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/mapPickerFragment"
+        android:name="com.urmyfood.shop.presentation.auth.map.MapPickerFragment"
+        android:label="MapPickerFragment"
+        tools:layout="@layout/fragment_map_picker" />
+
+    <fragment
+        android:id="@+id/changePasswordFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.ChangePasswordFragment"
+        android:label="ChangePasswordFragment"
+        tools:layout="@layout/fragment_change_password" />
+
+    <fragment
+        android:id="@+id/termsPoliciesFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.TermsPoliciesFragment"
+        android:label="TermsPoliciesFragment"
+        tools:layout="@layout/fragment_terms_policies" />
+
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="com.urmyfood.shop.presentation.main.account.StatisticsFragment"
+        android:label="StatisticsFragment"
+        tools:layout="@layout/fragment_statistics" />
+
+
+
+    <fragment
+        android:id="@+id/chatDetailFragment"
+        android:name="com.urmyfood.shop.presentation.main.chat.ChatDetailFragment"
+        android:label="ChatDetailFragment"
+        tools:layout="@layout/fragment_chat_detail">
+        <argument
+            android:name="sessionId"
+            app:argType="long" />
+        <argument
+            android:name="customerName"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+</navigation>

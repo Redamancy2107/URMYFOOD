@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: urmyfood-backend-test
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/urmyfood
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    ignore-missing-migrations: true
+    out-of-order: true
+
+supabase:
+  url: "http://localhost:8080"
+  anon-key: "test-anon-key"
+  service-role-key: "test-service-key"
+  storage:
+    bucket: "shop-profile-images"
+
+payos:
+  client-id: "test"
+  api-key: "test"
+  checksum-key: "test"
+
+google:
+  client-id: "test"
+  client-secret: "test"
+  refresh-token: "test"
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+  refresh-token:
+    expiration: 604800000
+
+mail:
+  host: localhost
+  port: 587
+  username: user
+  password: pass
+
+logging:
+  level:
+    org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR

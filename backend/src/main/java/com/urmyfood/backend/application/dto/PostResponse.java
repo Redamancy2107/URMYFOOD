@@ -46,12 +46,30 @@ public class PostResponse {
     @JsonProperty("image_url")
     private String imageUrl;
 
+    @JsonProperty("shop_account_id")
+    private Long shopAccountId;
+
     @JsonProperty("shop_name")
     private String shopName;
 
     @JsonProperty("shop_avatar_url")
     private String shopAvatarUrl;
 
+    @JsonProperty("shop_address")
+    private String shopAddress;
+
     @JsonProperty("created_at")
     private OffsetDateTime createdAt;
+
+    @JsonProperty("like_count")
+    private long likeCount;
+
+    @JsonProperty("is_liked")
+    private boolean isLiked;
+
+    @JsonProperty("comment_count")
+    private long commentCount;
+
+    @JsonProperty("category")
+    private String category;
 }

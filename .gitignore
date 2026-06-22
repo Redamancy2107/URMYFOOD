@@ -8,6 +8,7 @@ application-dev.properties
 # Android Signing Keys (Tuyệt đối không lên Git)
 *.jks
 *.keystore
+!**/debug.keystore
 *keystore.properties
 
 # Firebase / Google Services (Nếu có dùng)
@@ -145,3 +146,11 @@ fabric.properties
 
 ### VS Code ###
 .vscode/
+
+# URMYFOOD AI Rules
+.clinerules
+.cursorrules
+CODING_RULES.md
+antigravity_rules.txt
+.agents/
+AGENTS.md

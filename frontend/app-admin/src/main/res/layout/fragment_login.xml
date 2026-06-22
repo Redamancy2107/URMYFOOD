@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_color">
+
+    <!-- Header Logo -->
+    <LinearLayout
+        android:id="@+id/ll_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_logo_admin_launcher" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="URMYFOOD"
+            android:textColor="@color/dark_green"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Hệ thống quản trị thương mại điện tử thực phẩm"
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <!-- Login Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cv_login"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@color/bg_color"
+        app:strokeWidth="1dp"
+        app:strokeColor="@color/border_color"
+        app:layout_constraintWidth_max="480dp"
+        app:layout_constraintWidth_percent="0.85"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ll_header">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="32dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Đăng nhập Admin"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="Vui lòng nhập thông tin để truy cập bảng điều khiển"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <!-- Email Field -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Email"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/et_email"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="admin@urmyfood.com"
+                android:inputType="textEmailAddress"
+                android:drawableStart="@drawable/ic_email_outline"
+                android:drawablePadding="12dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <!-- Password Field -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Mật khẩu"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/et_password"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_input"
+                android:hint="••••••••"
+                android:inputType="textPassword"
+                android:drawableStart="@drawable/ic_lock_outline"
+                android:drawableEnd="@drawable/ic_eye_outline"
+                android:drawablePadding="12dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_secondary"
+                android:textSize="14sp" />
+
+            <!-- Options -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp">
+
+                <com.google.android.material.checkbox.MaterialCheckBox
+                    android:id="@+id/cb_remember"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ghi nhớ đăng nhập"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    app:buttonTint="@color/mint_green"
+                    app:useMaterialThemeColors="false" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:text="Quên mật khẩu?"
+                    android:textColor="@color/dark_green"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Error Message -->
+            <TextView
+                android:id="@+id/tv_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/error_red"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="Email hoặc mật khẩu không chính xác" />
+
+            <!-- Submit Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_continue"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:text="Đăng nhập"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:backgroundTint="@color/mint_green"
+                app:cornerRadius="12dp" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Footer Links -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cv_login">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chính sách bảo mật"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:text="Điều khoản dịch vụ"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hỗ trợ kỹ thuật"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

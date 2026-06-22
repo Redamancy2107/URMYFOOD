@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical"
+    android:background="?selectableItemBackground">
+
+    <TextView android:id="@+id/tv_full_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:textColor="@color/text_primary" android:textStyle="bold" android:textSize="14sp"/>
+    <TextView android:id="@+id/tv_email" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:textColor="@color/text_secondary" android:textSize="13sp"/>
+    <TextView android:id="@+id/tv_phone" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/text_secondary" android:textSize="13sp"/>
+    <TextView android:id="@+id/tv_role" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:textSize="12sp" android:textStyle="bold"/>
+    <TextView android:id="@+id/tv_status" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="0.8" android:textSize="12sp" android:textStyle="bold"/>
+    
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_toggle"
+        android:layout_width="60dp"
+        android:layout_height="36dp"
+        android:textSize="11sp"
+        app:cornerRadius="6dp"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+</LinearLayout>

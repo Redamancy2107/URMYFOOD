@@ -14,7 +14,12 @@ data class PostResponse(
     @SerializedName("status") val status: String,
     @SerializedName("content") val content: String?,
     @SerializedName("image_url") val imageUrl: String?,
+    @SerializedName("shop_account_id") val shopAccountId: Long = 0L,
     @SerializedName("shop_name") val shopName: String,
     @SerializedName("shop_avatar_url") val shopAvatarUrl: String?,
-    @SerializedName("created_at") val createdAt: String?
+    @SerializedName("shop_address") val shopAddress: String?,
+    @SerializedName("created_at") val createdAt: String?,
+    @SerializedName("like_count") val likeCount: Int = 0,
+    @SerializedName("is_liked") val isLiked: Boolean = false,
+    @SerializedName("comment_count") val commentCount: Int = 0
 )

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp">
+
+        <!-- Top info (Date / Order ID & Status Badge) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp">
+
+            <TextView
+                android:id="@+id/tvOrderTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                tools:text="10:30" />
+
+            <TextView
+                android:id="@+id/tvOrderId"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_toEndOf="@id/tvOrderTime"
+                android:textColor="@color/text_hint"
+                android:textSize="12sp"
+                tools:text="#ORD-001" />
+
+            <TextView
+                android:id="@+id/tvStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                tools:text="Chờ xác nhận" />
+        </RelativeLayout>
+
+        <!-- Main Body Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Rounded Image Placeholder -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
+
+                <ImageView
+                    android:id="@+id/ivOrderImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/bg_food_banner" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Details Column -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvCustomerName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="Nguyễn Văn A" />
+
+                <TextView
+                    android:id="@+id/tvItemsSummary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:maxLines="2"
+                    android:ellipsize="end"
+                    tools:text="2x Cơm tấm sườn, 1x Trà đá" />
+
+                <TextView
+                    android:id="@+id/tvTotalPrice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    tools:text="85.000₫" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Action Button Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:paddingTop="12dp">
+
+            <TextView
+                android:id="@+id/btnAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_btn_primary"
+                android:paddingHorizontal="20dp"
+                android:paddingVertical="10dp"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Chuẩn bị" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

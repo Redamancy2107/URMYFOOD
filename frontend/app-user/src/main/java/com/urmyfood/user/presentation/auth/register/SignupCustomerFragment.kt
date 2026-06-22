@@ -40,9 +40,6 @@ class SignupCustomerFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
 
         binding.btnRegister.setOnClickListener {
             val fullName = binding.etName.text.toString().trim()
@@ -53,6 +50,21 @@ class SignupCustomerFragment : Fragment() {
 
             if (fullName.isEmpty() || email.isEmpty() || phone.isEmpty() || password.isEmpty()) {
                 showError("Vui lòng điền đầy đủ thông tin")
+                return@setOnClickListener
+            }
+
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                showError("Email không hợp lệ")
+                return@setOnClickListener
+            }
+
+            if (phone.length < 9 || phone.length > 11 || !phone.all { it.isDigit() }) {
+                showError("Số điện thoại không hợp lệ (phải từ 9 đến 11 chữ số)")
+                return@setOnClickListener
+            }
+
+            if (password.length < 6) {
+                showError("Mật khẩu phải chứa ít nhất 6 ký tự")
                 return@setOnClickListener
             }
 
@@ -101,6 +113,7 @@ class SignupCustomerFragment : Fragment() {
                         putString("phone", binding.etPhone.text.toString().trim())
                         putString("password", binding.etPassword.text.toString())
                     }
+                    viewModel.resetSendOtpState()
                     findNavController().navigate(R.id.action_signupCustomerFragment_to_otpFragment, bundle)
                 }
                 is com.urmyfood.user.domain.model.Result.Error -> {

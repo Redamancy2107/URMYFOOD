@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical"
+    tools:context="com.urmyfood.shop.presentation.main.orders.OrdersFragment">
+
+    <include
+        android:id="@+id/mainHeader"
+        layout="@layout/layout_main_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="20dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:paddingHorizontal="16dp"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:id="@+id/tabContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="24dp"
+        android:visibility="gone" />
+
+    <!-- Orders List -->
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="12dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvOrders"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:paddingBottom="16dp"
+            tools:listitem="@layout/item_order_card" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/llEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvEmptyTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Không có đơn hàng nào"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvEmptySubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="Hiện tại không có đơn hàng nào trong trạng thái này."
+            android:textColor="@color/text_secondary"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>
+

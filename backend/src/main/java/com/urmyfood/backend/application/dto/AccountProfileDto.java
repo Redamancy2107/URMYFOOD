@@ -15,4 +15,6 @@ public class AccountProfileDto {
     private String email;
     private String phone;
     private String role;
+    private String avatarUrl;
+    private boolean isActive;
 }

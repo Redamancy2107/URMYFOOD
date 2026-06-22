@@ -24,10 +24,9 @@ public class CreatePostRequest {
     private String dishName;
 
     @NotNull
-    @DecimalMin("0.0")
+    @DecimalMin(value = "0.01", message = "Giá món ăn phải lớn hơn 0")
     private BigDecimal price;
 
-    @NotNull
     @DecimalMin("0.0")
     @JsonProperty("original_price")
     private BigDecimal originalPrice;
@@ -46,4 +45,7 @@ public class CreatePostRequest {
 
     @JsonProperty("image_url")
     private String imageUrl;
+
+    @JsonProperty("category")
+    private String category;
 }

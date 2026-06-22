@@ -8,6 +8,7 @@
     <string name="loading">Đang xử lý…</string>
     <string name="error_connection">Lỗi kết nối. Vui lòng thử lại.</string>
     <string name="toast_feature_in_development">Chức năng đang phát triển</string>
+    <string name="toast_filtered_category">Đã lọc theo danh mục: %s</string>
     <string name="follow">Theo dõi</string>
     <string name="following">Đã theo dõi</string>
     <string name="badge_flash_sale">⚡ Flash Sale</string>
@@ -46,7 +47,7 @@
 
     <string name="terms_msg_4"><![CDATA[<b>3. Sử dụng dịch vụ</b><br>Bạn cam kết sử dụng URMYFOOD cho các mục đích hợp pháp, phù hợp với quy định của pháp luật và không thực hiện các hành vi gây ảnh hưởng đến hệ thống, người dùng khác hoặc hoạt động của dịch vụ.<br><br>Bạn không được lợi dụng ứng dụng để thực hiện hành vi gian lận, giả mạo thông tin, đặt hàng sai mục đích, gây rối hệ thống hoặc vi phạm quyền lợi của bên thứ ba.]]></string>
 
-    <string name="terms_msg_5"><![CDATA[<b>4. Đặt hàng và thanh toán</b><br>Khi thực hiện đặt hàng qua URMYFOOD, bạn đồng ý cung cấp thông tin đặt hàng chính xác và thanh toán đầy đủ các khoản phí liên quan, bao gồm giá sản phẩm, phí giao hàng, phí dịch vụ và các chi phí phát sinh nếu có.<br><br>URMYFOOD có quyền từ chối, hủy hoặc điều chỉnh đơn hàng trong trường hợp phát hiện thông tin không chính xác, giao dịch bất thường hoặc có dấu hiệu vi phạm điều khoản sử dụng.]]></string>
+    <string name="terms_msg_5"><![CDATA[<b>4. Đặt hàng và thanh toán</b><br>Khi thực hiện đặt hàng qua URMYFOOD, bạn đồng ý cung cấp thông tin đặt hàng chính xác và thanh toán đầy đủ các khoản phí liên quan, bao gồm giá sản phẩm, phí giao hàng, phí dịch vụ và các chi phí phát sinh nếu có.<br><br>URMYFOOD có quyền từ chối, hủy hoặc điều chỉnh đơn hàng trong trường hợp phát hiện thông tin không chính xác, giao dịch bất thường hoặc có dấu hiệu vi phạm điều khoản sử dụng.<br><br>Đối với các đơn hàng đã thanh toán thành công qua cổng thanh toán điện tử, bạn sẽ không thể tự ý hủy đơn. Mọi yêu cầu hủy đơn và hoàn tiền phải được xem xét và xử lý thông qua Tổng đài hỗ trợ của URMYFOOD.]]></string>
 
     <string name="terms_msg_6"><![CDATA[<b>5. Bảo mật thông tin</b><br>URMYFOOD cam kết bảo vệ thông tin cá nhân của bạn theo Chính sách bảo mật hiện hành. Thông tin của bạn chỉ được thu thập, sử dụng và lưu trữ nhằm phục vụ cho việc cung cấp, cải thiện dịch vụ và tuân thủ quy định pháp luật.]]></string>
 
@@ -138,9 +139,9 @@
     <string name="profile_change_password">Đổi mật khẩu</string>
     <string name="profile_logout">Đăng xuất</string>
     <string name="profile_default_name">Người dùng</string>
-    <string name="profile_my_orders">Đơn hàng\ncủa tôi</string>
-    <string name="profile_my_vouchers">Voucher\ncủa tôi</string>
-    <string name="profile_address_book">Sổ\nđịa chỉ</string>
+    <string name="profile_my_orders">Đơn hàng</string>
+    <string name="profile_my_vouchers">Voucher</string>
+    <string name="profile_address_book">Địa chỉ</string>
     <string name="profile_account_settings">Cài đặt tài khoản</string>
     <string name="profile_personal_info">Thông tin cá nhân</string>
     <string name="profile_notification_settings">Cài đặt thông báo</string>
@@ -148,6 +149,77 @@
     <string name="profile_terms_policies">Điều khoản &amp; Chính sách</string>
     <string name="profile_student_verified">Sinh viên đã xác thực</string>
     <string name="profile_student_unverified">Chưa xác thực sinh viên</string>
+    <string name="profile_my_favorites">Yêu thích</string>
+
+    <!-- Wrong Role Bottom Sheet -->
+    <string name="wrong_role_title">Tài khoản không hợp lệ</string>
+    <string name="wrong_role_description">Tài khoản này hiện đang là tài khoản Chủ quán. Mỗi số điện thoại chỉ được đăng ký một vai trò duy nhất. Bạn không thể sử dụng tài khoản này để đăng nhập vào ứng dụng Sinh viên (Người mua).</string>
+    <string name="wrong_role_btn_register">Đăng ký tài khoản Sinh viên mới</string>
+    <string name="wrong_role_btn_back">Quay lại Đăng nhập</string>
+
+    <!-- Profile Edit Screen -->
+    <string name="profile_edit_title">Thông tin cá nhân</string>
+    <string name="profile_edit_name_hint">Họ và tên</string>
+    <string name="profile_edit_phone_hint">Số điện thoại</string>
+    <string name="profile_edit_email_hint">Email</string>
+    <string name="profile_edit_dob_hint">Ngày sinh</string>
+    <string name="profile_edit_save">Lưu thay đổi</string>
+    <string name="profile_edit_save_success">Cập nhật thông tin thành công!</string>
+    <string name="profile_edit_name_empty">Vui lòng nhập họ tên</string>
+
+    <!-- Change Password Screen -->
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="change_password_current_hint">Mật khẩu hiện tại</string>
+    <string name="change_password_new_hint">Mật khẩu mới</string>
+    <string name="change_password_confirm_hint">Xác nhận mật khẩu mới</string>
+    <string name="change_password_btn">Xác nhận</string>
+    <string name="change_password_success">Đổi mật khẩu thành công!</string>
+    <string name="change_password_empty">Vui lòng điền đầy đủ thông tin</string>
+    <string name="change_password_mismatch">Mật khẩu mới không khớp</string>
+    <string name="change_password_too_short">Mật khẩu phải có ít nhất 6 ký tự</string>
+
+    <!-- Address Book Screen -->
+    <string name="address_book_title">Địa chỉ của tôi</string>
+    <string name="address_book_add_new">+ Thêm địa chỉ mới</string>
+    <string name="address_book_label_home">Nhà riêng</string>
+    <string name="address_book_label_company">Công ty</string>
+    <string name="address_book_default">Mặc định</string>
+    <string name="address_book_delete_confirm">Bạn có chắc muốn xóa địa chỉ này?</string>
+    <string name="address_book_deleted">Đã xóa địa chỉ</string>
+
+    <!-- Address Edit Screen -->
+    <string name="address_edit_title_add">Thêm địa chỉ mới</string>
+    <string name="address_edit_title_edit">Chỉnh sửa địa chỉ</string>
+    <string name="address_edit_recipient_label">Họ và tên người nhận</string>
+    <string name="address_edit_recipient_hint">Nhập họ tên</string>
+    <string name="address_edit_phone_label">Số điện thoại</string>
+    <string name="address_edit_phone_hint">Nhập số điện thoại</string>
+    <string name="address_edit_detail_label">Địa chỉ chi tiết (Số nhà, đường...)</string>
+    <string name="address_edit_detail_hint">Nhập số nhà, tên đường, phường...</string>
+    <string name="address_edit_type_label">Loại địa chỉ</string>
+    <string name="address_edit_default_label">Đặt làm mặc định</string>
+    <string name="address_edit_default_desc">Dùng làm địa chỉ giao nhận mặc định</string>
+    <string name="address_edit_btn_save">Hoàn thành</string>
+    <string name="address_edit_error_name">Vui lòng nhập họ và tên người nhận</string>
+    <string name="address_edit_error_phone">Vui lòng nhập số điện thoại</string>
+    <string name="address_edit_error_detail">Vui lòng nhập địa chỉ chi tiết</string>
+    <string name="address_edit_success_add">Thêm địa chỉ mới thành công</string>
+    <string name="address_edit_success_update">Cập nhật địa chỉ thành công</string>
+
+    <!-- Vouchers Screen -->
+    <string name="vouchers_title">Voucher của tôi</string>
+    <string name="voucher_use_now">Dùng ngay</string>
+    <string name="voucher_expired">Hết hạn</string>
+
+    <!-- Order History Screen -->
+    <string name="order_history_title">Đơn hàng của tôi</string>
+    <string name="order_tab_pending">Chờ xác nhận</string>
+    <string name="order_tab_processing">Đang xử lý</string>
+    <string name="order_tab_delivering">Đang giao</string>
+    <string name="order_tab_completed">Hoàn thành</string>
+    <string name="order_tab_cancelled">Đã hủy</string>
+    <string name="order_btn_review">Đánh giá</string>
+    <string name="order_btn_reorder">Đặt lại</string>
 
     <!-- Content Descriptions -->
     <string name="cd_back_button">Nút quay lại</string>
@@ -169,6 +241,8 @@
     <string name="search_hint">Bạn muốn ăn gì hôm nay?</string>
     <string name="search_recent_title">Tìm kiếm gần đây</string>
     <string name="search_recent_clear_all">Xóa tất cả</string>
+    <string name="search_recent_empty">Chưa có tìm kiếm gần đây</string>
+    <string name="search_no_results">Không tìm thấy kết quả</string>
     <string name="search_suggestion_title">Gợi ý cho bạn</string>
     <string name="search_popular_category_title">Danh mục phổ biến</string>
 
@@ -178,4 +252,33 @@
     <!-- Auth Choices -->
     <string name="choose_role_guest">Tiếp tục với tư cách khách</string>
     <string name="profile_no_phone">Chưa cập nhật số điện thoại</string>
+
+    <!-- Terms & Policies Screen -->
+    <string name="terms_policies_title">Điều khoản &amp; Chính sách</string>
+    <string name="terms_policies_subtitle">Cam kết minh bạch</string>
+    <string name="terms_policies_description">Chúng tôi luôn nỗ lực bảo vệ quyền lợi và thông tin cá nhân của bạn thông qua các quy chuẩn nghiêm ngặt.</string>
+    <string name="terms_usage_title">Điều khoản sử dụng</string>
+    <string name="terms_usage_date">Cập nhật: 12/05/2024</string>
+    <string name="terms_privacy_title">Chính sách bảo mật</string>
+    <string name="terms_privacy_date">Cập nhật: 10/05/2024</string>
+    <string name="terms_refund_title">Chính sách hoàn tiền</string>
+    <string name="terms_refund_date">Cập nhật: 01/04/2024</string>
+    <string name="terms_regulations_title">Quy chế hoạt động</string>
+    <string name="terms_regulations_date">Cập nhật: 15/03/2024</string>
+    <string name="terms_contact_title">Bạn có thắc mắc khác?</string>
+    <string name="terms_contact_description">Liên hệ với đội ngũ pháp lý của URMYFOOD để được giải đáp chi tiết.</string>
+    <string name="terms_contact_btn">Gửi yêu cầu hỗ trợ</string>
+
+    <!-- Notification Settings Screen -->
+    <string name="notification_settings_title">Cài đặt thông báo</string>
+    <string name="notification_settings_heading">Tùy chỉnh nhận tin</string>
+    <string name="notification_settings_description">Chọn các loại thông báo bạn muốn nhận để cập nhật hành trình ẩm thực của mình.</string>
+    <string name="notification_orders_title">Đơn hàng</string>
+    <string name="notification_orders_desc">Trạng thái chuẩn bị &amp; giao hàng</string>
+    <string name="notification_promotions_title">Khuyến mãi</string>
+    <string name="notification_promotions_desc">Ưu đãi độc quyền &amp; mã giảm giá</string>
+    <string name="notification_messages_title">Tin nhắn</string>
+    <string name="notification_messages_desc">Trao đổi với Shipper &amp; Cửa hàng</string>
+    <string name="notification_system_title">Cập nhật hệ thống</string>
+    <string name="notification_system_desc">Thông báo quan trọng về ứng dụng</string>
 </resources>

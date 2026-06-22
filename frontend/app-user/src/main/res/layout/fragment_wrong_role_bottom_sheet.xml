@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="32dp">
+
+    <View
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@color/divider" />
+
+    <FrameLayout
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_error_badge" />
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_exclamation" />
+
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="@string/wrong_role_title"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:lineSpacingMultiplier="1.5"
+        android:text="@string/wrong_role_description"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRegister"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/wrong_role_btn_register"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="16dp" />
+
+    <TextView
+        android:id="@+id/tvBackToLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:text="@string/wrong_role_btn_back"
+        android:textColor="@color/primary"
+        android:textSize="14sp" />
+
+</LinearLayout>

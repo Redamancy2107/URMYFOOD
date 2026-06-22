@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="12dp">
+
+    <!-- Day Name -->
+    <TextView
+        android:id="@+id/tvDayName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/text_primary"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        tools:text="Thứ Hai" />
+
+    <!-- Time Range (visible when open) -->
+    <TextView
+        android:id="@+id/tvTimeRange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        tools:text="09:00 - 22:00" />
+
+    <!-- Closed Label (visible when closed) -->
+    <TextView
+        android:id="@+id/tvClosed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="@string/business_hours_closed"
+        android:textColor="@color/text_hint"
+        android:textSize="14sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- Switch Toggle -->
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switchDay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:thumbTint="@color/primary"
+        app:trackTint="@color/divider"
+        app:trackDecorationTint="@android:color/transparent" />
+
+</LinearLayout>

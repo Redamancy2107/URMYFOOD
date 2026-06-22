@@ -116,6 +116,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- PayOS SDK -->
+		<dependency>
+			<groupId>vn.payos</groupId>
+			<artifactId>payos-java</artifactId>
+			<version>2.0.1</version>
+		</dependency>
+
 		<!-- Dotenv support -->
 		<dependency>
 			<groupId>me.paulschwarz</groupId>
@@ -123,10 +130,28 @@
 			<version>5.1.0</version>
 		</dependency>
 
+		<!-- WebSocket / STOMP support -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-websocket</artifactId>
+		</dependency>
+
 		<!-- Email support -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
+		<!-- Gmail API -->
+		<dependency>
+			<groupId>com.google.apis</groupId>
+			<artifactId>google-api-services-gmail</artifactId>
+			<version>v1-rev20220404-2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.auth</groupId>
+			<artifactId>google-auth-library-oauth2-http</artifactId>
+			<version>1.23.0</version>
 		</dependency>
 
 		<!-- Google OAuth Client for ID Token Verification -->

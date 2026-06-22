@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="80"
+    android:viewportHeight="80">
+
+    <!-- Building body -->
+    <path
+        android:fillColor="#FFEDD5"
+        android:pathData="M8,40 H58 V72 H8 Z" />
+
+    <!-- Roof -->
+    <path
+        android:fillColor="#FED7AA"
+        android:pathData="M4,40 L33,14 L62,40 Z" />
+
+    <!-- Awning strip -->
+    <path
+        android:fillColor="#D11A2A"
+        android:pathData="M8,40 H58 V49 H8 Z" />
+
+    <!-- Left window -->
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M14,53 H24 V63 H14 Z" />
+
+    <!-- Right window -->
+    <path
+        android:fillColor="#BAE6FD"
+        android:pathData="M42,53 H52 V63 H42 Z" />
+
+    <!-- Door -->
+    <path
+        android:fillColor="#93C5FD"
+        android:pathData="M29,56 H38 V72 H29 Z" />
+
+    <!-- Clock outer ring (center 63,58, r=14) -->
+    <path
+        android:fillColor="#D11A2A"
+        android:pathData="M49,58 C49,50.27 55.27,44 63,44 C70.73,44 77,50.27 77,58 C77,65.73 70.73,72 63,72 C55.27,72 49,65.73 49,58 Z" />
+
+    <!-- Clock white face (center 63,58, r=12) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,58 C51,51.37 56.37,46 63,46 C69.63,46 75,51.37 75,58 C75,64.63 69.63,70 63,70 C56.37,70 51,64.63 51,58 Z" />
+
+    <!-- Minute hand (pointing to 12) -->
+    <path
+        android:strokeColor="#1C1B1F"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M63,58 L63,50" />
+
+    <!-- Hour hand (pointing to 3) -->
+    <path
+        android:strokeColor="#1C1B1F"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M63,58 L70,58" />
+
+    <!-- Center dot -->
+    <path
+        android:strokeColor="#1C1B1F"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:pathData="M63,58 L63,58.01" />
+</vector>

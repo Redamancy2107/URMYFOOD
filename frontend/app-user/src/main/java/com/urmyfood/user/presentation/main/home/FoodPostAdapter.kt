@@ -14,14 +14,24 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.ItemFoodPostBinding
 import com.urmyfood.user.domain.model.FoodPost
 import java.text.NumberFormat
+import java.time.Duration
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCallback()) {
 
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
-    
-    var onCommentClick: (() -> Unit)? = null
+
+    var onCommentClick: ((String) -> Unit)? = null
     var onShareClick: (() -> Unit)? = null
+    var onOrderClick: ((FoodPost) -> Unit)? = null
+    var onSaveClick: ((FoodPost) -> Unit)? = null
+    var onLikeClick: ((FoodPost) -> Unit)? = null
+    var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
+    var onShopClick: ((FoodPost) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemFoodPostBinding.inflate(
@@ -34,6 +44,23 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
         holder.bind(getItem(position))
     }
 
+    /** Chuyển timestamp ISO (UTC) thành chuỗi thời gian tương đối; null nếu không parse được. */
+    private fun relativeTime(iso: String?): String? {
+        if (iso.isNullOrBlank()) return null
+        return runCatching {
+            val minutes = Duration.between(OffsetDateTime.parse(iso).toInstant(), Instant.now()).toMinutes()
+            when {
+                minutes < 1 -> "Vừa xong"
+                minutes < 60 -> "$minutes phút trước"
+                minutes < 60 * 24 -> "${minutes / 60} giờ trước"
+                minutes < 60 * 24 * 7 -> "${minutes / (60 * 24)} ngày trước"
+                else -> OffsetDateTime.parse(iso)
+                    .atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.forLanguageTag("vi-VN")))
+            }
+        }.getOrNull()
+    }
+
     inner class ViewHolder(private val binding: ItemFoodPostBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -43,10 +70,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 // --- Header: shop info ---
                 tvShopName.text = post.shopName
                 
-                // Mock metadata: Time + Dot + Location
-                val mockTime = listOf("Vừa xong", "5 phút trước", "1 giờ trước", "3 giờ trước").random()
-                val mockLocation = listOf("Hà Nội", "KTX Khu A", "Làng Đại học", "Thủ Đức").random()
-                tvPostMeta.text = "$mockTime • $mockLocation"
+                // Thời gian đăng (tương đối) + địa chỉ shop thật; bỏ qua phần nào thiếu dữ liệu
+                val timeText = relativeTime(post.createdAt)
+                val locationText = post.shopAddress?.takeIf { it.isNotBlank() }
+                tvPostMeta.text = listOfNotNull(timeText, locationText).joinToString(" • ")
 
                 // --- Content description ---
                 tvContent.text = post.content ?: post.dishName
@@ -65,8 +92,7 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     tvOriginalPrice.paintFlags = tvOriginalPrice.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                     tvOriginalPrice.text = "${currencyFormat.format(post.originalPrice)}đ"
                 } else {
-                    // Mock "Best Seller" for items with low remaining quantity or randomly
-                    if (post.remainingQuantity < 10 || (0..1).random() == 1) {
+                    if (post.remainingQuantity in 1..9) {
                         tvFlashSaleBadge.visibility = View.VISIBLE
                         tvFlashSaleBadge.text = ctx.getString(R.string.badge_best_seller)
                     } else {
@@ -98,9 +124,9 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                     .into(ivShopAvatar)
 
                 // --- Action buttons logic ---
-                // Mock data
-                tvLikeCount.text = "${(50..200).random()}"
-                tvCommentCount.text = "${(2..30).random()}"
+                tvCommentCount.text = "${post.commentCount}"
+                tvLikeCount.text = "${post.likeCount}"
+                btnLike.setImageResource(if (post.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
 
                 // Follow toggle
                 var isFollowing = false
@@ -116,27 +142,31 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 // Like toggle
-                var isLiked = false
                 btnLike.setOnClickListener {
-                    isLiked = !isLiked
-                    btnLike.setImageResource(if (isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border)
+                    onLikeClick?.invoke(post)
                 }
 
                 // Bookmark toggle
-                var isBookmarked = false
+                val isBookmarked = checkIsBookmarked?.invoke(post) ?: false
+                btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
                 btnBookmark.setOnClickListener {
-                    isBookmarked = !isBookmarked
-                    btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
+                    onSaveClick?.invoke(post)
                 }
 
                 btnComment.setOnClickListener {
-                    onCommentClick?.invoke()
+                    onCommentClick?.invoke(post.postId)
                 }
                 btnShare.setOnClickListener {
                     onShareClick?.invoke()
                 }
                 btnOrder.setOnClickListener {
-                    Toast.makeText(ctx, R.string.toast_feature_in_development, Toast.LENGTH_SHORT).show()
+                    onOrderClick?.invoke(post)
+                }
+                ivShopAvatar.setOnClickListener {
+                    onShopClick?.invoke(post)
+                }
+                tvShopName.setOnClickListener {
+                    onShopClick?.invoke(post)
                 }
             }
         }

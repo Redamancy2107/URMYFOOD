@@ -20,6 +20,8 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
+import androidx.fragment.app.setFragmentResultListener
+
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentAuthLoginBinding? = null
@@ -42,12 +44,18 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeViewModel()
+        
+        setFragmentResultListener(WrongRoleBottomSheetFragment.KEY) { _, bundle ->
+            val action = bundle.getString("action")
+            if (action == "register") {
+                findNavController().navigate(
+                    R.id.action_loginFragment_to_signupCustomerFragment
+                )
+            }
+        }
     }
 
     private fun setupClickListeners() {
-        binding.btnBack.setOnClickListener {
-            findNavController().navigateUp()
-        }
 
         binding.btnLogin.setOnClickListener {
             val emailOrPhone = binding.etEmail.text.toString().trim()
@@ -99,6 +107,12 @@ class LoginFragment : Fragment() {
                 is LoginUiState.GuestSuccess -> {
                     setLoading(false)
                     findNavController().navigate(R.id.action_loginFragment_to_mainContainerFragment)
+                }
+                is LoginUiState.WrongRole -> {
+                    setLoading(false)
+                    viewModel.resetState()
+                    WrongRoleBottomSheetFragment.newInstance()
+                        .show(parentFragmentManager, WrongRoleBottomSheetFragment.TAG)
                 }
                 is LoginUiState.Error -> {
                     setLoading(false)

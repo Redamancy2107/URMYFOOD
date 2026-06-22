@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dropdown_menu"
+    android:orientation="vertical"
+    android:paddingTop="8dp">
+
+    <!-- Handle bar for dragging -->
+    <View
+        android:id="@+id/handleBar"
+        android:layout_width="40dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:background="@color/divider" />
+
+    <TextView
+        android:id="@+id/tvPaymentTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingVertical="12dp"
+        android:text="Thanh Toán Đơn Hàng"
+        android:textColor="@color/text_primary"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider" />
+
+    <!-- Scrollable container for input fields and options -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp">
+
+            <!-- Section 1: Delivery Details -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Thông tin nhận hàng"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnSelectSavedAddress"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Chọn từ đã lưu ▾"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Address Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilDeliveryAddress"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:hint="Địa chỉ giao hàng"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etDeliveryAddress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Note Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilNote"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:hint="Ghi chú cho cửa hàng"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Voucher Section Header -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:text="Mã ưu đãi / Voucher"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/btnSelectSavedVoucher"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:text="Xem ưu đãi ▾"
+                    android:textColor="@color/primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Voucher Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilVoucherCode"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:hint="Mã ưu đãi / Voucher"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etVoucherCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapCharacters"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Section 2: Payment Options -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:text="Phương thức thanh toán"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <!-- Option 1: Cash -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvPayCash"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginBottom="12dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/primary"
+                app:cardBackgroundColor="@color/white">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="16dp">
+
+                    <ImageView
+                        android:id="@+id/ivCashIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ic_receipt"
+                        app:tint="@color/primary" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_toEndOf="@id/ivCashIcon"
+                        android:layout_centerVertical="true">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tiền mặt (COD)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Thanh toán khi nhận đồ ăn"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <RadioButton
+                        android:id="@+id/rbPayCash"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:checked="true"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:buttonTint="@color/primary" />
+
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Option 2: VietQR -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cvPayCard"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="1dp"
+                app:strokeColor="@color/divider"
+                app:cardBackgroundColor="@color/white">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="16dp">
+
+                    <ImageView
+                        android:id="@+id/ivCardIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_centerVertical="true"
+                        android:src="@drawable/ic_coupon"
+                        app:tint="@color/text_secondary" />
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginStart="16dp"
+                        android:layout_toEndOf="@id/ivCardIcon"
+                        android:layout_centerVertical="true">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="VietQR"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quét mã QR ngân hàng"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <RadioButton
+                        android:id="@+id/rbPayCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:checked="false"
+                        android:clickable="false"
+                        android:focusable="false"
+                        android:buttonTint="@color/primary" />
+
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/divider" />
+
+    <!-- Checkout Action (Pinned at Bottom) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="8dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirmPayment"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:backgroundTint="@color/primary"
+            android:text="Xác nhận thanh toán"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:cornerRadius="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>
+

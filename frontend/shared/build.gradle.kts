@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.urmyfood.shared"
-    compileSdk = 35
+    compileSdk = 36
 
 
     defaultConfig {
@@ -34,7 +34,16 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.gson)
+    implementation(libs.kotlinx.coroutines.core)
+
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

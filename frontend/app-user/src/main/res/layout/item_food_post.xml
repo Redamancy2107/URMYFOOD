@@ -30,14 +30,16 @@
 
         <TextView
             android:id="@+id/tvShopName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/btnFollow"
             app:layout_constraintStart_toEndOf="@id/ivShopAvatar"
             app:layout_constraintTop_toTopOf="@id/ivShopAvatar"
             tools:text="Burger Bự Sinh Viên" />
@@ -46,15 +48,15 @@
             android:id="@+id/btnFollow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginEnd="12dp"
             android:text="@string/follow"
             android:textColor="@color/primary"
             android:textSize="13sp"
             android:textStyle="bold"
             android:paddingHorizontal="4dp"
-            app:layout_constraintBottom_toBottomOf="@id/tvShopName"
-            app:layout_constraintStart_toEndOf="@id/tvShopName"
-            app:layout_constraintTop_toTopOf="@id/tvShopName" />
+            app:layout_constraintBottom_toBottomOf="@id/ivShopAvatar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ivShopAvatar" />
 
 
         <TextView
@@ -66,18 +68,18 @@
             android:maxLines="1"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
-            app:layout_constraintEnd_toStartOf="@id/tvFlashSaleBadge"
+            app:layout_constraintEnd_toStartOf="@id/btnFollow"
             app:layout_constraintStart_toStartOf="@id/tvShopName"
             app:layout_constraintTop_toBottomOf="@id/tvShopName"
             tools:text="10 phút trước • Hà Nội" />
 
 
-        <!-- Flash sale badge (top right of header) -->
+        <!-- Flash sale badge (under follow button) -->
         <TextView
             android:id="@+id/tvFlashSaleBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="12dp"
+            android:layout_marginTop="4dp"
             android:background="@drawable/bg_flash_sale_badge"
             android:paddingHorizontal="8dp"
             android:paddingVertical="3dp"
@@ -86,9 +88,8 @@
             android:textSize="11sp"
             android:textStyle="bold"
             android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/ivShopAvatar"
-            app:layout_constraintBottom_toBottomOf="@id/ivShopAvatar"
+            app:layout_constraintTop_toBottomOf="@id/btnFollow"
+            app:layout_constraintEnd_toEndOf="@id/btnFollow"
             tools:visibility="visible" />
 
         <!-- ===== CONTENT: Description text ===== -->

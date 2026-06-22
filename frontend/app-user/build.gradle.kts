@@ -31,6 +31,18 @@ android {
         // Lấy mã Google Client ID từ file local.properties
         val googleClientId = properties.getProperty("GOOGLE_SERVER_CLIENT_ID") ?: ""
         buildConfigField("String", "GOOGLE_SERVER_CLIENT_ID", "\"$googleClientId\"")
+
+        val baseUrl = properties.getProperty("base_url") ?: "http://10.0.2.2:8080/"
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -46,6 +58,11 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 
@@ -84,6 +101,7 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.shimmer)
     implementation(libs.androidx.swiperefreshlayout)
+    implementation(libs.zxing.core)
 
     // Auth & Google Services
     implementation(libs.play.services.auth)

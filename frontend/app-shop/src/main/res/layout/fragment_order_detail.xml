@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:orientation="vertical"
+    tools:context="com.urmyfood.shop.presentation.main.orders.detail.OrderDetailFragment">
+
+    <!-- Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/bg_card"
+        android:elevation="0dp"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/text_primary"
+        app:subtitle="12h00 AM"
+        app:subtitleTextColor="@color/text_hint"
+        app:title="Đơn hàng #12345"
+        app:titleTextColor="@color/text_primary"
+        app:titleTextAppearance="@style/ToolbarTitleBold" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
+
+            <!-- Order Status Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@color/bg_card"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:strokeWidth="0dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Trạng thái đơn"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvOrderStatus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textColor="@color/primary"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="Đang đợi" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/ivMoreOptions"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:background="@drawable/bg_status_badge"
+                        android:contentDescription="@null"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_more_horiz" />
+                </RelativeLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Customer Info Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="@color/bg_card"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="1dp"
+                app:strokeWidth="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Thông tin khách hàng"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!-- Avatar -->
+                        <com.google.android.material.imageview.ShapeableImageView
+                            android:id="@+id/ivCustomerAvatar"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@color/input_bg"
+                            android:scaleType="centerCrop"
+                            android:contentDescription="@null"
+                            app:shapeAppearanceOverlay="@style/CircleShape" />
+
+                        <TextView
+                            android:id="@+id/tvCustomerName"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:textColor="@color/text_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            tools:text="Hùng đẹp zai" />
+
+                        <ImageView
+                            android:id="@+id/ivCall"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:contentDescription="@null"
+                            android:src="@drawable/ic_call" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Buyer Note Card -->
+            <LinearLayout
+                android:id="@+id/llBuyerNote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_note_card"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_note" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Ghi chú từ người mua"
+                        android:textColor="@color/primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvBuyerNote"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    tools:text="&quot;Không hành, không cay. Dị ứng mắm tôm&quot;" />
+            </LinearLayout>
+
+            <!-- Dish List Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Danh sách món"
+                android:textColor="@color/text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDishes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="2"
+                tools:listitem="@layout/item_dish_detail" />
+
+            <!-- Summary Section -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="12dp"
+                android:background="@color/divider" />
+
+            <!-- Subtotal -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Tạm tính"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvSubtotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    tools:text="44.000₫" />
+            </LinearLayout>
+
+            <!-- Platform Fee -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Phí nền tảng (5%)"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvPlatformFee"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    tools:text="2.200₫" />
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/divider" />
+
+            <!-- Earnings -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Thực nhận"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvEarnings"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="41.800₫" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Bottom Action Button -->
+    <TextView
+        android:id="@+id/btnAction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_btn_primary"
+        android:gravity="center"
+        android:paddingVertical="14dp"
+        android:text="Bắt đầu chuẩn bị"
+        android:textColor="@color/text_on_primary"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

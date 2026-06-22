@@ -35,7 +35,9 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/error"
+            "/error",
+            "/ws/**",
+            "/api/v1/payments/payos/webhook"
     };
 
     @Bean
@@ -46,6 +48,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_URLS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/posts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/posts/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shops/*/profile/public").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/vouchers").permitAll()
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.ListPopupWindow
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.widget.NestedScrollView
 import com.urmyfood.user.presentation.common.GuestLoginDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -17,6 +18,8 @@ import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainHomeBinding
 import com.urmyfood.user.di.ServiceLocator
 import com.urmyfood.user.util.BrandingHelper
+import androidx.navigation.fragment.findNavController
+
 
 /**
  * Home screen fragment.
@@ -32,6 +35,7 @@ class HomeFragment : Fragment() {
     }
 
     private val adapter = FoodPostAdapter()
+    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,17 +52,31 @@ class HomeFragment : Fragment() {
         setupRecyclerView()
         setupCategories()
         setupSwipeRefresh()
+        setupScrollListener()
         setupClickListeners()
         observeUiState()
+        observeLoadingMore()
+        observeLikeError()
+        observeSharedEvents()
+    }
+
+    private fun observeSharedEvents() {
+        com.urmyfood.user.di.ServiceLocator.postCommentEvent.observe(viewLifecycleOwner) { postId ->
+            viewModel.incrementCommentCount(postId)
+            adapter.notifyDataSetChanged()
+        }
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, likeData) = event
+            val (isLiked, likeCount) = likeData
+            viewModel.updateLikeStateExternally(postId, isLiked, likeCount)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun setupRecyclerView() {
         binding.rvPosts.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPosts.adapter = adapter
         binding.rvPosts.isNestedScrollingEnabled = false
-
-        // Load mock data immediately for FE preview (no backend needed)
-        loadMockPosts()
     }
 
     private fun loadMockPosts() {
@@ -74,7 +92,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = true,
                 status = "ACTIVE",
                 content = "Siêu béo, topping ngập tràn, free size L",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
                 shopName = "Tiệm Trà Sữa Mây",
                 shopAvatarUrl = null
             ),
@@ -89,7 +107,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
                 shopName = "Cơm Tấm Bụi",
                 shopAvatarUrl = null
             ),
@@ -104,7 +122,7 @@ class HomeFragment : Fragment() {
                 isFlashSale = false,
                 status = "ACTIVE",
                 content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
-                imageUrl = null,
+                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
                 shopName = "Quán Bà Chiểu",
                 shopAvatarUrl = null
             )
@@ -135,6 +153,36 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupScrollListener() {
+        val nestedScroll = binding.root.parent?.let {
+            generateSequence(binding.root as View) { it.parent as? View }
+                .filterIsInstance<NestedScrollView>()
+                .firstOrNull()
+        }
+        (binding.root as? NestedScrollView
+            ?: binding.swipeRefresh.getChildAt(0) as? NestedScrollView)
+            ?.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { v, _, scrollY, _, _ ->
+                val threshold = 200
+                if (scrollY >= v.getChildAt(0).measuredHeight - v.measuredHeight - threshold) {
+                    viewModel.loadMore()
+                }
+            })
+    }
+
+    private fun observeLoadingMore() {
+        viewModel.isLoadingMore.observe(viewLifecycleOwner) { loading ->
+            binding.pbLoadingMore.visibility = if (loading) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun observeLikeError() {
+        viewModel.likeError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearLikeError()
+        }
+    }
+
     private fun observeUiState() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -160,8 +208,12 @@ class HomeFragment : Fragment() {
                     binding.swipeRefresh.isRefreshing = false
                     binding.shimmerLayout.stopShimmer()
                     binding.shimmerLayout.visibility = View.GONE
-                    // Fallback to mock data on error for demo purposes
-                    if (adapter.currentList.isEmpty()) loadMockPosts()
+                    binding.tvError.text = state.message
+                    binding.tvError.visibility = View.VISIBLE
+
+                    if (adapter.currentList.isEmpty()) {
+                        binding.rvPosts.visibility = View.GONE
+                    }
                 }
             }
         }
@@ -175,9 +227,42 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
-        // Feature in development for posts in adapter
-        adapter.onCommentClick = { showCommentSheet() }
+        adapter.onCommentClick = { postId -> showCommentSheet(postId) }
         adapter.onShareClick = { showShareSheet() }
+        adapter.onOrderClick = { foodPost ->
+            showGuestDialogOrRun {
+                val orderSheet = OrderBottomSheetFragment(foodPost)
+                orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
+            }
+        }
+        adapter.onLikeClick = { post ->
+            showGuestDialogOrRun {
+                viewModel.toggleLike(post.postId, post.isLiked)
+            }
+        }
+        adapter.checkIsBookmarked = { post ->
+            if (viewModel.isGuest) {
+                false
+            } else {
+                favoritesManager.isFavorite(post.postId)
+            }
+        }
+        adapter.onSaveClick = { post ->
+            showGuestDialogOrRun {
+                val isSaved = favoritesManager.toggleFavorite(post)
+                val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
+                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+                adapter.notifyDataSetChanged()
+            }
+        }
+        adapter.onShopClick = { post ->
+            val bundle = Bundle().apply {
+                putString("shopName", post.shopName)
+                putString("shopAvatarUrl", post.shopAvatarUrl)
+                putLong("shopId", post.shopAccountId)
+            }
+            findNavController().navigate(R.id.shopProfileFragment, bundle)
+        }
     }
 
     private fun showShareSheet() {
@@ -187,9 +272,9 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showCommentSheet() {
+    private fun showCommentSheet(postId: String) {
         showGuestDialogOrRun {
-            val commentSheet = QuickCommentFragment()
+            val commentSheet = QuickCommentFragment.newInstance(postId)
             commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
         }
     }
@@ -204,19 +289,38 @@ class HomeFragment : Fragment() {
 
     private fun showGuestLoginDialog() {
         val dialog = GuestLoginDialog()
-        dialog.onLoginClick = { navigateToAuth() }
-        dialog.onRegisterClick = { navigateToAuth() }
+        dialog.onLoginClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToLogin()
+        }
+        dialog.onRegisterClick = {
+            com.urmyfood.user.di.ServiceLocator.tokenManager.clear()
+            com.urmyfood.user.di.ServiceLocator.guestSessionManager.clearGuest()
+            navigateToRegister()
+        }
         dialog.show(parentFragmentManager, GuestLoginDialog.TAG)
     }
 
-    private fun navigateToAuth() {
+    private fun navigateToLogin() {
         val parentNavController = requireActivity()
             .supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment)
             ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
 
         parentNavController?.let {
-            it.navigate(R.id.splashFragment)
+            it.navigate(R.id.loginFragment)
+        }
+    }
+
+    private fun navigateToRegister() {
+        val parentNavController = requireActivity()
+            .supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment)
+            ?.let { (it as? androidx.navigation.fragment.NavHostFragment)?.navController }
+
+        parentNavController?.let {
+            it.navigate(R.id.signupCustomerFragment)
         }
     }
 
@@ -259,6 +363,8 @@ class HomeFragment : Fragment() {
             
             setOnItemClickListener { _, _, position, _ ->
                 val selected = items[position].first
+                val order = if (position == 0) "LOW_TO_HIGH" else "HIGH_TO_LOW"
+                viewModel.setSortOrder(order)
                 Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
                 dismiss()
             }
@@ -272,6 +378,11 @@ class HomeFragment : Fragment() {
             getString(R.string.toast_feature_in_development),
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {

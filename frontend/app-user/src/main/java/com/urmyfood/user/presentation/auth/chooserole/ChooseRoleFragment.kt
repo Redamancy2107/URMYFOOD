@@ -7,9 +7,19 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentAuthChooseRoleBinding
+
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.urmyfood.user.BuildConfig
 
 class ChooseRoleFragment : Fragment() {
 
@@ -33,6 +43,14 @@ class ChooseRoleFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupClickListeners()
         observeViewModel()
+
+        setFragmentResultListener(com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.KEY) { _, bundle ->
+            val action = bundle.getString("action")
+            if (action == "register") {
+                com.urmyfood.user.di.ServiceLocator.tokenManager.setFirstTime(false)
+                findNavController().navigate(R.id.action_chooseRoleFragment_to_signupCustomerFragment)
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -47,7 +65,7 @@ class ChooseRoleFragment : Fragment() {
         }
 
         binding.btnGoogleLogin.setOnClickListener {
-            showFeatureInDevelopment()
+            handleGoogleLogin()
         }
 
         binding.tvGuest.setOnClickListener {
@@ -61,17 +79,56 @@ class ChooseRoleFragment : Fragment() {
             when (state) {
                 is ChooseRoleUiState.GuestSuccess ->
                     findNavController().navigate(R.id.action_chooseRoleFragment_to_mainContainerFragment)
+                is ChooseRoleUiState.Success -> {
+                    findNavController().navigate(R.id.action_chooseRoleFragment_to_mainContainerFragment)
+                }
+                is ChooseRoleUiState.WrongRole -> {
+                    viewModel.resetState()
+                    com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.newInstance()
+                        .show(parentFragmentManager, com.urmyfood.user.presentation.auth.login.WrongRoleBottomSheetFragment.TAG)
+                }
+                is ChooseRoleUiState.Error -> {
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                }
                 else -> Unit
             }
         }
     }
 
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
+    private fun handleGoogleLogin() {
+        android.util.Log.d("URMYFOOD_AUTH", ">>> [ChooseRoleFragment] Starting Google Login")
+        val credentialManager = CredentialManager.create(requireContext())
+        
+        val googleIdOption: GetGoogleIdOption = GetGoogleIdOption.Builder()
+            .setFilterByAuthorizedAccounts(false)
+            .setServerClientId(BuildConfig.GOOGLE_SERVER_CLIENT_ID)
+            .build()
+
+        val request: GetCredentialRequest = GetCredentialRequest.Builder()
+            .addCredentialOption(googleIdOption)
+            .build()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = requireContext(),
+                )
+                
+                val credential = result.credential
+                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                    val googleIdToken = googleIdTokenCredential.idToken
+                    android.util.Log.d("URMYFOOD_AUTH", ">>> [ChooseRoleFragment] Received ID Token: $googleIdToken")
+                    viewModel.loginWithGoogle(googleIdToken)
+                } else {
+                    android.util.Log.w("URMYFOOD_AUTH", ">>> [ChooseRoleFragment] Received unexpected credential type: ${credential.type}")
+                }
+            } catch (e: GetCredentialException) {
+                android.util.Log.e("URMYFOOD_AUTH", ">>> [ChooseRoleFragment] Google Login Exception: ${e.message}", e)
+                Toast.makeText(requireContext(), "Lỗi đăng nhập Google: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onDestroyView() {
