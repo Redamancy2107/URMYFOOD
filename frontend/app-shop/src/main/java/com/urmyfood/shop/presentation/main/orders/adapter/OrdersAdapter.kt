@@ -35,7 +35,7 @@ class OrdersAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(order: Order) {
-            binding.tvOrderId.text = order.orderId.take(8).uppercase()
+            binding.tvOrderId.text = "#${order.orderId.take(8).uppercase()}"
             binding.tvTimestamp.text = order.createdAt
             binding.tvCustomerName.text = order.customerName
             binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
