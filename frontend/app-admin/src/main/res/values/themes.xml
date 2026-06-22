@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.URMYFOOD" parent="Base.Theme.URMYFOOD" />
+
+    <style name="CircleImageAppearance">
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

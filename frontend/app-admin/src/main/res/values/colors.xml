@@ -16,4 +16,5 @@
     <color name="transparent">#00000000</color>
     <color name="splash_bg_start">#E6FAFC</color>
     <color name="splash_bg_end">#DDF6F2</color>
+    <color name="error_red">#EF4444</color>
 </resources>

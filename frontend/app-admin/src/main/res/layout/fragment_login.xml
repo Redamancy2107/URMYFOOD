@@ -143,14 +143,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp">
 
-                <CheckBox
+                <com.google.android.material.checkbox.MaterialCheckBox
                     android:id="@+id/cb_remember"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Ghi nhớ đăng nhập"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
-                    android:buttonTint="@color/mint_green" />
+                    app:buttonTint="@color/mint_green"
+                    app:useMaterialThemeColors="false" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -163,13 +164,26 @@
                     android:textStyle="bold" />
             </RelativeLayout>
 
+            <!-- Error Message -->
+            <TextView
+                android:id="@+id/tv_error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/error_red"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:text="Email hoặc mật khẩu không chính xác" />
+
             <!-- Submit Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_continue"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginTop="24dp"
-                android:text="Tiếp tục \u2192"
+                android:layout_marginTop="16dp"
+                android:text="Đăng nhập"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:textStyle="bold"
