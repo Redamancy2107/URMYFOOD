@@ -2,6 +2,7 @@ package com.urmyfood.user.data.repository
 
 import com.urmyfood.user.data.model.*
 import com.urmyfood.user.data.remote.PostApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.LikeToggleResult
@@ -37,7 +38,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -64,7 +65,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -92,7 +93,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -119,7 +120,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -139,7 +140,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -159,7 +160,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 }

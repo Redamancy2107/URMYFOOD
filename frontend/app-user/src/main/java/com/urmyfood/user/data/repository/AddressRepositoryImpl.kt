@@ -3,6 +3,7 @@ package com.urmyfood.user.data.repository
 import com.urmyfood.user.data.model.AddressRequest
 import com.urmyfood.user.data.model.AddressResponse
 import com.urmyfood.user.data.remote.AddressApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.AddressRepository
 
@@ -37,7 +38,7 @@ class AddressRepositoryImpl(
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -61,7 +62,7 @@ class AddressRepositoryImpl(
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 }

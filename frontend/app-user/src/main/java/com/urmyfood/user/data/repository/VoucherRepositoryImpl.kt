@@ -2,6 +2,7 @@ package com.urmyfood.user.data.repository
 
 import com.urmyfood.user.data.model.VoucherResponse
 import com.urmyfood.user.data.remote.VoucherApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.VoucherRepository
 
@@ -23,7 +24,7 @@ class VoucherRepositoryImpl(
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 }

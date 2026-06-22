@@ -8,6 +8,7 @@ import com.urmyfood.user.data.model.CheckoutRequest
 import com.urmyfood.user.data.model.DirectCheckoutRequest
 import com.urmyfood.user.data.model.OrderResponse
 import com.urmyfood.user.data.remote.OrderApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.OrderRepository
 import kotlinx.coroutines.CancellationException
@@ -86,7 +87,7 @@ class OrderRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
