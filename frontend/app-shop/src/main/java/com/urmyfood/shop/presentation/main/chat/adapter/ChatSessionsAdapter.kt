@@ -1,11 +1,13 @@
 package com.urmyfood.shop.presentation.main.chat.adapter
 
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.urmyfood.shared.domain.model.ChatSession
 import com.urmyfood.shop.databinding.ItemChatSessionBinding
 
@@ -32,7 +34,40 @@ class ChatSessionsAdapter(
             binding.tvAvatarInitial.text = session.customerName.firstOrNull()?.uppercase() ?: "?"
             binding.tvCustomerName.text = session.customerName
             binding.tvLastMessage.text = session.lastMessage ?: ""
-            binding.tvTimestamp.text = session.lastMessageAt?.take(5) ?: ""
+            val timeStr = session.lastMessageAt?.let { at ->
+                if (at.length >= 16 && at.contains("T")) {
+                    val tIndex = at.indexOf("T")
+                    at.substring(tIndex + 1, tIndex + 6)
+                } else {
+                    at.take(5)
+                }
+            } ?: ""
+            binding.tvTimestamp.text = timeStr
+
+            // Bold unread messages
+            if (session.unreadCount > 0) {
+                binding.tvLastMessage.setTypeface(null, Typeface.BOLD)
+                binding.tvLastMessage.setTextColor(itemView.context.getColor(com.urmyfood.shop.R.color.text_primary))
+            } else {
+                binding.tvLastMessage.setTypeface(null, Typeface.NORMAL)
+                binding.tvLastMessage.setTextColor(itemView.context.getColor(com.urmyfood.shop.R.color.text_secondary))
+            }
+
+            // Customer Avatar Image Load with fallback
+            if (!session.customerAvatarUrl.isNullOrEmpty()) {
+                binding.ivCustomerAvatar.visibility = View.VISIBLE
+                binding.viewAvatar.visibility = View.GONE
+                binding.tvAvatarInitial.visibility = View.GONE
+                Glide.with(itemView.context)
+                    .load(session.customerAvatarUrl)
+                    .placeholder(com.urmyfood.shop.R.drawable.ic_person_placeholder)
+                    .circleCrop()
+                    .into(binding.ivCustomerAvatar)
+            } else {
+                binding.ivCustomerAvatar.visibility = View.GONE
+                binding.viewAvatar.visibility = View.VISIBLE
+                binding.tvAvatarInitial.visibility = View.VISIBLE
+            }
 
             if (session.unreadCount > 0) {
                 binding.tvUnreadBadge.visibility = View.VISIBLE

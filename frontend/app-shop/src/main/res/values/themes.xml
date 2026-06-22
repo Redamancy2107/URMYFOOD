@@ -6,6 +6,10 @@
         <item name="colorAccent">@color/primary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Surface Inverse (for Toasts/Snackbars) -->
+        <item name="colorSurfaceInverse">#FFFFFF</item>
+        <item name="colorOnSurfaceInverse">#000000</item>
     </style>
 
     <style name="Theme.URMYFOOD" parent="Base.Theme.URMYFOOD" />
@@ -26,6 +30,11 @@
         <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Full</item>
     </style>
 
+    <!-- Bottom Navigation Text Size for Responsiveness -->
+    <style name="BottomNavText" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">10sp</item>
+    </style>
+
     <!-- Circle image shape (for avatars) -->
     <style name="CircleImage" parent="">
         <item name="cornerFamily">rounded</item>
@@ -36,5 +45,13 @@
     <style name="Rounded12" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">12dp</item>
+    </style>
+
+    <!-- Custom Alert Dialog Theme (White background, Black text, Rounded corners) -->
+    <style name="CustomAlertDialogTheme" parent="ThemeOverlay.Material3.Dialog.Alert">
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="android:backgroundTint">#FFFFFF</item>
+        <item name="android:textColorPrimary">#000000</item>
+        <item name="android:textColorSecondary">#444444</item>
     </style>
 </resources>

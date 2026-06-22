@@ -5,17 +5,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shared.util.showToast
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.FragmentPostDetailBinding
 import com.urmyfood.shop.di.ServiceLocator
 import com.urmyfood.shop.domain.model.Post
+import com.urmyfood.shop.domain.model.ShopProfile
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -37,7 +41,7 @@ class PostDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val postId = arguments?.getString("postId") ?: run {
-            Toast.makeText(requireContext(), "Không tìm thấy bài đăng", Toast.LENGTH_SHORT).show()
+            showToast("Không tìm thấy bài đăng")
             findNavController().navigateUp()
             return
         }
@@ -59,7 +63,7 @@ class PostDetailFragment : Fragment() {
                 is PostDetailUiState.Loading -> { /* progress */ }
                 is PostDetailUiState.Success -> bindPost(state.post)
                 is PostDetailUiState.Error -> {
-                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                    showToast(state.message)
                     findNavController().navigateUp()
                 }
             }
@@ -68,10 +72,10 @@ class PostDetailFragment : Fragment() {
         viewModel.deleteResult.observe(viewLifecycleOwner) { result ->
             result ?: return@observe
             if (result is Result.Success) {
-                Toast.makeText(requireContext(), "Đã xóa bài đăng thành công!", Toast.LENGTH_SHORT).show()
+                showToast("Đã xóa bài đăng thành công!")
                 findNavController().navigateUp()
             } else if (result is Result.Error) {
-                Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                showToast(result.message)
             }
             viewModel.clearDeleteResult()
         }
@@ -81,6 +85,18 @@ class PostDetailFragment : Fragment() {
         val formatter = NumberFormat.getInstance(Locale("vi", "VN"))
 
         binding.tvShopName.text = post.shopName
+        if (!post.shopAvatarUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(post.shopAvatarUrl)
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .circleCrop()
+                .into(binding.ivShopAvatar)
+        } else {
+            binding.ivShopAvatar.setImageResource(R.drawable.ic_person)
+        }
+        loadShopProfile()
+
         binding.tvPostMeta.text = post.createdAt
         binding.tvDescription.text = post.content ?: ""
         binding.tvDescription.visibility = if (post.content.isNullOrBlank()) View.GONE else View.VISIBLE
@@ -129,7 +145,8 @@ class PostDetailFragment : Fragment() {
         }
 
         binding.btnDeletePost.setOnClickListener {
-            AlertDialog.Builder(requireContext())
+            val contextThemeWrapper = ContextThemeWrapper(requireContext(), R.style.CustomAlertDialogTheme)
+            AlertDialog.Builder(contextThemeWrapper)
                 .setTitle("Xóa bài viết")
                 .setMessage("Bạn có chắc chắn muốn xóa bài viết này không?")
                 .setPositiveButton("Xóa") { _, _ -> viewModel.deletePost() }
@@ -140,6 +157,39 @@ class PostDetailFragment : Fragment() {
         binding.btnEditPost.setOnClickListener {
             val bundle = Bundle().apply { putString("postId", post.postId) }
             findNavController().navigate(R.id.action_postDetail_to_createPost, bundle)
+        }
+    }
+
+    private fun loadShopProfile() {
+        val cached = ServiceLocator.cachedShopProfile
+        if (cached != null) {
+            bindShopProfile(cached)
+        } else {
+            lifecycleScope.launch {
+                when (val result = ServiceLocator.provideGetShopProfileUseCase().invoke()) {
+                    is Result.Success -> {
+                        ServiceLocator.cachedShopProfile = result.data
+                        bindShopProfile(result.data)
+                    }
+                    is Result.Error -> {
+                        // ignore or use default
+                    }
+                }
+            }
+        }
+    }
+
+    private fun bindShopProfile(profile: ShopProfile) {
+        binding.tvShopName.text = profile.shopName
+        if (!profile.logoUrl.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(profile.logoUrl)
+                .placeholder(R.drawable.ic_person)
+                .error(R.drawable.ic_person)
+                .circleCrop()
+                .into(binding.ivShopAvatar)
+        } else {
+            binding.ivShopAvatar.setImageResource(R.drawable.ic_person)
         }
     }
 

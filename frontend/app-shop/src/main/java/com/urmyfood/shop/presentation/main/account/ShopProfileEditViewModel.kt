@@ -63,6 +63,7 @@ class ShopProfileEditViewModel(
             when (val result = getShopProfileUseCase()) {
                 is Result.Success -> {
                     currentProfile = result.data
+                    com.urmyfood.shop.di.ServiceLocator.cachedShopProfile = result.data
                     _loadState.value = ProfileUiState.Success(result.data)
                 }
                 is Result.Error -> _loadState.value = ProfileUiState.Error(result.message)
@@ -130,6 +131,7 @@ class ShopProfileEditViewModel(
                     when (val result = updateShopProfileUseCase(profile)) {
                         is Result.Success -> {
                             currentProfile = result.data
+                            com.urmyfood.shop.di.ServiceLocator.cachedShopProfile = result.data
                             _updateState.value = ProfileEditUiState.Success(result.data)
                         }
                         is Result.Error -> _updateState.value = ProfileEditUiState.Error(result.message)

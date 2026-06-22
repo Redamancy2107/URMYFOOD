@@ -30,7 +30,10 @@ class AccountViewModel(
         _uiState.value = AccountUiState.Loading
         viewModelScope.launch {
             when (val result = getShopProfileUseCase()) {
-                is Result.Success -> _uiState.value = AccountUiState.Success(result.data)
+                is Result.Success -> {
+                    com.urmyfood.shop.di.ServiceLocator.cachedShopProfile = result.data
+                    _uiState.value = AccountUiState.Success(result.data)
+                }
                 is Result.Error -> _uiState.value = AccountUiState.Error(result.message)
             }
         }

@@ -82,6 +82,9 @@ object ServiceLocator {
 
     private lateinit var appContext: Context
 
+    @Volatile
+    var cachedShopProfile: com.urmyfood.shop.domain.model.ShopProfile? = null
+
     val tokenManager: TokenManager by lazy { TokenManager(appContext, "shop_prefs") }
 
     val notificationSettingsManager: NotificationSettingsManager by lazy {
@@ -173,6 +176,8 @@ object ServiceLocator {
     fun provideShopRegistrationFlowViewModelFactory() = ShopRegistrationFlowViewModel.Factory(
         SubmitShopVerificationUseCase(shopVerificationRepository, tokenManager)
     )
+
+    fun provideGetShopProfileUseCase() = GetShopProfileUseCase(shopProfileRepository, tokenManager)
 
     fun provideAccountViewModelFactory() = AccountViewModel.Factory(
         GetShopProfileUseCase(shopProfileRepository, tokenManager),
