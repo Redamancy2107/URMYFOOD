@@ -71,13 +71,22 @@ interface AdminApi {
     suspend fun getAllAccounts(
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 20,
-        @Query("role") role: String? = null
+        @Query("role") role: String? = null,
+        @Query("sortBy") sortBy: String = "createdAt",
+        @Query("sortDir") sortDir: String = "DESC"
     ): Response<ApiResponse<PageResponse<AccountProfile>>>
 
     @POST("api/v1/admin/accounts/{id}/lock-unlock")
     suspend fun lockUnlockAccount(
         @Path("id") id: Long,
-        @Query("active") active: Boolean
+        @Query("active") active: Boolean,
+        @Query("reason") reason: String
+    ): Response<ApiResponse<Void>>
+
+    @DELETE("api/v1/admin/accounts/{id}")
+    suspend fun deleteAccount(
+        @Path("id") id: Long,
+        @Query("reason") reason: String
     ): Response<ApiResponse<Void>>
 
     // ── Content Moderation (Kiểm Duyệt Nội Dung) ───────────────────────
