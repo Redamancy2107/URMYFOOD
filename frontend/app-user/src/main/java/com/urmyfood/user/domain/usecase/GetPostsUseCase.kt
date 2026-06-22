@@ -10,9 +10,9 @@ class GetPostsUseCase(
     private val repository: PostRepository,
     private val tokenProvider: TokenProvider
 ) {
-    suspend operator fun invoke(page: Int, size: Int = PAGE_SIZE, anchor: String? = null): Result<PageResult<FoodPost>> {
+    suspend operator fun invoke(page: Int, size: Int = PAGE_SIZE, anchor: String? = null, category: String? = null): Result<PageResult<FoodPost>> {
         val token = tokenProvider.getAccessToken()?.let { "Bearer $it" }
-        return repository.getPosts(token, page, size, anchor)
+        return repository.getPosts(token, page, size, anchor, category)
     }
 
     companion object {

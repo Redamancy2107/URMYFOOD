@@ -44,7 +44,15 @@ fun OrderItemResponse.toDomain() = OrderItem(
     quantity = quantity ?: 0,
     priceAtPurchase = priceAtPurchase ?: 0.0,
     dishNameSnapshot = dishNameSnapshot.orEmpty(),
-    imageUrlSnapshot = imageUrlSnapshot
+    imageUrlSnapshot = imageUrlSnapshot?.let { url ->
+        if (url.isEmpty()) null
+        else if (url.startsWith("http://") || url.startsWith("https://")) url
+        else {
+            val baseUrl = com.urmyfood.shop.BuildConfig.BASE_URL.removeSuffix("/")
+            val path = if (url.startsWith("/")) url else "/$url"
+            "$baseUrl$path"
+        }
+    }
 )
 
 fun OrderResponse.toDomain() = Order(

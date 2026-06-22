@@ -9,10 +9,14 @@ import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.AddSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.ClearSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.RemoveSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.SavePostUseCase
 import com.urmyfood.user.domain.usecase.SearchPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
+import com.urmyfood.user.domain.usecase.UnsavePostUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -20,6 +24,10 @@ import kotlinx.coroutines.launch
 class SearchViewModel(
     private val searchPostsUseCase: SearchPostsUseCase,
     private val toggleLikeUseCase: ToggleLikeUseCase,
+    private val followShopUseCase: FollowShopUseCase,
+    private val unfollowShopUseCase: UnfollowShopUseCase,
+    private val savePostUseCase: SavePostUseCase,
+    private val unsavePostUseCase: UnsavePostUseCase,
     private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
     private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
     private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
@@ -41,6 +49,12 @@ class SearchViewModel(
 
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
+
+    private val _followError = MutableLiveData<String?>()
+    val followError: LiveData<String?> = _followError
+
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
 
     private val _query = MutableLiveData("")
     val query: LiveData<String> = _query
@@ -187,10 +201,92 @@ class SearchViewModel(
         _likeError.value = null
     }
 
+    fun clearFollowError() {
+        _followError.value = null
+    }
+
+    fun clearSaveError() {
+        _saveError.value = null
+    }
+
     private fun updatePostLike(postId: String, isLiked: Boolean, likeCount: Int) {
         val index = loadedPosts.indexOfFirst { it.postId == postId }
         if (index >= 0) {
             loadedPosts[index] = loadedPosts[index].copy(isLiked = isLiked, likeCount = likeCount)
+            val page = (_uiState.value as? UiState.Success)?.page ?: 0
+            _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, page)
+        }
+    }
+
+    fun toggleFollow(shopId: Long, isCurrentlyFollowing: Boolean) {
+        if (shopId <= 0L) return
+        updateFollowStateForShop(shopId, !isCurrentlyFollowing)
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, !isCurrentlyFollowing))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlyFollowing) {
+                unfollowShopUseCase(shopId)
+            } else {
+                followShopUseCase(shopId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateFollowStateForShop(result.data.shopId, result.data.isFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                        Pair(result.data.shopId, result.data.isFollowing)
+                    )
+                }
+                is Result.Error -> {
+                    updateFollowStateForShop(shopId, isCurrentlyFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, isCurrentlyFollowing))
+                    _followError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateFollowStateForShop(shopId: Long, isFollowing: Boolean) {
+        var changed = false
+        for (index in loadedPosts.indices) {
+            if (loadedPosts[index].shopAccountId == shopId && loadedPosts[index].isFollowingShop != isFollowing) {
+                loadedPosts[index] = loadedPosts[index].copy(isFollowingShop = isFollowing)
+                changed = true
+            }
+        }
+        if (changed) {
+            val page = (_uiState.value as? UiState.Success)?.page ?: 0
+            _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, page)
+        }
+    }
+
+    fun toggleSave(postId: String, isCurrentlySaved: Boolean) {
+        updateSavedState(postId, !isCurrentlySaved)
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, !isCurrentlySaved))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlySaved) {
+                unsavePostUseCase(postId)
+            } else {
+                savePostUseCase(postId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateSavedState(result.data.postId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(result.data.postId, result.data.isSaved))
+                }
+                is Result.Error -> {
+                    updateSavedState(postId, isCurrentlySaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, isCurrentlySaved))
+                    _saveError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateSavedState(postId: String, isSaved: Boolean) {
+        val index = loadedPosts.indexOfFirst { it.postId == postId }
+        if (index >= 0 && loadedPosts[index].isSaved != isSaved) {
+            loadedPosts[index] = loadedPosts[index].copy(isSaved = isSaved)
             val page = (_uiState.value as? UiState.Success)?.page ?: 0
             _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, page)
         }
@@ -209,6 +305,10 @@ class SearchViewModel(
     class Factory(
         private val searchPostsUseCase: SearchPostsUseCase,
         private val toggleLikeUseCase: ToggleLikeUseCase,
+        private val followShopUseCase: FollowShopUseCase,
+        private val unfollowShopUseCase: UnfollowShopUseCase,
+        private val savePostUseCase: SavePostUseCase,
+        private val unsavePostUseCase: UnsavePostUseCase,
         private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
         private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
         private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
@@ -220,6 +320,10 @@ class SearchViewModel(
                 return SearchViewModel(
                     searchPostsUseCase,
                     toggleLikeUseCase,
+                    followShopUseCase,
+                    unfollowShopUseCase,
+                    savePostUseCase,
+                    unsavePostUseCase,
                     getSearchHistoryUseCase,
                     addSearchHistoryUseCase,
                     removeSearchHistoryUseCase,

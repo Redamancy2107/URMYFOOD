@@ -2,13 +2,18 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.CreateOrderReviewRequest;
+import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderItemResponse;
+import com.urmyfood.backend.application.dto.OrderReviewResponse;
 import com.urmyfood.backend.application.dto.OrderResponse;
+import com.urmyfood.backend.application.dto.ReorderResponse;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.CartItem;
 import com.urmyfood.backend.domain.model.Order;
 import com.urmyfood.backend.domain.model.OrderItem;
+import com.urmyfood.backend.domain.model.OrderReview;
 import com.urmyfood.backend.domain.model.OrderStatus;
 import com.urmyfood.backend.domain.model.PaymentMethod;
 import com.urmyfood.backend.domain.model.PaymentStatus;
@@ -17,9 +22,12 @@ import com.urmyfood.backend.domain.model.PostStatus;
 import com.urmyfood.backend.domain.model.Voucher;
 import com.urmyfood.backend.domain.repository.AccountRepository;
 import com.urmyfood.backend.domain.repository.CartItemRepository;
+import com.urmyfood.backend.domain.repository.OrderReviewRepository;
 import com.urmyfood.backend.domain.repository.OrderRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import com.urmyfood.backend.domain.repository.VoucherRepository;
+import com.urmyfood.backend.domain.repository.ShopProfileRepository;
+import com.urmyfood.backend.domain.model.ShopProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
@@ -39,10 +48,12 @@ import java.util.stream.Collectors;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderReviewRepository orderReviewRepository;
     private final CartItemRepository cartItemRepository;
     private final PostRepository postRepository;
     private final AccountRepository accountRepository;
     private final VoucherRepository voucherRepository;
+    private final ShopProfileRepository shopProfileRepository;
 
     @org.springframework.beans.factory.annotation.Value("${app.order.payment-timeout-minutes:15}")
     private int paymentExpireMinutes;
@@ -90,6 +101,38 @@ public class OrderService {
         return toResponse(savedOrder);
     }
 
+    @Transactional
+    public OrderResponse directCheckout(Long customerId, DirectCheckoutRequest request) {
+        Account customer = accountRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay tai khoan"));
+
+        PaymentMethod paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        Post post = lockPostsById(List.of(request.getPostId())).get(request.getPostId());
+        Account shop = validatePostForCheckout(post, request.getQuantity());
+        BigDecimal totalAmount = post.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        Voucher voucher = resolveVoucher(request.getVoucherId(), request.getVoucherCode(), totalAmount);
+        BigDecimal discountAmount = voucher == null ? BigDecimal.ZERO : voucher.getDiscountValue().min(totalAmount);
+        BigDecimal finalAmount = totalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
+
+        Order order = Order.builder()
+                .customer(customer)
+                .shop(shop)
+                .voucher(voucher)
+                .totalAmount(totalAmount)
+                .discountAmount(discountAmount)
+                .finalAmount(finalAmount)
+                .orderStatus(OrderStatus.PENDING)
+                .paymentMethod(paymentMethod)
+                .paymentStatus(PaymentStatus.UNPAID)
+                .deliveryAddress(request.getDeliveryAddress())
+                .note(request.getNote())
+                .items(List.of(toOrderItemSnapshot(post, request.getQuantity())))
+                .build();
+
+        decreasePostQuantity(post, request.getQuantity());
+        return toResponse(orderRepository.save(order));
+    }
+
     public List<OrderResponse> getMyOrders(Long customerId) {
         return orderRepository.findByCustomerId(customerId)
                 .stream()
@@ -132,6 +175,105 @@ public class OrderService {
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(request.getCancelReason());
         return toResponse(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void cancelOrderSystem(UUID orderId, String reason) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        
+        if (order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
+
+        restorePostQuantities(order.getItems());
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        order.setCancelReason(reason);
+        orderRepository.save(order);
+    }
+
+    public OrderReviewResponse getReview(Long customerId, UUID orderId) {
+        findOwnedOrder(customerId, orderId);
+        OrderReview review = orderReviewRepository.findByOrderIdAndCustomerId(orderId, customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Review not found"));
+        return toReviewResponse(review);
+    }
+
+    @Transactional
+    public OrderReviewResponse createReview(Long customerId, UUID orderId, CreateOrderReviewRequest request) {
+        Order order = findOwnedOrder(customerId, orderId);
+        if (order.getOrderStatus() != OrderStatus.COMPLETED) {
+            throw new IllegalArgumentException("Only completed orders can be reviewed");
+        }
+        if (orderReviewRepository.existsByOrderId(orderId)) {
+            throw new IllegalArgumentException("Order was already reviewed");
+        }
+        if (request.getRating() < 1 || request.getRating() > 5) {
+            throw new IllegalArgumentException("Rating must be between 1 and 5");
+        }
+        String comment = request.getComment() == null || request.getComment().isBlank()
+                ? null
+                : request.getComment().trim();
+        OrderReview saved = orderReviewRepository.save(OrderReview.builder()
+                .orderId(order.getOrderId())
+                .customerId(customerId)
+                .shopId(order.getShop().getId())
+                .rating(request.getRating())
+                .comment(comment)
+                .build());
+        return toReviewResponse(saved);
+    }
+
+    @Transactional
+    public ReorderResponse reorder(Long customerId, UUID orderId) {
+        Order order = findOwnedOrder(customerId, orderId);
+        Account customer = accountRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+        List<CartItem> currentItems = cartItemRepository.findByCustomerId(customerId);
+        boolean hasOtherShop = currentItems.stream()
+                .anyMatch(item -> !item.getPost().getAuthor().getId().equals(order.getShop().getId()));
+        if (hasOtherShop) {
+            throw new IllegalArgumentException("Cart contains items from another shop");
+        }
+
+        Map<UUID, Post> lockedPosts = lockPostsById(order.getItems().stream()
+                .map(item -> item.getPost().getPostId())
+                .toList());
+        List<ReorderResponse.SkippedItem> skippedItems = new ArrayList<>();
+        int addedCount = 0;
+
+        for (OrderItem item : order.getItems()) {
+            Post post = lockedPosts.get(item.getPost().getPostId());
+            String skipReason = reorderSkipReason(post, item.getQuantity());
+            if (skipReason != null) {
+                skippedItems.add(toSkippedItem(item, skipReason));
+                continue;
+            }
+
+            CartItem cartItem = cartItemRepository.findByCustomerIdAndPostId(customerId, post.getPostId())
+                    .orElse(CartItem.builder()
+                            .customer(customer)
+                            .post(post)
+                            .quantity(0)
+                            .build());
+            int newQuantity = cartItem.getQuantity() + item.getQuantity();
+            if (newQuantity > post.getRemainingQuantity()) {
+                skippedItems.add(toSkippedItem(item, "not_enough_quantity"));
+                continue;
+            }
+            cartItem.setQuantity(newQuantity);
+            cartItemRepository.save(cartItem);
+            addedCount++;
+        }
+
+        if (addedCount == 0) {
+            throw new IllegalArgumentException("No item can be reordered");
+        }
+
+        return ReorderResponse.builder()
+                .addedCount(addedCount)
+                .skippedItems(skippedItems)
+                .build();
     }
 
     public List<OrderResponse> getShopOrders(Long shopId) {
@@ -258,6 +400,13 @@ public class OrderService {
 
     private Account validateCartForCheckout(List<CartItem> cartItems) {
         Account shop = cartItems.get(0).getPost().getAuthor();
+        
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin cửa hàng"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hiện đang không hoạt động");
+        }
+
         for (CartItem item : cartItems) {
             Post post = item.getPost();
             if (!post.getAuthor().getId().equals(shop.getId())) {
@@ -271,6 +420,50 @@ public class OrderService {
             }
         }
         return shop;
+    }
+
+    private Account validatePostForCheckout(Post post, int quantity) {
+        Account shop = post.getAuthor();
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin cua hang"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hien dang khong hoat dong");
+        }
+        if (post.getStatus() != PostStatus.ACTIVE) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " hien khong the dat");
+        }
+        if (quantity > post.getRemainingQuantity()) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " khong con du so luong");
+        }
+        return shop;
+    }
+
+    private boolean isWithinOpeningHours(String openingHours) {
+        if (openingHours == null || openingHours.trim().isEmpty()) {
+            return true;
+        }
+        try {
+            String[] parts = openingHours.split("-");
+            if (parts.length != 2) {
+                return true;
+            }
+            String startStr = parts[0].trim();
+            String endStr = parts[1].trim();
+
+            java.time.ZonedDateTime nowVietnam = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            java.time.LocalTime nowTime = nowVietnam.toLocalTime();
+
+            java.time.LocalTime startTime = java.time.LocalTime.parse(startStr);
+            java.time.LocalTime endTime = java.time.LocalTime.parse(endStr);
+
+            if (startTime.isBefore(endTime)) {
+                return !nowTime.isBefore(startTime) && !nowTime.isAfter(endTime);
+            } else {
+                return !nowTime.isBefore(startTime) || !nowTime.isAfter(endTime);
+            }
+        } catch (Exception e) {
+            return true;
+        }
     }
 
     private Voucher resolveVoucher(Long voucherId, String voucherCode, BigDecimal totalAmount) {
@@ -329,13 +522,17 @@ public class OrderService {
     private void decreasePostQuantities(List<CartItem> cartItems) {
         cartItems.forEach(item -> {
             Post post = item.getPost();
-            int remainingQuantity = post.getRemainingQuantity() - item.getQuantity();
-            post.setRemainingQuantity(remainingQuantity);
-            if (remainingQuantity == 0) {
-                post.setStatus(PostStatus.SOLD_OUT);
-            }
-            postRepository.save(post);
+            decreasePostQuantity(post, item.getQuantity());
         });
+    }
+
+    private void decreasePostQuantity(Post post, int quantity) {
+        int remainingQuantity = post.getRemainingQuantity() - quantity;
+        post.setRemainingQuantity(remainingQuantity);
+        if (remainingQuantity == 0) {
+            post.setStatus(PostStatus.SOLD_OUT);
+        }
+        postRepository.save(post);
     }
 
     private void restorePostQuantities(List<OrderItem> orderItems) {
@@ -374,6 +571,7 @@ public class OrderService {
                 .deliveryAddress(order.getDeliveryAddress())
                 .note(order.getNote())
                 .cancelReason(order.getCancelReason())
+                .reviewed(orderReviewRepository.existsByOrderId(order.getOrderId()))
                 .items(itemResponses)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
@@ -390,6 +588,39 @@ public class OrderService {
                 .quantity(item.getQuantity())
                 .priceAtPurchase(item.getPriceAtPurchase())
                 .subtotal(subtotal)
+                .build();
+    }
+
+    private String reorderSkipReason(Post post, int requestedQuantity) {
+        if (post.getStatus() != PostStatus.ACTIVE) {
+            return "inactive";
+        }
+        if (post.getRemainingQuantity() <= 0) {
+            return "out_of_stock";
+        }
+        if (requestedQuantity > post.getRemainingQuantity()) {
+            return "not_enough_quantity";
+        }
+        return null;
+    }
+
+    private ReorderResponse.SkippedItem toSkippedItem(OrderItem item, String reason) {
+        return ReorderResponse.SkippedItem.builder()
+                .postId(item.getPost().getPostId())
+                .dishName(item.getDishNameSnapshot())
+                .reason(reason)
+                .build();
+    }
+
+    private OrderReviewResponse toReviewResponse(OrderReview review) {
+        return OrderReviewResponse.builder()
+                .id(review.getId())
+                .orderId(review.getOrderId())
+                .customerId(review.getCustomerId())
+                .shopId(review.getShopId())
+                .rating(review.getRating())
+                .comment(review.getComment())
+                .createdAt(review.getCreatedAt())
                 .build();
     }
 }

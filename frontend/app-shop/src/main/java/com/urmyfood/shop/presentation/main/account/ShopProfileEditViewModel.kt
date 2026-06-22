@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.ShopProfile
 import com.urmyfood.shop.domain.model.ShopProfileImageType
 import com.urmyfood.shop.domain.usecase.GetShopProfileUseCase
@@ -63,6 +64,7 @@ class ShopProfileEditViewModel(
             when (val result = getShopProfileUseCase()) {
                 is Result.Success -> {
                     currentProfile = result.data
+                    com.urmyfood.shop.di.ServiceLocator.cachedShopProfile = result.data
                     _loadState.value = ProfileUiState.Success(result.data)
                 }
                 is Result.Error -> _loadState.value = ProfileUiState.Error(result.message)
@@ -130,6 +132,7 @@ class ShopProfileEditViewModel(
                     when (val result = updateShopProfileUseCase(profile)) {
                         is Result.Success -> {
                             currentProfile = result.data
+                            com.urmyfood.shop.di.ServiceLocator.cachedShopProfile = result.data
                             _updateState.value = ProfileEditUiState.Success(result.data)
                         }
                         is Result.Error -> _updateState.value = ProfileEditUiState.Error(result.message)
@@ -138,7 +141,7 @@ class ShopProfileEditViewModel(
             } catch (e: TimeoutCancellationException) {
                 _updateState.value = ProfileEditUiState.Error("Lưu hồ sơ quá lâu. Vui lòng thử lại")
             } catch (e: Exception) {
-                _updateState.value = ProfileEditUiState.Error(e.message ?: "Không thể lưu hồ sơ quán")
+                _updateState.value = ProfileEditUiState.Error(e.toUserMessage())
             }
         }
     }

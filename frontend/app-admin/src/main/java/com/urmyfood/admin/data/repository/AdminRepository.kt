@@ -72,13 +72,19 @@ class AdminRepository {
     suspend fun getAllAccounts(
         page: Int = 0,
         size: Int = 20,
-        role: String? = null
+        role: String? = null,
+        sortBy: String = "createdAt",
+        sortDir: String = "DESC"
     ): Result<PageResponse<AccountProfile>> = safeApiCallWithData {
-        api.getAllAccounts(page, size, role)
+        api.getAllAccounts(page, size, role, sortBy, sortDir)
     }
 
-    suspend fun lockUnlockAccount(id: Long, active: Boolean): Result<Unit> = safeApiCall {
-        api.lockUnlockAccount(id, active)
+    suspend fun lockUnlockAccount(id: Long, active: Boolean, reason: String): Result<Unit> = safeApiCall {
+        api.lockUnlockAccount(id, active, reason)
+    }
+
+    suspend fun deleteAccount(id: Long, reason: String): Result<Unit> = safeApiCall {
+        api.deleteAccount(id, reason)
     }
 
     // ── Content Moderation ──────────────────────────────────────────────

@@ -3,7 +3,11 @@ package com.urmyfood.user.data.remote
 import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CancelOrderRequest
 import com.urmyfood.user.data.model.CheckoutRequest
+import com.urmyfood.user.data.model.CreateOrderReviewRequest
+import com.urmyfood.user.data.model.DirectCheckoutRequest
+import com.urmyfood.user.data.model.OrderReviewResponse
 import com.urmyfood.user.data.model.OrderResponse
+import com.urmyfood.user.data.model.ReorderResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -17,6 +21,12 @@ interface OrderApiService {
     suspend fun checkout(
         @Header("Authorization") token: String,
         @Body request: CheckoutRequest
+    ): Response<ApiResponse<OrderResponse>>
+
+    @POST("api/v1/orders/direct-checkout")
+    suspend fun directCheckout(
+        @Header("Authorization") token: String,
+        @Body request: DirectCheckoutRequest
     ): Response<ApiResponse<OrderResponse>>
 
     @GET("api/v1/orders")
@@ -36,6 +46,25 @@ interface OrderApiService {
         @Path("orderId") orderId: String,
         @Body request: CancelOrderRequest
     ): Response<ApiResponse<OrderResponse>>
+
+    @GET("api/v1/orders/{orderId}/review")
+    suspend fun getReview(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String
+    ): Response<ApiResponse<OrderReviewResponse>>
+
+    @POST("api/v1/orders/{orderId}/review")
+    suspend fun createReview(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String,
+        @Body request: CreateOrderReviewRequest
+    ): Response<ApiResponse<OrderReviewResponse>>
+
+    @POST("api/v1/orders/{orderId}/reorder")
+    suspend fun reorder(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String
+    ): Response<ApiResponse<ReorderResponse>>
 
     @POST("api/v1/payments/payos/create/{orderId}")
     suspend fun createPayOsPayment(

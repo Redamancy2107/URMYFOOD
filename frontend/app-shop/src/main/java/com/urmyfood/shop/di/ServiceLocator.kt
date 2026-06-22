@@ -66,6 +66,7 @@ import com.urmyfood.shop.presentation.main.account.AccountViewModel
 import com.urmyfood.shop.presentation.main.account.ChangePasswordViewModel
 import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
 import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
+import com.urmyfood.shop.presentation.main.home.HomeViewModel
 import com.urmyfood.shop.presentation.main.orders.OrdersViewModel
 import com.urmyfood.shop.presentation.main.orders.detail.OrderDetailViewModel
 import com.urmyfood.shop.presentation.main.chat.ChatDetailViewModel
@@ -81,6 +82,9 @@ import java.util.concurrent.TimeUnit
 object ServiceLocator {
 
     private lateinit var appContext: Context
+
+    @Volatile
+    var cachedShopProfile: com.urmyfood.shop.domain.model.ShopProfile? = null
 
     val tokenManager: TokenManager by lazy { TokenManager(appContext, "shop_prefs") }
 
@@ -174,6 +178,8 @@ object ServiceLocator {
         SubmitShopVerificationUseCase(shopVerificationRepository, tokenManager)
     )
 
+    fun provideGetShopProfileUseCase() = GetShopProfileUseCase(shopProfileRepository, tokenManager)
+
     fun provideAccountViewModelFactory() = AccountViewModel.Factory(
         GetShopProfileUseCase(shopProfileRepository, tokenManager),
         tokenManager
@@ -191,6 +197,11 @@ object ServiceLocator {
 
     fun provideStatisticsViewModelFactory() = StatisticsViewModel.Factory(
         GetShopStatisticsUseCase(shopStatisticsRepository, tokenManager)
+    )
+
+    fun provideHomeViewModelFactory() = HomeViewModel.Factory(
+        GetShopOrdersUseCase(orderRepository, tokenManager),
+        UpdateOrderStatusUseCase(orderRepository, tokenManager)
     )
 
     fun provideOrdersViewModelFactory() = OrdersViewModel.Factory(
@@ -220,7 +231,8 @@ object ServiceLocator {
         postId,
         GetPostByIdUseCase(postRepository, tokenManager),
         TogglePostStatusUseCase(postRepository, tokenManager),
-        DeletePostUseCase(postRepository, tokenManager)
+        DeletePostUseCase(postRepository, tokenManager),
+        com.urmyfood.shop.domain.usecase.UpdateRemainingQuantityUseCase(postRepository, tokenManager)
     )
 
     fun provideCommentViewModelFactory() = CommentViewModel.Factory(

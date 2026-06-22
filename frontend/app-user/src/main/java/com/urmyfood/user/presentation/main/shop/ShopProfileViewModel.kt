@@ -6,19 +6,40 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.user.data.model.VoucherResponse
 import com.urmyfood.user.domain.model.FoodPost
+import com.urmyfood.user.domain.model.Result as UserResult
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetChatSessionUseCase
+import com.urmyfood.user.domain.usecase.GetShopPostsUseCase
+import com.urmyfood.user.domain.usecase.GetShopProfileUseCase
+import com.urmyfood.user.domain.usecase.GetVouchersUseCase
+import com.urmyfood.user.domain.usecase.SavePostUseCase
+import com.urmyfood.user.domain.usecase.SaveVoucherUseCase
+import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
+import com.urmyfood.user.domain.usecase.UnsavePostUseCase
 import kotlinx.coroutines.launch
 
 data class ShopVoucher(
-    val voucherId: String,
+    val voucherId: Long,
     val title: String,
     val description: String,
-    val expiryDate: String
+    val expiryDate: String,
+    val isSaved: Boolean
 )
 
 class ShopProfileViewModel(
-    private val getChatSessionUseCase: GetChatSessionUseCase
+    private val getChatSessionUseCase: GetChatSessionUseCase,
+    private val getShopProfileUseCase: GetShopProfileUseCase,
+    private val getShopPostsUseCase: GetShopPostsUseCase,
+    private val getVouchersUseCase: GetVouchersUseCase,
+    private val followShopUseCase: FollowShopUseCase,
+    private val unfollowShopUseCase: UnfollowShopUseCase,
+    private val toggleLikeUseCase: ToggleLikeUseCase,
+    private val savePostUseCase: SavePostUseCase,
+    private val unsavePostUseCase: UnsavePostUseCase,
+    private val saveVoucherUseCase: SaveVoucherUseCase
 ) : ViewModel() {
 
     sealed class ChatUiState {
@@ -47,11 +68,31 @@ class ShopProfileViewModel(
     }
 
     class Factory(
-        private val getChatSessionUseCase: GetChatSessionUseCase
+        private val getChatSessionUseCase: GetChatSessionUseCase,
+        private val getShopProfileUseCase: GetShopProfileUseCase,
+        private val getShopPostsUseCase: GetShopPostsUseCase,
+        private val getVouchersUseCase: GetVouchersUseCase,
+        private val followShopUseCase: FollowShopUseCase,
+        private val unfollowShopUseCase: UnfollowShopUseCase,
+        private val toggleLikeUseCase: ToggleLikeUseCase,
+        private val savePostUseCase: SavePostUseCase,
+        private val unsavePostUseCase: UnsavePostUseCase,
+        private val saveVoucherUseCase: SaveVoucherUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ShopProfileViewModel(getChatSessionUseCase) as T
+            ShopProfileViewModel(
+                getChatSessionUseCase,
+                getShopProfileUseCase,
+                getShopPostsUseCase,
+                getVouchersUseCase,
+                followShopUseCase,
+                unfollowShopUseCase,
+                toggleLikeUseCase,
+                savePostUseCase,
+                unsavePostUseCase,
+                saveVoucherUseCase
+            ) as T
     }
 
     private val _shopName = MutableLiveData<String>()
@@ -66,14 +107,14 @@ class ShopProfileViewModel(
     private val _isFollowing = MutableLiveData<Boolean>()
     val isFollowing: LiveData<Boolean> = _isFollowing
 
+    private val _followError = MutableLiveData<String?>()
+    val followError: LiveData<String?> = _followError
+
+    private val _actionError = MutableLiveData<String?>()
+    val actionError: LiveData<String?> = _actionError
+
     private val _productsCount = MutableLiveData<Int>()
     val productsCount: LiveData<Int> = _productsCount
-
-    private val _responseRate = MutableLiveData<String>()
-    val responseRate: LiveData<String> = _responseRate
-
-    private val _activeDuration = MutableLiveData<String>()
-    val activeDuration: LiveData<String> = _activeDuration
 
     private val _vouchers = MutableLiveData<List<ShopVoucher>>()
     val vouchers: LiveData<List<ShopVoucher>> = _vouchers
@@ -94,9 +135,6 @@ class ShopProfileViewModel(
     private val _operatingHours = MutableLiveData<String>()
     val operatingHours: LiveData<String> = _operatingHours
 
-    private val _rating = MutableLiveData<String>()
-    val rating: LiveData<String> = _rating
-
     private val _shopCategory = MutableLiveData<String>()
     val shopCategory: LiveData<String> = _shopCategory
 
@@ -109,174 +147,65 @@ class ShopProfileViewModel(
 
     private val allProducts = mutableListOf<FoodPost>()
 
-    fun initShop(name: String, avatarUrl: String?) {
-        _shopName.value = name
-        _shopAvatarUrl.value = avatarUrl
+    fun initShop(shopId: Long, fallbackName: String, fallbackAvatarUrl: String?) {
+        _shopName.value = fallbackName
+        _shopAvatarUrl.value = fallbackAvatarUrl
+        loadProfile(shopId)
+        loadShopContent(shopId)
+    }
 
-        // Mock shop metadata - remove when BE ready
-        _address.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> "12 Cao Thắng, Phường 5, Quận 3, TP. Hồ Chí Minh"
-            "Cơm Tấm Bụi" -> "378 Lê Văn Sỹ, Phường 14, Quận 3, TP. Hồ Chí Minh"
-            "Quán Bà Chiểu" -> "Bùi Hữu Nghĩa, Phường 1, Quận Bình Thạnh, TP. Hồ Chí Minh"
-            "Phở Hùng - Lê Thánh Tôn" -> "58 Đ. Bùi Hữu Nghĩa, Gia Định, Hồ Chí Minh, Việt Nam"
-            else -> "145 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
-        }
-        
-        _operatingHours.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> "08:00 - 22:00"
-            "Cơm Tấm Bụi" -> "06:30 - 21:00"
-            "Quán Bà Chiểu" -> "07:00 - 22:30"
-            "Phở Hùng - Lê Thánh Tôn" -> "08:00 - 10:00"
-            else -> "09:00 - 21:30"
-        }
-
-        _rating.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> "4.7"
-            "Cơm Tấm Bụi" -> "4.5"
-            "Quán Bà Chiểu" -> "4.8"
-            else -> "4.6"
-        }
-
-        _shopCategory.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> "Trà sữa"
-            "Cơm Tấm Bụi" -> "Cơm tấm"
-            "Quán Bà Chiểu" -> "Bún bò"
-            "Phở Hùng - Lê Thánh Tôn" -> "Phở"
-            else -> "Phở"
-        }
-
-        _isOpen.value = when (name) {
-            "Tiệm Trà Sữa Mây" -> true
-            "Cơm Tấm Bụi" -> true
-            "Quán Bà Chiểu" -> true
-            "Phở Hùng - Lê Thánh Tôn" -> false
-            else -> true
-        }
-        
-        // Generate mock shop stats based on shop name
-        val hash = name.hashCode().let { if (it < 0) -it else it }
-        val mockFollowersCount = 500 + (hash % 4500)
-        _followers.value = String.format("%.1fk Người theo dõi", mockFollowersCount / 1000f)
-        _isFollowing.value = hash % 2 == 0
-        
-        val mockProdCount = 15 + (hash % 45)
-        _productsCount.value = mockProdCount
-        
-        _responseRate.value = "${90 + (hash % 10)}%"
-        _activeDuration.value = "${5 + (hash % 25)}p"
-
-        // Mock vouchers
-        _vouchers.value = listOf(
-            ShopVoucher("v1", "Giảm 10%", "Tối đa 50K", "HSD: 15/12/2026"),
-            ShopVoucher("v2", "Freeship 15K", "Đơn từ 100K", "HSD: 31/12/2026"),
-            ShopVoucher("v3", "Giảm 20K", "Cho khách mới", "HSD: 30/06/2026")
-        )
-
-        // Mock posts
-        val mockPosts = mutableListOf<FoodPost>()
-        for (i in 1..3) {
-            val dishName = when (name) {
-                "Tiệm Trà Sữa Mây" -> if (i == 1) "Trà sữa trân châu đường đen" else if (i == 2) "Trà sữa matcha đậu đỏ" else "Trà hoa quả nhiệt đới"
-                "Cơm Tấm Bụi" -> if (i == 1) "Cơm tấm sườn bì chả" else if (i == 2) "Cơm tấm gà nướng" else "Cơm tấm ba chỉ cháy cạnh"
-                "Quán Bà Chiểu" -> if (i == 1) "Bún bò Huế đặc biệt" else if (i == 2) "Mỳ Quảng gà ta" else "Bún thịt nướng chả giò"
-                else -> if (i == 1) "Cơm Gà Hải Nam đặc biệt" else if (i == 2) "Cơm gà xối mỡ" else "Cơm gà quay tiêu"
+    private fun loadShopContent(shopId: Long) {
+        viewModelScope.launch {
+            when (val result = getShopPostsUseCase(shopId)) {
+                is UserResult.Success -> {
+                    val posts = result.data.items
+                    _posts.value = posts
+                    allProducts.clear()
+                    allProducts.addAll(posts)
+                    _products.value = posts
+                    _categories.value = listOf("Tất cả") + posts.mapNotNull { it.category }.distinct()
+                    _productsCount.value = posts.size
+                }
+                is UserResult.Error -> Unit
             }
-            val price = when (i) {
-                1 -> 35000.0
-                2 -> 28000.0
-                else -> 30000.0
+        }
+        viewModelScope.launch {
+            when (val result = getVouchersUseCase()) {
+                is UserResult.Success -> _vouchers.value = result.data.map { it.toShopVoucher() }
+                is UserResult.Error -> Unit
             }
-            val originalPrice = price + 10000.0
-            mockPosts.add(
-                FoodPost(
-                    postId = "shop_${hash}_post_$i",
-                    dishName = dishName,
-                    price = price,
-                    originalPrice = originalPrice,
-                    maxQuantity = 50,
-                    remainingQuantity = 12 + i * 5,
-                    endTime = if (i == 1) "16:00" else null,
-                    isFlashSale = i == 1,
-                    status = "ACTIVE",
-                    content = if (i == 1) "⚡ FLASH SALE GIỜ VÀNG - Món siêu ngon giá rẻ tụt quần, mua ngay kẻo lỡ!" else "Món bán chạy nhất của quán ngày hôm nay. Đảm bảo vệ sinh an toàn thực phẩm.",
-                    imageUrl = when (name) {
-                        "Tiệm Trà Sữa Mây" -> "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500"
-                        "Cơm Tấm Bụi" -> "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
-                        "Quán Bà Chiểu" -> "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500"
-                        else -> "https://images.unsplash.com/photo-1562967914-608f82629710?w=500"
-                    },
-                    shopName = name,
-                    shopAvatarUrl = avatarUrl
-                )
-            )
         }
-        _posts.value = mockPosts
+    }
 
-        // Mock categories - remove when BE ready
-        val categoriesList = when (name) {
-            "Tiệm Trà Sữa Mây" -> listOf("Tất cả", "Trà Sữa Truyền Thống", "Trà Trái Cây", "Đồ Uống Đá Xay", "Toppings Thêm")
-            "Cơm Tấm Bụi" -> listOf("Tất cả", "Cơm Tấm Đặc Biệt", "Món Ăn Kèm", "Canh Nóng", "Đồ Uống Giải Khát")
-            "Quán Bà Chiểu" -> listOf("Tất cả", "Bún & Phở Nước", "Món Trộn & Khô", "Mỳ Quảng", "Trà Đá & Khăn Lạnh")
-            else -> listOf("Tất cả", "Cơm Gà Các Loại", "Món Gỏi & Salad", "Canh & Món Thêm", "Giải Khát")
-        }
-        _categories.value = categoriesList
+    private fun VoucherResponse.toShopVoucher() = ShopVoucher(
+        voucherId = id,
+        title = title,
+        description = description.orEmpty(),
+        expiryDate = "HSD: $expiryDate",
+        isSaved = isSaved
+    )
 
-        // Mock products (grid of menu dishes) - remove when BE ready
-        allProducts.clear()
-        val dishesList = when (name) {
-            "Tiệm Trà Sữa Mây" -> listOf("Hồng trà sữa", "Lục trà nhài", "Trà sữa thái xanh", "Trà sữa khoai môn", "Trà đào cam sả", "Trà dâu tây")
-            "Cơm Tấm Bụi" -> listOf("Cơm tấm sườn", "Cơm tấm bì chả", "Cơm tấm đùi gà", "Cơm tấm trứng ốp la", "Cơm tấm xá xíu", "Canh khổ qua nhồi thịt")
-            "Quán Bà Chiểu" -> listOf("Bún bò tái nạm", "Bún giò heo", "Bún mọc sườn", "Bún thịt nướng", "Mỳ Quảng tôm thịt", "Phở bò chín")
-            else -> listOf("Cơm gà luộc", "Cơm gà xối mỡ", "Cơm gà nướng mật ong", "Gỏi gà xé phay", "Canh lá giang", "Nước sâm dứa")
-        }
-        dishesList.forEachIndexed { index, dish ->
-            val productCategory = when (dish) {
-                // Tiệm Trà Sữa Mây
-                "Hồng trà sữa", "Trà sữa thái xanh", "Trà sữa khoai môn" -> "Trà Sữa Truyền Thống"
-                "Lục trà nhài", "Trà đào cam sả", "Trà dâu tây" -> "Trà Trái Cây"
-                
-                // Cơm Tấm Bụi
-                "Cơm tấm sườn", "Cơm tấm bì chả", "Cơm tấm đùi gà", "Cơm tấm trứng ốp la", "Cơm tấm xá xíu" -> "Cơm Tấm Đặc Biệt"
-                "Canh khổ qua nhồi thịt" -> "Canh Nóng"
-                
-                // Quán Bà Chiểu
-                "Bún bò tái nạm", "Bún giò heo", "Bún mọc sườn", "Phở bò chín" -> "Bún & Phở Nước"
-                "Bún thịt nướng" -> "Món Trộn & Khô"
-                "Mỳ Quảng tôm thịt" -> "Mỳ Quảng"
-                
-                // Other / Cơm Gà
-                "Cơm gà luộc", "Cơm gà xối mỡ", "Cơm gà nướng mật ong" -> "Cơm Gà Các Loại"
-                "Gỏi gà xé phay" -> "Món Gỏi & Salad"
-                "Canh lá giang" -> "Canh & Món Thêm"
-                "Nước sâm dứa" -> "Giải Khát"
-                
-                else -> categoriesList.getOrNull(1) ?: ""
+    private fun loadProfile(shopId: Long) {
+        if (shopId <= 0L) return
+        viewModelScope.launch {
+            when (val result = getShopProfileUseCase(shopId)) {
+                is UserResult.Success -> {
+                    val profile = result.data
+                    _shopName.value = profile.shopName
+                    _shopAvatarUrl.value = profile.logoUrl
+                    _address.value = profile.address.orEmpty()
+                    _operatingHours.value = profile.openingHours.orEmpty()
+                    _shopCategory.value = profile.category.orEmpty()
+                    _isOpen.value = com.urmyfood.shared.util.TimeUtils.isShopCurrentlyOpen(profile.isOpen, profile.openingHours)
+                    _followers.value = formatFollowerCount(profile.followerCount)
+                    _isFollowing.value = profile.isFollowing
+                    applyFollowStateToPosts(profile.shopId, profile.isFollowing)
+                }
+                is UserResult.Error -> {
+                    _followError.value = result.message
+                }
             }
-            allProducts.add(
-                FoodPost(
-                    postId = "shop_${hash}_prod_$index",
-                    dishName = dish,
-                    price = 25000.0 + (index * 2000),
-                    originalPrice = 25000.0 + (index * 2000),
-                    maxQuantity = 100,
-                    remainingQuantity = 45,
-                    endTime = null,
-                    isFlashSale = false,
-                    status = "ACTIVE",
-                    content = null,
-                    imageUrl = when (name) {
-                        "Tiệm Trà Sữa Mây" -> "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500"
-                        "Cơm Tấm Bụi" -> "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"
-                        "Quán Bà Chiểu" -> "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500"
-                        else -> "https://images.unsplash.com/photo-1562967914-608f82629710?w=500"
-                    },
-                    shopName = name,
-                    shopAvatarUrl = avatarUrl,
-                    category = productCategory
-                )
-            )
         }
-        _products.value = allProducts
     }
 
     /**
@@ -293,21 +222,169 @@ class ShopProfileViewModel(
         }
     }
 
-    fun toggleFollow() {
-        _isFollowing.value = _isFollowing.value?.not()
-    }
+    fun toggleFollow(shopId: Long) {
+        if (shopId <= 0L) return
+        val previous = _isFollowing.value ?: false
+        applyFollowState(shopId, !previous, null)
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, !previous))
 
-    fun toggleLike(postId: String) {
-        val currentPosts = _posts.value ?: return
-        val updatedPosts = currentPosts.map { post ->
-            if (post.postId == postId) {
-                val newIsLiked = !post.isLiked
-                val newLikeCount = if (newIsLiked) post.likeCount + 1 else (post.likeCount - 1).coerceAtLeast(0)
-                post.copy(isLiked = newIsLiked, likeCount = newLikeCount)
+        viewModelScope.launch {
+            val result = if (previous) {
+                unfollowShopUseCase(shopId)
             } else {
-                post
+                followShopUseCase(shopId)
+            }
+            when (result) {
+                is UserResult.Success -> {
+                    applyFollowState(result.data.shopId, result.data.isFollowing, result.data.followerCount)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                        Pair(result.data.shopId, result.data.isFollowing)
+                    )
+                }
+                is UserResult.Error -> {
+                    applyFollowState(shopId, previous, null)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, previous))
+                    _followError.value = result.message
+                }
             }
         }
-        _posts.value = updatedPosts
+    }
+
+    fun applyFollowState(shopId: Long, isFollowing: Boolean, followerCount: Long?) {
+        val previous = _isFollowing.value ?: false
+        _isFollowing.value = isFollowing
+        if (followerCount != null) {
+            _followers.value = formatFollowerCount(followerCount)
+        } else if (previous != isFollowing) {
+            val currentCount = parseFollowerCount(_followers.value)
+            val nextCount = if (isFollowing) currentCount + 1 else (currentCount - 1).coerceAtLeast(0)
+            _followers.value = formatFollowerCount(nextCount)
+        }
+        applyFollowStateToPosts(shopId, isFollowing)
+    }
+
+    fun clearFollowError() {
+        _followError.value = null
+    }
+
+    fun clearActionError() {
+        _actionError.value = null
+    }
+
+    private fun applyFollowStateToPosts(shopId: Long, isFollowing: Boolean) {
+        _posts.value = _posts.value?.map { post ->
+            if (post.shopAccountId == shopId) post.copy(isFollowingShop = isFollowing) else post
+        }
+        for (index in allProducts.indices) {
+            val post = allProducts[index]
+            if (post.shopAccountId == shopId && post.isFollowingShop != isFollowing) {
+                allProducts[index] = post.copy(isFollowingShop = isFollowing)
+            }
+        }
+        filterProductsByCategory(_selectedCategory.value)
+    }
+
+    private fun formatFollowerCount(count: Long): String {
+        return if (count >= 1000) {
+            String.format("%.1fk Người theo dõi", count / 1000f)
+        } else {
+            "$count Người theo dõi"
+        }
+    }
+
+    private fun parseFollowerCount(text: String?): Long {
+        if (text.isNullOrBlank()) return 0L
+        val raw = text.substringBefore(" ").replace(",", ".").trim()
+        return if (raw.endsWith("k", ignoreCase = true)) {
+            ((raw.dropLast(1).toFloatOrNull() ?: 0f) * 1000).toLong()
+        } else {
+            raw.toLongOrNull() ?: 0L
+        }
+    }
+
+    fun toggleLike(post: FoodPost) {
+        val currentCount = post.likeCount
+        val optimisticCount = if (post.isLiked) (currentCount - 1).coerceAtLeast(0) else currentCount + 1
+        applyLikeState(post.postId, !post.isLiked, optimisticCount)
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(!post.isLiked, optimisticCount)))
+
+        viewModelScope.launch {
+            when (val result = toggleLikeUseCase(post.postId, post.isLiked)) {
+                is UserResult.Success -> {
+                    applyLikeState(post.postId, result.data.isLiked, result.data.likeCount)
+                    com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(result.data.isLiked, result.data.likeCount)))
+                }
+                is UserResult.Error -> {
+                    applyLikeState(post.postId, post.isLiked, currentCount)
+                    com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(post.isLiked, currentCount)))
+                    _actionError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun toggleSave(post: FoodPost) {
+        applySavedState(post.postId, !post.isSaved)
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(post.postId, !post.isSaved))
+
+        viewModelScope.launch {
+            val result = if (post.isSaved) unsavePostUseCase(post.postId) else savePostUseCase(post.postId)
+            when (result) {
+                is UserResult.Success -> {
+                    applySavedState(result.data.postId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(result.data.postId, result.data.isSaved))
+                }
+                is UserResult.Error -> {
+                    applySavedState(post.postId, post.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(post.postId, post.isSaved))
+                    _actionError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun saveVoucher(voucherId: Long) {
+        applyVoucherSaved(voucherId, true)
+        com.urmyfood.user.di.ServiceLocator.voucherSavedEvent.postValue(Pair(voucherId, true))
+
+        viewModelScope.launch {
+            when (val result = saveVoucherUseCase(voucherId)) {
+                is UserResult.Success -> {
+                    applyVoucherSaved(result.data.voucherId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.voucherSavedEvent.postValue(Pair(result.data.voucherId, result.data.isSaved))
+                }
+                is UserResult.Error -> {
+                    applyVoucherSaved(voucherId, false)
+                    com.urmyfood.user.di.ServiceLocator.voucherSavedEvent.postValue(Pair(voucherId, false))
+                    _actionError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun applyLikeState(postId: String, isLiked: Boolean, likeCount: Int) {
+        updatePosts { post ->
+            if (post.postId == postId) post.copy(isLiked = isLiked, likeCount = likeCount) else post
+        }
+    }
+
+    fun applySavedState(postId: String, isSaved: Boolean) {
+        updatePosts { post ->
+            if (post.postId == postId) post.copy(isSaved = isSaved) else post
+        }
+    }
+
+    fun applyVoucherSaved(voucherId: Long, isSaved: Boolean) {
+        _vouchers.value = _vouchers.value?.map { voucher ->
+            if (voucher.voucherId == voucherId) voucher.copy(isSaved = isSaved) else voucher
+        }
+    }
+
+    private fun updatePosts(transform: (FoodPost) -> FoodPost) {
+        _posts.value = _posts.value?.map(transform)
+        for (index in allProducts.indices) {
+            allProducts[index] = transform(allProducts[index])
+        }
+        filterProductsByCategory(_selectedCategory.value)
     }
 }

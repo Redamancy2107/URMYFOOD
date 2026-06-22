@@ -57,6 +57,38 @@ public class OrderPersistenceAdapter implements OrderRepository {
     }
 
     @Override
+    public List<Order> findShopOrdersForAllTimeStatistics(Long shopId) {
+        return jpaOrderRepository.findShopOrdersForAllTimeStatistics(shopId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findShopOrdersForStatistics(Long shopId, OffsetDateTime startAt, OffsetDateTime endAt) {
+        return jpaOrderRepository.findShopOrdersForStatistics(shopId, startAt, endAt)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findPendingOrAcceptedOrdersByPostId(UUID postId) {
+        return jpaOrderRepository.findPendingOrAcceptedOrdersByPostId(postId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findPendingOrAcceptedOrdersByShopId(Long shopId) {
+        return jpaOrderRepository.findPendingOrAcceptedOrdersByShopId(shopId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Order> findByShopId(Long shopId) {
         return jpaOrderRepository.findByShopIdOrderByCreatedAtDesc(shopId)
                 .stream()

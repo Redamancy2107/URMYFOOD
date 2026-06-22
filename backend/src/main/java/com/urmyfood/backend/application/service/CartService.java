@@ -11,6 +11,8 @@ import com.urmyfood.backend.domain.model.PostStatus;
 import com.urmyfood.backend.domain.repository.AccountRepository;
 import com.urmyfood.backend.domain.repository.CartItemRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
+import com.urmyfood.backend.domain.repository.ShopProfileRepository;
+import com.urmyfood.backend.domain.model.ShopProfile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,7 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final PostRepository postRepository;
     private final AccountRepository accountRepository;
+    private final ShopProfileRepository shopProfileRepository;
 
     @Transactional(readOnly = true)
     public CartResponse getCart(Long customerId) {
@@ -98,6 +101,41 @@ public class CartService {
         }
         if (post.getRemainingQuantity() <= 0) {
             throw new IllegalArgumentException("Món ăn đã hết hàng");
+        }
+
+        Account shop = post.getAuthor();
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin cửa hàng"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hiện đang không hoạt động");
+        }
+    }
+
+    private boolean isWithinOpeningHours(String openingHours) {
+        if (openingHours == null || openingHours.trim().isEmpty()) {
+            return true;
+        }
+        try {
+            String[] parts = openingHours.split("-");
+            if (parts.length != 2) {
+                return true;
+            }
+            String startStr = parts[0].trim();
+            String endStr = parts[1].trim();
+
+            java.time.ZonedDateTime nowVietnam = java.time.ZonedDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+            java.time.LocalTime nowTime = nowVietnam.toLocalTime();
+
+            java.time.LocalTime startTime = java.time.LocalTime.parse(startStr);
+            java.time.LocalTime endTime = java.time.LocalTime.parse(endStr);
+
+            if (startTime.isBefore(endTime)) {
+                return !nowTime.isBefore(startTime) && !nowTime.isAfter(endTime);
+            } else {
+                return !nowTime.isBefore(startTime) || !nowTime.isAfter(endTime);
+            }
+        } catch (Exception e) {
+            return true;
         }
     }
 

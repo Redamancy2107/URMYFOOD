@@ -60,6 +60,23 @@ data class CheckoutRequest(
     val voucherCode: String? = null
 )
 
+data class DirectCheckoutRequest(
+    @SerializedName("post_id")
+    val postId: String,
+    @SerializedName("quantity")
+    val quantity: Int,
+    @SerializedName("paymentMethod")
+    val paymentMethod: String,
+    @SerializedName("deliveryAddress")
+    val deliveryAddress: String,
+    @SerializedName("voucherId")
+    val voucherId: Long? = null,
+    @SerializedName("note")
+    val note: String? = null,
+    @SerializedName("voucher_code")
+    val voucherCode: String? = null
+)
+
 data class CancelOrderRequest(
     @SerializedName("cancelReason")
     val cancelReason: String
@@ -94,6 +111,8 @@ data class OrderResponse(
     val note: String?,
     @SerializedName("cancel_reason")
     val cancelReason: String?,
+    @SerializedName("reviewed")
+    val reviewed: Boolean = false,
     @SerializedName("items")
     val items: List<OrderItemResponse>,
     @SerializedName("created_at")
@@ -102,14 +121,54 @@ data class OrderResponse(
     val updatedAt: String?
 )
 
+data class CreateOrderReviewRequest(
+    @SerializedName("rating")
+    val rating: Int,
+    @SerializedName("comment")
+    val comment: String?
+)
+
+data class OrderReviewResponse(
+    @SerializedName("id")
+    val id: String,
+    @SerializedName("order_id")
+    val orderId: String,
+    @SerializedName("customer_id")
+    val customerId: Long,
+    @SerializedName("shop_id")
+    val shopId: Long,
+    @SerializedName("rating")
+    val rating: Int,
+    @SerializedName("comment")
+    val comment: String?,
+    @SerializedName("created_at")
+    val createdAt: String?
+)
+
+data class ReorderResponse(
+    @SerializedName("added_count")
+    val addedCount: Int,
+    @SerializedName("skipped_items")
+    val skippedItems: List<ReorderSkippedItem> = emptyList()
+)
+
+data class ReorderSkippedItem(
+    @SerializedName("post_id")
+    val postId: String,
+    @SerializedName("dish_name")
+    val dishName: String,
+    @SerializedName("reason")
+    val reason: String
+)
+
 data class OrderItemResponse(
     @SerializedName("order_item_id")
     val orderItemId: String,
     @SerializedName("post_id")
     val postId: String,
-    @SerializedName("dish_name")
+    @SerializedName("dish_name_snapshot")
     val dishName: String,
-    @SerializedName("image_url")
+    @SerializedName("image_url_snapshot")
     val imageUrl: String?,
     @SerializedName("quantity")
     val quantity: Int,

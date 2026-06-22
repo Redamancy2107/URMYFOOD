@@ -1,6 +1,7 @@
 package com.urmyfood.user.presentation.main.search
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import com.urmyfood.user.data.model.ShopFollowResponse
 import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.LikeToggleResult
@@ -9,12 +10,15 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.TokenProvider
 import com.urmyfood.user.domain.repository.PostRepository
 import com.urmyfood.user.domain.repository.SearchHistoryRepository
+import com.urmyfood.user.domain.repository.ShopRepository
 import com.urmyfood.user.domain.usecase.AddSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.ClearSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.RemoveSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.SearchPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -46,10 +50,35 @@ class SearchViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun fakePost(id: String) = FoodPost(id, "Post $id", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "Shop", null)
+    private fun fakePost(id: String) = FoodPost(
+        postId = id,
+        dishName = "Post $id",
+        price = 50000.0,
+        originalPrice = 60000.0,
+        maxQuantity = 50,
+        remainingQuantity = 40,
+        endTime = null,
+        isFlashSale = false,
+        status = "ACTIVE",
+        content = null,
+        imageUrl = null,
+        shopAccountId = 1L,
+        shopName = "Shop",
+        shopAvatarUrl = null
+    )
 
     private val fakeToken = object : TokenProvider {
         override fun getAccessToken() = "tok"
+    }
+
+    private val fakeShopRepository = object : ShopRepository {
+        override suspend fun getProfile(token: String, shopId: Long) = Result.Error("unused")
+        override suspend fun getFollowState(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, false, 0))
+        override suspend fun follow(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, true, 1))
+        override suspend fun unfollow(token: String, shopId: Long) =
+            Result.Success(ShopFollowResponse(shopId, false, 0))
     }
 
     private class FakeSearchHistoryRepository(initial: List<String> = emptyList()) : SearchHistoryRepository {
@@ -80,7 +109,7 @@ class SearchViewModelTest {
 
     private fun makeRepo(searchResult: (String, Int) -> Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?) = searchResult(query, page)
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
             override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))
@@ -95,6 +124,8 @@ class SearchViewModelTest {
         SearchViewModel(
             SearchPostsUseCase(repo, fakeToken),
             ToggleLikeUseCase(repo, fakeToken),
+            FollowShopUseCase(fakeShopRepository, fakeToken),
+            UnfollowShopUseCase(fakeShopRepository, fakeToken),
             GetSearchHistoryUseCase(historyRepository),
             AddSearchHistoryUseCase(historyRepository),
             RemoveSearchHistoryUseCase(historyRepository),
@@ -249,7 +280,25 @@ class SearchViewModelTest {
 
     @Test
     fun `toggleLike updates result optimistically`() = runTest(testDispatcher) {
-        val posts = listOf(FoodPost("p1", "Post", 50000.0, 60000.0, 50, 40, null, false, "ACTIVE", null, null, "Shop", null, likeCount = 3))
+        val posts = listOf(
+            FoodPost(
+                postId = "p1",
+                dishName = "Post",
+                price = 50000.0,
+                originalPrice = 60000.0,
+                maxQuantity = 50,
+                remainingQuantity = 40,
+                endTime = null,
+                isFlashSale = false,
+                status = "ACTIVE",
+                content = null,
+                imageUrl = null,
+                shopAccountId = 1L,
+                shopName = "Shop",
+                shopAvatarUrl = null,
+                likeCount = 3
+            )
+        )
         val vm = makeViewModel(makeRepo { _, _ -> Result.Success(PageResult(posts, 0, false)) })
         vm.submitSearch("pho")
         testDispatcher.scheduler.advanceUntilIdle()

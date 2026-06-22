@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -80,7 +79,12 @@ class LoginFragment : Fragment() {
         }
 
         binding.btnLoginOtp.setOnClickListener {
-            showFeatureInDevelopment()
+            val email = binding.etEmail.text?.toString()?.trim().orEmpty()
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                showError("Vui lòng nhập email hợp lệ để nhận OTP")
+                return@setOnClickListener
+            }
+            viewModel.sendLoginOtp(email)
         }
 
         binding.tvGuest.setOnClickListener {
@@ -103,6 +107,15 @@ class LoginFragment : Fragment() {
                     findNavController().navigate(
                         R.id.action_loginFragment_to_mainContainerFragment
                     )
+                }
+                is LoginUiState.OtpSent -> {
+                    setLoading(false)
+                    val bundle = Bundle().apply {
+                        putString("otpSource", "login")
+                        putString("email", state.email)
+                    }
+                    viewModel.resetState()
+                    findNavController().navigate(R.id.action_loginFragment_to_otpFragment, bundle)
                 }
                 is LoginUiState.GuestSuccess -> {
                     setLoading(false)
@@ -153,22 +166,15 @@ class LoginFragment : Fragment() {
                 }
             } catch (e: GetCredentialException) {
                 android.util.Log.e("URMYFOOD_AUTH", ">>> [LoginFragment] Google Login Exception: ${e.message}", e)
-                showError("Lỗi đăng nhập Google: ${e.message}")
+                showError("Đăng nhập Google thất bại. Vui lòng thử lại.")
             }
         }
-    }
-
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     private fun setLoading(isLoading: Boolean) {
         binding.progressBar.isVisible = isLoading
         binding.btnLogin.isEnabled = !isLoading
+        binding.btnLoginOtp.isEnabled = !isLoading
         binding.btnLogin.text = if (isLoading) "" else getString(R.string.login_btn)
     }
 

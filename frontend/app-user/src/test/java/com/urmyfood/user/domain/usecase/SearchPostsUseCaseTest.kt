@@ -16,7 +16,22 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchPostsUseCaseTest {
 
-    private fun fakePost(id: String) = FoodPost(id, "Post $id", 60000.0, 70000.0, 50, 30, null, false, "ACTIVE", null, null, "Shop", null)
+    private fun fakePost(id: String) = FoodPost(
+        postId = id,
+        dishName = "Post $id",
+        price = 60000.0,
+        originalPrice = 70000.0,
+        maxQuantity = 50,
+        remainingQuantity = 30,
+        endTime = null,
+        isFlashSale = false,
+        status = "ACTIVE",
+        content = null,
+        imageUrl = null,
+        shopAccountId = 1L,
+        shopName = "Shop",
+        shopAvatarUrl = null
+    )
 
     private val fakeToken = object : TokenProvider {
         override fun getAccessToken() = "tok"
@@ -24,7 +39,7 @@ class SearchPostsUseCaseTest {
 
     private fun makeRepo(result: (String, Int, Int) -> Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?) = result(query, page, size)
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
             override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))

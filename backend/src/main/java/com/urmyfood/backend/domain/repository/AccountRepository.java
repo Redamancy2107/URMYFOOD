@@ -9,6 +9,6 @@ public interface AccountRepository {
     Optional<Account> findByEmail(String email);
     Optional<Account> findByPhone(String phone);
     Optional<Account> findById(Long id);
-    List<Account> findAll(int page, int size, String role);
+    List<Account> findAll(int page, int size, String role, String sortBy, String sortDir);
     long count(String role);
 }

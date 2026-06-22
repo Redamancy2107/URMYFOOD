@@ -30,7 +30,7 @@ class GetPostsUseCaseTest {
 
     private fun makeRepository(result: Result<PageResult<FoodPost>>): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = result
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = result
             override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> = Result.Success(PageResult(emptyList(), 0, false))
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
             override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int): Result<PageResult<Comment>> = Result.Success(PageResult(emptyList(), 0, false))
@@ -42,7 +42,7 @@ class GetPostsUseCaseTest {
     fun `invoke delegates to repository with bearer token`() = runTest {
         var receivedToken: String? = null
         val repo = object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?): Result<PageResult<FoodPost>> {
                 receivedToken = token
                 return Result.Success(PageResult(emptyList(), 0, false))
             }
@@ -89,7 +89,7 @@ class GetPostsUseCaseTest {
             override fun getAccessToken(): String? = null
         }
         val repo = object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?): Result<PageResult<FoodPost>> {
                 receivedToken = token
                 return Result.Success(PageResult(emptyList(), 0, false))
             }

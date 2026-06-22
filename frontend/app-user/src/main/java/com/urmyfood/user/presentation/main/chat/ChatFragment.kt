@@ -6,10 +6,10 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.urmyfood.shared.util.showToast
 import com.urmyfood.user.R
 import com.urmyfood.user.databinding.FragmentMainChatBinding
 import com.urmyfood.user.di.ServiceLocator
@@ -41,6 +41,11 @@ class ChatFragment : Fragment() {
         observeViewModel()
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadSessions()
+    }
+
     private fun setupRecyclerView() {
         chatListAdapter = ChatListAdapter { session ->
             val bundle = Bundle().apply {
@@ -67,15 +72,12 @@ class ChatFragment : Fragment() {
                     else
                         "Không tìm thấy kết quả"
                 }
-                is ChatViewModel.UiState.Error -> Toast.makeText(requireContext(), state.message, Toast.LENGTH_SHORT).show()
+                is ChatViewModel.UiState.Error -> showToast(state.message)
             }
         }
     }
 
     private fun setupClickListeners() {
-        binding.btnNotification.setOnClickListener {
-            Toast.makeText(requireContext(), getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show()
-        }
         binding.etSearchChat.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit

@@ -35,7 +35,7 @@ class HomeFragment : Fragment() {
     }
 
     private val adapter = FoodPostAdapter()
-    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
+    private var isFirstResume = true
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +57,10 @@ class HomeFragment : Fragment() {
         observeUiState()
         observeLoadingMore()
         observeLikeError()
+        observeFollowError()
+        observeSaveError()
         observeSharedEvents()
+        observeFilters()
     }
 
     private fun observeSharedEvents() {
@@ -71,6 +74,14 @@ class HomeFragment : Fragment() {
             viewModel.updateLikeStateExternally(postId, isLiked, likeCount)
             adapter.notifyDataSetChanged()
         }
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
+            val (shopId, isFollowing) = event
+            viewModel.updateFollowStateForShop(shopId, isFollowing)
+        }
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, isSaved) = event
+            viewModel.updateSavedState(postId, isSaved)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -79,72 +90,23 @@ class HomeFragment : Fragment() {
         binding.rvPosts.isNestedScrollingEnabled = false
     }
 
-    private fun loadMockPosts() {
-        val mockPosts = listOf(
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "1",
-                dishName = "Trà sữa trân châu đường đen",
-                price = 25000.0,
-                originalPrice = 35000.0,
-                maxQuantity = 100,
-                remainingQuantity = 89,
-                endTime = "14:00",
-                isFlashSale = true,
-                status = "ACTIVE",
-                content = "Siêu béo, topping ngập tràn, free size L",
-                imageUrl = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500",
-                shopName = "Tiệm Trà Sữa Mây",
-                shopAvatarUrl = null
-            ),
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "2",
-                dishName = "Cơm tấm sườn bì chả",
-                price = 35000.0,
-                originalPrice = 45000.0,
-                maxQuantity = 50,
-                remainingQuantity = 38,
-                endTime = null,
-                isFlashSale = false,
-                status = "ACTIVE",
-                content = "Cơm tấm đúng vị Sài Gòn, nước mắm kẹo đặc trưng",
-                imageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500",
-                shopName = "Cơm Tấm Bụi",
-                shopAvatarUrl = null
-            ),
-            com.urmyfood.user.domain.model.FoodPost(
-                postId = "3",
-                dishName = "Bún bò Huế đặc biệt",
-                price = 40000.0,
-                originalPrice = 40000.0,
-                maxQuantity = 30,
-                remainingQuantity = 15,
-                endTime = null,
-                isFlashSale = false,
-                status = "ACTIVE",
-                content = "Nước lèo hầm xương 12 tiếng, giò heo, bò viên",
-                imageUrl = "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500",
-                shopName = "Quán Bà Chiểu",
-                shopAvatarUrl = null
-            )
-        )
-
-        // Show posts immediately, skip shimmer
-        binding.shimmerLayout.stopShimmer()
-        binding.shimmerLayout.visibility = View.GONE
-        binding.rvPosts.visibility = View.VISIBLE
-        adapter.submitList(mockPosts)
-    }
-
     private fun setupCategories() {
         val categories = listOf(
-            com.urmyfood.user.presentation.model.Category(1, "Cơm", "🍜"),
-            com.urmyfood.user.presentation.model.Category(2, "Bún/Phở", "🥣"),
-            com.urmyfood.user.presentation.model.Category(3, "Trà sữa", "🧋"),
+            com.urmyfood.user.presentation.model.Category(0, "Tất cả", "🍽️"),
+            com.urmyfood.user.presentation.model.Category(1, "Món chính", "🍛"),
+            com.urmyfood.user.presentation.model.Category(2, "Đồ uống", "🥤"),
+            com.urmyfood.user.presentation.model.Category(3, "Tráng miệng", "🍰"),
             com.urmyfood.user.presentation.model.Category(4, "Ăn vặt", "🍢"),
-            com.urmyfood.user.presentation.model.Category(5, "Bánh mì", "🥖")
+            com.urmyfood.user.presentation.model.Category(5, "Combo", "🍱"),
+            com.urmyfood.user.presentation.model.Category(6, "Bún/Phở", "🥣"),
+            com.urmyfood.user.presentation.model.Category(7, "Cơm", "🍜"),
+            com.urmyfood.user.presentation.model.Category(8, "Trà sữa", "🧋"),
+            com.urmyfood.user.presentation.model.Category(9, "Bánh mì", "🥖")
         )
         binding.rvCategories.adapter =
-            com.urmyfood.user.presentation.main.home.adapter.CategoryAdapter(categories)
+            com.urmyfood.user.presentation.main.home.adapter.CategoryAdapter(categories) { category ->
+                viewModel.selectCategory(category)
+            }
     }
 
     private fun setupSwipeRefresh() {
@@ -180,6 +142,22 @@ class HomeFragment : Fragment() {
             msg ?: return@observe
             Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
             viewModel.clearLikeError()
+        }
+    }
+
+    private fun observeFollowError() {
+        viewModel.followError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearFollowError()
+        }
+    }
+
+    private fun observeSaveError() {
+        viewModel.saveError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearSaveError()
         }
     }
 
@@ -220,15 +198,19 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
-        binding.tvSeeAll.setOnClickListener { showFeatureInDevelopment() }
-        
         binding.btnFilterPrice.setOnClickListener { view ->
             showPriceFilterMenu(view)
         }
 
+        binding.btnFilterDate.setOnClickListener { view ->
+            showDateFilterMenu(view)
+        }
+
+        binding.btnFilterFlash.setOnClickListener {
+            viewModel.toggleFlashSaleFilter()
+        }
+
         adapter.onCommentClick = { postId -> showCommentSheet(postId) }
-        adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
             showGuestDialogOrRun {
                 val orderSheet = OrderBottomSheetFragment(foodPost)
@@ -240,19 +222,14 @@ class HomeFragment : Fragment() {
                 viewModel.toggleLike(post.postId, post.isLiked)
             }
         }
-        adapter.checkIsBookmarked = { post ->
-            if (viewModel.isGuest) {
-                false
-            } else {
-                favoritesManager.isFavorite(post.postId)
+        adapter.onFollowClick = { post ->
+            showGuestDialogOrRun {
+                viewModel.toggleFollow(post.shopAccountId, post.isFollowingShop)
             }
         }
         adapter.onSaveClick = { post ->
             showGuestDialogOrRun {
-                val isSaved = favoritesManager.toggleFavorite(post)
-                val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                adapter.notifyDataSetChanged()
+                viewModel.toggleSave(post.postId, post.isSaved)
             }
         }
         adapter.onShopClick = { post ->
@@ -262,13 +239,6 @@ class HomeFragment : Fragment() {
                 putLong("shopId", post.shopAccountId)
             }
             findNavController().navigate(R.id.shopProfileFragment, bundle)
-        }
-    }
-
-    private fun showShareSheet() {
-        showGuestDialogOrRun {
-            val shareSheet = ShareBottomSheetFragment()
-            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
     }
 
@@ -353,12 +323,11 @@ class HomeFragment : Fragment() {
         ListPopupWindow(requireContext()).apply {
             setAdapter(adapter)
             setAnchorView(anchor)
-            width = 500 // pixels
+            width = 500 
             height = ListPopupWindow.WRAP_CONTENT
             isModal = true
             setBackgroundDrawable(requireContext().getDrawable(R.drawable.bg_dropdown_menu))
             
-            // Offset to look better
             verticalOffset = 8 
             
             setOnItemClickListener { _, _, position, _ ->
@@ -372,17 +341,73 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
+    private fun showDateFilterMenu(anchor: View) {
+        val items = listOf(
+            Pair("Mới nhất", R.drawable.ic_trending_up),
+            Pair("Cũ nhất", R.drawable.ic_trending_down)
+        )
+
+        val adapter = object : ArrayAdapter<Pair<String, Int>>(
             requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
+            R.layout.item_dropdown_menu,
+            items
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.item_dropdown_menu, parent, false)
+                
+                val item = getItem(position)
+                val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+                val ivIcon = view.findViewById<ImageView>(R.id.ivIcon)
+                
+                tvTitle.text = item?.first
+                item?.second?.let { ivIcon.setImageResource(it) }
+                
+                return view
+            }
+        }
+
+        ListPopupWindow(requireContext()).apply {
+            setAdapter(adapter)
+            setAnchorView(anchor)
+            width = 500 
+            height = ListPopupWindow.WRAP_CONTENT
+            isModal = true
+            setBackgroundDrawable(requireContext().getDrawable(R.drawable.bg_dropdown_menu))
+            verticalOffset = 8 
+            
+            setOnItemClickListener { _, _, position, _ ->
+                val selected = items[position].first
+                val order = if (position == 0) "NEWEST" else "OLDEST"
+                viewModel.setSortOrder(order)
+                Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
+                dismiss()
+            }
+            show()
+        }
+    }
+
+    private fun observeFilters() {
+        viewModel.isFlashSaleFilterActive.observe(viewLifecycleOwner) { isActive ->
+            val ctx = requireContext()
+            if (isActive) {
+                binding.btnFilterFlash.setBackgroundColor(ctx.getColor(R.color.primary))
+                binding.btnFilterFlash.setTextColor(ctx.getColor(android.R.color.white))
+            } else {
+                binding.btnFilterFlash.setBackgroundColor(ctx.getColor(R.color.white))
+                binding.btnFilterFlash.setTextColor(ctx.getColor(R.color.primary))
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        adapter.notifyDataSetChanged()
+        if (isFirstResume) {
+            isFirstResume = false
+            adapter.notifyDataSetChanged()
+        } else {
+            viewModel.loadPosts()
+        }
     }
 
     override fun onDestroyView() {

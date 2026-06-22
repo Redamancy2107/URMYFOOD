@@ -9,6 +9,7 @@ import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.data.model.GetOrCreateSessionRequest
 import com.urmyfood.shop.data.model.toDomain
 import com.urmyfood.shop.data.remote.ChatApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.repository.ChatRepository
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -38,7 +39,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun getOrCreateSession(token: String, shopId: Long): Result<ChatSession> = try {
@@ -50,7 +51,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun getMessages(token: String, sessionId: Long): Result<List<ChatMessage>> = try {
@@ -61,7 +62,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun markAsRead(token: String, sessionId: Long): Result<Unit> = try {
@@ -72,7 +73,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override fun connectWebSocket(wsUrl: String, token: String) {
@@ -92,7 +93,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage(), response.code())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override fun sendMessageViaWebSocket(sessionId: Long, content: String) {

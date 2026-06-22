@@ -27,7 +27,7 @@ class PostRepositoryImplTest {
         maxQuantity = 200, remainingQuantity = 150, endTime = null, isFlashSale = false,
         status = "ACTIVE", content = "Cơm tấm sườn bì chả",
         imageUrl = "https://example.com/image.jpg", shopName = "Quán Cơm Ngon",
-        shopAvatarUrl = null, createdAt = "2024-01-01T00:00:00Z"
+        shopAvatarUrl = null, shopAddress = null, createdAt = "2024-01-01T00:00:00Z"
     )
 
     private fun fakePageResponse(vararg posts: PostResponse, hasNext: Boolean = false) = PageResponse(
@@ -42,7 +42,7 @@ class PostRepositoryImplTest {
     ): PostApiService = object : PostApiService {
         override suspend fun getPost(postId: String, token: String?): Response<ApiResponse<PostResponse>> =
             Response.success(ApiResponse(true, "OK", fakePostResponse(postId)))
-        override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = getPostsBlock(token, page, size, anchor)
+        override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = getPostsBlock(token, page, size, anchor)
         override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?): Response<ApiResponse<PageResponse<PostResponse>>> =
             Response.success(ApiResponse(true, "OK", fakePageResponse()))
         override suspend fun likePost(postId: String, token: String): Response<ApiResponse<LikeToggleResult>> =
@@ -62,7 +62,7 @@ class PostRepositoryImplTest {
             Response.success(ApiResponse(true, "OK", fakePageResponse(*postResponses.toTypedArray())))
         }
 
-        val result = PostRepositoryImpl(apiService).getPosts(token = null, page = 0, size = 20, anchor = null)
+        val result = PostRepositoryImpl(apiService).getPosts(token = null, page = 0, size = 20, anchor = null, category = null)
 
         assertTrue(result is Result.Success)
         val pageResult = (result as Result.Success<PageResult<*>>).data
@@ -75,7 +75,7 @@ class PostRepositoryImplTest {
             Response.success(ApiResponse(true, "OK", fakePageResponse()))
         }
 
-        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null)
+        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null, null)
 
         assertTrue(result is Result.Success)
         assertTrue((result as Result.Success).data.items.isEmpty())
@@ -88,7 +88,7 @@ class PostRepositoryImplTest {
             Response.success(ApiResponse<PageResponse<PostResponse>>(false, errorMsg, null))
         }
 
-        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null)
+        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null, null)
 
         assertTrue(result is Result.Error)
         assertEquals(errorMsg, (result as Result.Error).message)
@@ -98,7 +98,7 @@ class PostRepositoryImplTest {
     fun `getPosts returns Error when API returns HTTP 404`() = runTest {
         val apiService = makeApiService { _, _, _, _ -> Response.error(404, errorBody()) }
 
-        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null)
+        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null, null)
 
         assertTrue(result is Result.Error)
         assertEquals("Lỗi server: 404", (result as Result.Error).message)
@@ -108,7 +108,7 @@ class PostRepositoryImplTest {
     fun `getPosts returns Error when network throws IOException`() = runTest {
         val apiService = makeApiService { _, _, _, _ -> throw IOException("Network unreachable") }
 
-        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null)
+        val result = PostRepositoryImpl(apiService).getPosts(null, 0, 20, null, null)
 
         assertTrue(result is Result.Error)
         assertEquals("Network unreachable", (result as Result.Error).message)

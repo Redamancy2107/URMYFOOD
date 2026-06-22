@@ -20,6 +20,32 @@ class CheckoutUseCase(
     }
 }
 
+class DirectCheckoutUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(
+        postId: String,
+        quantity: Int,
+        paymentMethod: String,
+        deliveryAddress: String,
+        note: String? = null,
+        voucherCode: String? = null
+    ): Result<OrderResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập để đặt hàng")
+        return orderRepository.directCheckout(
+            "Bearer $token",
+            postId,
+            quantity,
+            paymentMethod,
+            deliveryAddress,
+            null,
+            note,
+            voucherCode
+        )
+    }
+}
+
 class GetOrdersUseCase(
     private val orderRepository: OrderRepository,
     private val tokenManager: TokenProvider
@@ -37,6 +63,26 @@ class CancelOrderUseCase(
     suspend operator fun invoke(orderId: String, cancelReason: String): Result<OrderResponse> {
         val token = tokenManager.getAccessToken() ?: return Result.Error("Vui lòng đăng nhập để hủy đơn hàng")
         return orderRepository.cancelOrder("Bearer $token", orderId, cancelReason)
+    }
+}
+
+class CreateOrderReviewUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String, rating: Int, comment: String?): Result<com.urmyfood.user.data.model.OrderReviewResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui long dang nhap")
+        return orderRepository.createReview("Bearer $token", orderId, rating, comment)
+    }
+}
+
+class ReorderUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String): Result<com.urmyfood.user.data.model.ReorderResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui long dang nhap")
+        return orderRepository.reorder("Bearer $token", orderId)
     }
 }
 

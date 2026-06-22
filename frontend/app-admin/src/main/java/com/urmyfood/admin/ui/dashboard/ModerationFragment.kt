@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.urmyfood.admin.R
 import com.urmyfood.admin.data.model.PostItem
 import com.urmyfood.admin.data.repository.AdminRepository
@@ -45,7 +46,8 @@ class ModerationFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = PostAdapter(postsList, 
             onHide = { post -> togglePostStatus(post) },
-            onDelete = { post -> confirmDeletePost(post) }
+            onDelete = { post -> confirmDeletePost(post) },
+            onClick = { post -> showPostDetailDialog(post) }
         )
         binding.rvPosts.layoutManager = LinearLayoutManager(requireContext())
         binding.rvPosts.adapter = adapter
@@ -64,6 +66,64 @@ class ModerationFragment : Fragment() {
             }.onFailure { error ->
                 Toast.makeText(requireContext(), "Lỗi tải bài viết: ${error.message}", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun showPostDetailDialog(post: PostItem) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_post_detail, null)
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        val ivDishImage = dialogView.findViewById<ImageView>(R.id.iv_dish_image)
+        val tvDishName = dialogView.findViewById<TextView>(R.id.tv_dialog_dish_name)
+        val tvPrice = dialogView.findViewById<TextView>(R.id.tv_dialog_price)
+        val tvOriginalPrice = dialogView.findViewById<TextView>(R.id.tv_dialog_original_price)
+        val tvShopName = dialogView.findViewById<TextView>(R.id.tv_dialog_shop_name)
+        val tvCategory = dialogView.findViewById<TextView>(R.id.tv_dialog_category)
+        val tvStatus = dialogView.findViewById<TextView>(R.id.tv_dialog_status)
+        val tvContent = dialogView.findViewById<TextView>(R.id.tv_dialog_content)
+        val btnClose = dialogView.findViewById<View>(R.id.btn_dialog_close)
+
+        tvDishName.text = post.dishName ?: "Chưa xác định"
+        
+        val currencyFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+        tvPrice.text = currencyFormat.format(post.price ?: 0.0)
+        
+        if (post.originalPrice != null && post.originalPrice > (post.price ?: 0.0)) {
+            tvOriginalPrice.visibility = View.VISIBLE
+            tvOriginalPrice.text = currencyFormat.format(post.originalPrice)
+            tvOriginalPrice.paintFlags = tvOriginalPrice.paintFlags or android.graphics.Paint.STRIKE_THRU_TEXT_FLAG
+        } else {
+            tvOriginalPrice.visibility = View.GONE
+        }
+
+        tvShopName.text = "Cửa hàng: ${post.shopName ?: "Chưa rõ"}"
+        tvCategory.text = "Danh mục: ${post.category ?: "Chưa rõ"}"
+        
+        val statusText = if (post.status == "HIDDEN") "Đã ẩn" else "Hiển thị"
+        tvStatus.text = "Trạng thái: $statusText"
+        tvContent.text = post.content ?: "Không có mô tả chi tiết."
+
+        Glide.with(this)
+            .load(post.imageUrl)
+            .placeholder(R.drawable.ic_post_placeholder)
+            .error(R.drawable.ic_post_placeholder)
+            .into(ivDishImage)
+
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialog.show()
+
+        dialog.window?.let { window ->
+            // Adjust width for landscape mode on tablets (55% width is premium)
+            window.setLayout(
+                (resources.displayMetrics.widthPixels * 0.55).toInt(),
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            window.setBackgroundDrawableResource(android.R.color.transparent)
         }
     }
 
@@ -112,7 +172,8 @@ class ModerationFragment : Fragment() {
     private class PostAdapter(
         private val items: List<PostItem>,
         private val onHide: (PostItem) -> Unit,
-        private val onDelete: (PostItem) -> Unit
+        private val onDelete: (PostItem) -> Unit,
+        private val onClick: (PostItem) -> Unit
     ) : RecyclerView.Adapter<PostAdapter.ViewHolder>() {
 
         private val currencyFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
@@ -150,6 +211,7 @@ class ModerationFragment : Fragment() {
 
             holder.btnHide.setOnClickListener { onHide(item) }
             holder.btnDelete.setOnClickListener { onDelete(item) }
+            holder.itemView.setOnClickListener { onClick(item) }
         }
 
         override fun getItemCount() = items.size

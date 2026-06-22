@@ -55,8 +55,13 @@ public class AccountPersistenceAdapter implements AccountRepository {
     }
 
     @Override
-    public List<Account> findAll(int page, int size, String role) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+    public List<Account> findAll(int page, int size, String role, String sortBy, String sortDir) {
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
+        String sortProperty = sortBy != null && !sortBy.trim().isEmpty() ? sortBy : "id";
+        if ("createdAt".equals(sortProperty)) {
+            sortProperty = "id";
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortProperty));
         if (role == null || role.trim().isEmpty()) {
             return jpaAccountRepository.findAll(pageable).stream().map(this::toDomain).toList();
         }

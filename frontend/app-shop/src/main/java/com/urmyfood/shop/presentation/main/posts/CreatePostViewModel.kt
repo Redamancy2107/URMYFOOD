@@ -125,7 +125,7 @@ class CreatePostViewModel(
 
         val dishNameVal = _dishName.value!!.trim()
         val priceVal = _price.value!!.trim().toLong()
-        val origPriceVal = _originalPrice.value?.trim()?.toLongOrNull()
+        val origPriceVal = _originalPrice.value?.trim()?.toLongOrNull() ?: priceVal
         val stockVal = _stockCount.value ?: 1
         val flashSaleVal = _isFlashSale.value ?: false
         val contentVal = _description.value?.trim()?.ifBlank { null }

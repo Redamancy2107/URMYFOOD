@@ -8,8 +8,12 @@ import androidx.lifecycle.viewModelScope
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.GuestRepository
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
+import com.urmyfood.user.domain.usecase.SavePostUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
+import com.urmyfood.user.domain.usecase.UnsavePostUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -22,6 +26,10 @@ sealed class NewsfeedUiState {
 class HomeViewModel(
     private val getPostsUseCase: GetPostsUseCase,
     private val toggleLikeUseCase: ToggleLikeUseCase,
+    private val followShopUseCase: FollowShopUseCase,
+    private val unfollowShopUseCase: UnfollowShopUseCase,
+    private val savePostUseCase: SavePostUseCase,
+    private val unsavePostUseCase: UnsavePostUseCase,
     private val guestRepository: GuestRepository
 ) : ViewModel() {
 
@@ -36,8 +44,22 @@ class HomeViewModel(
     private val _likeError = MutableLiveData<String?>()
     val likeError: LiveData<String?> = _likeError
 
+    private val _followError = MutableLiveData<String?>()
+    val followError: LiveData<String?> = _followError
+
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
+
     private val _sortOrder = MutableLiveData<String?>(null)
     val sortOrder: LiveData<String?> = _sortOrder
+
+    private val _isFlashSaleFilterActive = MutableLiveData<Boolean>(false)
+    val isFlashSaleFilterActive: LiveData<Boolean> = _isFlashSaleFilterActive
+
+    private val _selectedCategory = MutableLiveData<String?>(null)
+    val selectedCategory: LiveData<String?> = _selectedCategory
+
+    private var currentCategory: String? = null
 
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
@@ -54,11 +76,29 @@ class HomeViewModel(
         applySortingAndEmit()
     }
 
+    fun selectCategory(category: String?) {
+        if (category == currentCategory) return
+        currentCategory = category
+        _selectedCategory.value = category
+        loadPosts()
+    }
+
+    fun toggleFlashSaleFilter() {
+        _isFlashSaleFilterActive.value = !(_isFlashSaleFilterActive.value ?: false)
+        applySortingAndEmit()
+    }
+
     private fun applySortingAndEmit() {
+        var baseList = loadedPosts.toList()
+        if (_isFlashSaleFilterActive.value == true) {
+            baseList = baseList.filter { it.isFlashSale }
+        }
         val sortedList = when (_sortOrder.value) {
-            "LOW_TO_HIGH" -> loadedPosts.sortedBy { it.price }
-            "HIGH_TO_LOW" -> loadedPosts.sortedByDescending { it.price }
-            else -> loadedPosts.toList()
+            "LOW_TO_HIGH" -> baseList.sortedBy { it.price }
+            "HIGH_TO_LOW" -> baseList.sortedByDescending { it.price }
+            "NEWEST" -> baseList.sortedByDescending { it.createdAt ?: "" }
+            "OLDEST" -> baseList.sortedBy { it.createdAt ?: "" }
+            else -> baseList
         }
         _uiState.value = NewsfeedUiState.Success(sortedList)
     }
@@ -73,7 +113,7 @@ class HomeViewModel(
         _uiState.value = NewsfeedUiState.Loading
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = 0, anchor = null)) {
+            when (val result = getPostsUseCase(page = 0, anchor = null, category = currentCategory)) {
                 is Result.Success -> {
                     loadedPosts.addAll(result.data.items)
                     hasNextPage = result.data.hasNext
@@ -92,7 +132,7 @@ class HomeViewModel(
         _isLoadingMore.value = true
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor)) {
+            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor, category = currentCategory)) {
                 is Result.Success -> {
                     val newPosts = result.data.items.filter { new ->
                         loadedPosts.none { it.postId == new.postId }
@@ -130,6 +170,8 @@ class HomeViewModel(
     }
 
     fun clearLikeError() { _likeError.value = null }
+    fun clearFollowError() { _followError.value = null }
+    fun clearSaveError() { _saveError.value = null }
 
     private fun updatePostLike(postId: String, isLiked: Boolean, likeCount: Int) {
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
@@ -137,7 +179,6 @@ class HomeViewModel(
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
             applySortingAndEmit()
             
-            // Dispatch to favorites screen or other listeners
             com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(postId, Pair(isLiked, likeCount)))
         }
     }
@@ -146,6 +187,78 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0 && (loadedPosts[idx].isLiked != isLiked || loadedPosts[idx].likeCount != likeCount)) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+        }
+    }
+
+    fun toggleSave(postId: String, isCurrentlySaved: Boolean) {
+        updateSavedState(postId, !isCurrentlySaved)
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, !isCurrentlySaved))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlySaved) {
+                unsavePostUseCase(postId)
+            } else {
+                savePostUseCase(postId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateSavedState(result.data.postId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(result.data.postId, result.data.isSaved))
+                }
+                is Result.Error -> {
+                    updateSavedState(postId, isCurrentlySaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, isCurrentlySaved))
+                    _saveError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateSavedState(postId: String, isSaved: Boolean) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0 && loadedPosts[idx].isSaved != isSaved) {
+            loadedPosts[idx] = loadedPosts[idx].copy(isSaved = isSaved)
+            applySortingAndEmit()
+        }
+    }
+
+    fun toggleFollow(shopId: Long, isCurrentlyFollowing: Boolean) {
+        if (shopId <= 0L) return
+        updateFollowStateForShop(shopId, !isCurrentlyFollowing)
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, !isCurrentlyFollowing))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlyFollowing) {
+                unfollowShopUseCase(shopId)
+            } else {
+                followShopUseCase(shopId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateFollowStateForShop(result.data.shopId, result.data.isFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                        Pair(result.data.shopId, result.data.isFollowing)
+                    )
+                }
+                is Result.Error -> {
+                    updateFollowStateForShop(shopId, isCurrentlyFollowing)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, isCurrentlyFollowing))
+                    _followError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateFollowStateForShop(shopId: Long, isFollowing: Boolean) {
+        var changed = false
+        for (index in loadedPosts.indices) {
+            if (loadedPosts[index].shopAccountId == shopId && loadedPosts[index].isFollowingShop != isFollowing) {
+                loadedPosts[index] = loadedPosts[index].copy(isFollowingShop = isFollowing)
+                changed = true
+            }
+        }
+        if (changed) {
             applySortingAndEmit()
         }
     }
@@ -160,7 +273,11 @@ class HomeViewModel(
 
     class Factory(
         private val getPostsUseCase: GetPostsUseCase,
-        private val toggleLikeUseCase: ToggleLikeUseCase
+        private val toggleLikeUseCase: ToggleLikeUseCase,
+        private val followShopUseCase: FollowShopUseCase,
+        private val unfollowShopUseCase: UnfollowShopUseCase,
+        private val savePostUseCase: SavePostUseCase,
+        private val unsavePostUseCase: UnsavePostUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -168,6 +285,10 @@ class HomeViewModel(
                 return HomeViewModel(
                     getPostsUseCase,
                     toggleLikeUseCase,
+                    followShopUseCase,
+                    unfollowShopUseCase,
+                    savePostUseCase,
+                    unsavePostUseCase,
                     com.urmyfood.user.di.ServiceLocator.guestSessionManager
                 ) as T
             }

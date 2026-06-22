@@ -2,6 +2,7 @@ package com.urmyfood.backend.presentation.controller;
 
 import com.urmyfood.backend.application.dto.*;
 import com.urmyfood.backend.application.service.AdminService;
+import com.urmyfood.backend.application.service.AdminReportService;
 import com.urmyfood.backend.infrastructure.security.CustomAccountDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class AdminController {
 
     private final AdminService adminService;
+    private final AdminReportService adminReportService;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<AdminProfileDto>> getAdminProfile(Authentication authentication) {
@@ -78,18 +80,36 @@ public class AdminController {
     public ResponseEntity<ApiResponse<PageResponse<AccountProfileDto>>> getAllAccounts(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
-            @RequestParam(value = "role", required = false) String role) {
-        PageResponse<AccountProfileDto> response = adminService.getAllAccounts(page, size, role);
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortBy,
+            @RequestParam(value = "sortDir", defaultValue = "DESC") String sortDir) {
+        PageResponse<AccountProfileDto> response = adminService.getAllAccounts(page, size, role, sortBy, sortDir);
+        System.out.println("----- DEBUG ACCOUNTS -----");
+        if(response.getContent() != null) {
+            for(AccountProfileDto dto : response.getContent()) {
+                System.out.println("ID: " + dto.getId() + ", AvatarUrl: " + dto.getAvatarUrl());
+            }
+        }
+        System.out.println("--------------------------");
         return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài khoản thành công", response));
     }
 
     @PostMapping("/accounts/{id}/lock-unlock")
     public ResponseEntity<ApiResponse<Void>> lockUnlockAccount(
             @PathVariable("id") Long id,
-            @RequestParam("active") boolean active) {
-        adminService.lockUnlockAccount(id, active);
+            @RequestParam("active") boolean active,
+            @RequestParam(value = "reason", required = false) String reason) {
+        adminService.lockUnlockAccount(id, active, reason);
         String action = active ? "Kích hoạt" : "Khóa";
         return ResponseEntity.ok(ApiResponse.success(action + " tài khoản thành công", null));
+    }
+
+    @DeleteMapping("/accounts/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "reason", required = false) String reason) {
+        adminService.deleteAccount(id, reason);
+        return ResponseEntity.ok(ApiResponse.success("Xóa tài khoản thành công", null));
     }
 
     @GetMapping("/vouchers")
@@ -162,5 +182,54 @@ public class AdminController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=customers_report.csv")
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(bytes);
+    }
+
+    // FR_ADM_002: Content Moderation
+    @GetMapping("/reports")
+    public ResponseEntity<ApiResponse<PageResponse<ReportResponse>>> getReports(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "status", defaultValue = "PENDING") String status) {
+        PageResponse<ReportResponse> response = adminReportService.getReports(page, size, status);
+        return ResponseEntity.ok(ApiResponse.success("Lấy danh sách báo cáo thành công", response));
+    }
+
+    @PostMapping("/reports/{reportId}/ignore")
+    public ResponseEntity<ApiResponse<Void>> ignoreReport(
+            @PathVariable("reportId") UUID reportId,
+            Authentication authentication) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        adminReportService.ignoreReport(reportId, details.getAccount().getId());
+        return ResponseEntity.ok(ApiResponse.success("Đã bỏ qua báo cáo", null));
+    }
+
+    @PostMapping("/reports/{reportId}/delete-post")
+    public ResponseEntity<ApiResponse<Void>> deletePostFromReport(
+            @PathVariable("reportId") UUID reportId,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        String warningMessage = body.getOrDefault("warningMessage", "Bài viết vi phạm nội quy.");
+        adminReportService.deletePost(reportId, warningMessage, details.getAccount().getId());
+        return ResponseEntity.ok(ApiResponse.success("Đã xóa bài viết và cảnh cáo shop", null));
+    }
+
+    @PostMapping("/reports/{reportId}/block-shop")
+    public ResponseEntity<ApiResponse<Void>> blockShopFromReport(
+            @PathVariable("reportId") UUID reportId,
+            @RequestBody ReportBlockShopRequest request,
+            Authentication authentication) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        adminReportService.blockShop(reportId, request.getBlockDays(), request.getReason(), details.getAccount().getId());
+        return ResponseEntity.ok(ApiResponse.success("Đã khóa shop thành công", null));
+    }
+
+    @PostMapping("/reports/{reportId}/delete-shop")
+    public ResponseEntity<ApiResponse<Void>> deleteShopFromReport(
+            @PathVariable("reportId") UUID reportId,
+            Authentication authentication) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        adminReportService.deleteShop(reportId, details.getAccount().getId());
+        return ResponseEntity.ok(ApiResponse.success("Đã xóa shop vĩnh viễn", null));
     }
 }

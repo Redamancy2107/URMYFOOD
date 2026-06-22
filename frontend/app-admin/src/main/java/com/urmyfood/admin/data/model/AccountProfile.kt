@@ -9,6 +9,6 @@ data class AccountProfile(
     @SerializedName("email") val email: String?,
     @SerializedName("phone") val phone: String?,
     @SerializedName("role") val role: String?,
-    @SerializedName("avatarUrl") val avatarUrl: String?,
+    @SerializedName(value = "avatarUrl", alternate = ["avatar_url"]) val avatarUrl: String?,
     @SerializedName("active") val isActive: Boolean = true
 )

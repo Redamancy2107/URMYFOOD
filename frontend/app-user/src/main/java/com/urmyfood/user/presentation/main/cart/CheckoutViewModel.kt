@@ -9,8 +9,9 @@ import com.urmyfood.user.data.model.AddressResponse
 import com.urmyfood.user.data.model.VoucherResponse
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.CheckoutUseCase
+import com.urmyfood.user.domain.usecase.DirectCheckoutUseCase
 import com.urmyfood.user.domain.usecase.GetAddressesUseCase
-import com.urmyfood.user.domain.usecase.GetVouchersUseCase
+import com.urmyfood.user.domain.usecase.GetSavedVouchersUseCase
 import com.urmyfood.user.domain.usecase.CreatePayOsPaymentUseCase
 import kotlinx.coroutines.launch
 
@@ -26,8 +27,9 @@ data class CheckoutUiState(
 
 class CheckoutViewModel(
     private val checkoutUseCase: CheckoutUseCase,
+    private val directCheckoutUseCase: DirectCheckoutUseCase,
     private val getAddressesUseCase: GetAddressesUseCase,
-    private val getVouchersUseCase: GetVouchersUseCase,
+    private val getSavedVouchersUseCase: GetSavedVouchersUseCase,
     private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
 ) : ViewModel() {
 
@@ -58,8 +60,8 @@ class CheckoutViewModel(
                 is Result.Error -> { /* silently ignore address load error */ }
             }
 
-            // Load vouchers
-            when (val result = getVouchersUseCase()) {
+            // Load saved vouchers
+            when (val result = getSavedVouchersUseCase()) {
                 is Result.Success -> {
                     _vouchers.value = result.data
                 }
@@ -84,43 +86,49 @@ class CheckoutViewModel(
             val finalVoucher = if (voucherCode.isNullOrBlank()) null else voucherCode.trim()
 
             when (val result = checkoutUseCase(paymentMethod, address, finalNote, finalVoucher)) {
-                is Result.Success -> {
-                    val order = result.data
-                    if (paymentMethod == PAYMENT_VIETQR) {
-                        when (val payOsResult = createPayOsPaymentUseCase(order.orderId)) {
-                            is Result.Success -> {
-                                _uiState.value = CheckoutUiState(
-                                    isSuccess = true,
-                                    message = "Tạo mã thanh toán thành công!",
-                                    orderId = order.orderId,
-                                    finalAmount = order.finalAmount.toLong(),
-                                    qrCode = payOsResult.data.qrCode,
-                                    paymentMethod = paymentMethod
-                                )
-                            }
-                            is Result.Error -> {
-                                _uiState.value = CheckoutUiState(
-                                    isSuccess = true,
-                                    message = "Đặt hàng thành công! Vui lòng chờ quán xác nhận trước khi thanh toán.",
-                                    orderId = order.orderId,
-                                    finalAmount = order.finalAmount.toLong(),
-                                    paymentMethod = paymentMethod
-                                )
-                            }
-                        }
-                    } else {
-                        _uiState.value = CheckoutUiState(
-                            isSuccess = true,
-                            message = "Đặt hàng thành công!",
-                            orderId = order.orderId,
-                            finalAmount = order.finalAmount.toLong(),
-                            paymentMethod = paymentMethod
-                        )
-                    }
-                }
+                is Result.Success -> handleCheckoutSuccess(result.data, paymentMethod)
                 is Result.Error -> _uiState.value = CheckoutUiState(message = result.message)
             }
         }
+    }
+
+    fun directCheckout(
+        postId: String,
+        quantity: Int,
+        paymentMethod: String,
+        deliveryAddress: String,
+        note: String? = null,
+        voucherCode: String? = null
+    ) {
+        viewModelScope.launch {
+            _uiState.value = CheckoutUiState(isLoading = true)
+            val address = if (deliveryAddress.isBlank()) DEFAULT_DELIVERY_ADDRESS else deliveryAddress
+            val finalNote = if (note.isNullOrBlank()) DEFAULT_NOTE else note
+            val finalVoucher = if (voucherCode.isNullOrBlank()) null else voucherCode.trim()
+
+            when (val result = directCheckoutUseCase(postId, quantity, paymentMethod, address, finalNote, finalVoucher)) {
+                is Result.Success -> handleCheckoutSuccess(result.data, paymentMethod)
+                is Result.Error -> _uiState.value = CheckoutUiState(message = result.message)
+            }
+        }
+    }
+
+    private suspend fun handleCheckoutSuccess(
+        order: com.urmyfood.user.data.model.OrderResponse,
+        paymentMethod: String
+    ) {
+        val messageText = if (paymentMethod == PAYMENT_VIETQR) {
+            "Đặt hàng thành công! Vui lòng chờ quán xác nhận trước khi thanh toán."
+        } else {
+            "Đặt hàng thành công! Vui lòng chờ quán xác nhận."
+        }
+        _uiState.value = CheckoutUiState(
+            isSuccess = true,
+            message = messageText,
+            orderId = order.orderId,
+            finalAmount = order.finalAmount.toLong(),
+            paymentMethod = paymentMethod
+        )
     }
 
     fun clearMessage() {
@@ -129,14 +137,21 @@ class CheckoutViewModel(
 
     class Factory(
         private val checkoutUseCase: CheckoutUseCase,
+        private val directCheckoutUseCase: DirectCheckoutUseCase,
         private val getAddressesUseCase: GetAddressesUseCase,
-        private val getVouchersUseCase: GetVouchersUseCase,
+        private val getSavedVouchersUseCase: GetSavedVouchersUseCase,
         private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(CheckoutViewModel::class.java)) {
-                return CheckoutViewModel(checkoutUseCase, getAddressesUseCase, getVouchersUseCase, createPayOsPaymentUseCase) as T
+                return CheckoutViewModel(
+                    checkoutUseCase,
+                    directCheckoutUseCase,
+                    getAddressesUseCase,
+                    getSavedVouchersUseCase,
+                    createPayOsPaymentUseCase
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
