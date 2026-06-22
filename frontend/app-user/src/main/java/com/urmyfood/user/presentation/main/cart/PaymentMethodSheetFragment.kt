@@ -104,7 +104,7 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
     private fun setupClickListeners() {
         // Confirm Button
         binding.btnConfirmPayment.setOnClickListener {
-            val paymentMethod = if (isPayCardSelected) "MOMO" else "COD"
+            val paymentMethod = if (isPayCardSelected) PAYMENT_VIETQR else PAYMENT_COD
             val deliveryAddress = binding.etDeliveryAddress.text?.toString()?.trim().orEmpty()
             val note = binding.etNote.text?.toString()?.trim()
             val voucherCode = binding.etVoucherCode.text?.toString()?.trim()
@@ -161,7 +161,16 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
                 if (state.isSuccess) {
                     (parentFragment as? CartFragment)?.loadCartItems()
                     try {
-                        findNavController().navigate(R.id.orderHistoryFragment)
+                        if (state.paymentMethod == PAYMENT_VIETQR && !state.qrCode.isNullOrBlank()) {
+                            val bundle = Bundle().apply {
+                                putString("qrCode", state.qrCode)
+                                putLong("amount", state.finalAmount)
+                                putString("orderId", state.orderId)
+                            }
+                            findNavController().navigate(R.id.paymentQrFragment, bundle)
+                        } else {
+                            findNavController().navigate(R.id.orderHistoryFragment)
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
@@ -193,5 +202,7 @@ class PaymentMethodSheetFragment : BottomSheetDialogFragment() {
 
     companion object {
         const val TAG = "PaymentMethodSheetFragment"
+        private const val PAYMENT_COD = "COD"
+        private const val PAYMENT_VIETQR = "VIETQR"
     }
 }

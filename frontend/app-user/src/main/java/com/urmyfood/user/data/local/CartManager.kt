@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.urmyfood.user.domain.model.CartItem
-import com.urmyfood.user.presentation.main.profile.OrderHistoryFragment.Order
+
 
 /**
  * Manages local storage of shopping cart items and dynamically placed orders.
@@ -94,45 +94,5 @@ class CartManager(context: Context) {
         prefs.edit().remove(KEY_CART).apply()
     }
 
-    // ==========================================
-    // Dynamic Order History Logic
-    // ==========================================
 
-    /**
-     * Retrieve the user's order history.
-     * Pre-populates with mock data on first access if no history exists.
-     */
-    fun getOrders(): List<Order> {
-        val json = prefs.getString(KEY_ORDERS, null)
-        if (json == null) {
-            // Populate initial mock orders - remove when BE ready
-            val initial = listOf(
-                Order("Phở Hà Nội", "Phở bò tái nạm x1", "65.000đ", "18/05/2026 12:30", 0, "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=500"),
-                Order("Bún Đậu Mắm Tôm", "Bún đậu đặc biệt x2", "110.000đ", "17/05/2026 19:00", 1, "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=500"),
-                Order("Cơm Tấm Sà Bi Chưởng", "Cơm tấm sườn bì chả x1", "75.000đ", "15/05/2026 11:45", 2, "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500"),
-                Order("Bánh Mì Huỳnh Hoa", "Bánh mì đặc biệt x1", "68.000đ", "14/05/2026 08:00", 2, "https://images.unsplash.com/photo-1600454021970-351feb2a5149?w=500"),
-                Order("Trà Sữa Gong Cha", "Trà sữa truyền thống x2", "96.000đ", "10/05/2026 15:20", 3, "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500")
-            )
-            saveOrders(initial)
-            return initial
-        }
-        val type = object : TypeToken<List<Order>>() {}.type
-        return gson.fromJson(json, type) ?: emptyList()
-    }
-
-    /**
-     * Save the entire order list.
-     */
-    fun saveOrders(orders: List<Order>) {
-        prefs.edit().putString(KEY_ORDERS, gson.toJson(orders)).apply()
-    }
-
-    /**
-     * Add a newly placed order to the top of the history list.
-     */
-    fun addOrder(order: Order) {
-        val ordersList = getOrders().toMutableList()
-        ordersList.add(0, order) // Add to top
-        saveOrders(ordersList)
-    }
 }

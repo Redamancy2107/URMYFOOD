@@ -213,9 +213,10 @@
 
     <!-- Order History Screen -->
     <string name="order_history_title">Đơn hàng của tôi</string>
+    <string name="order_tab_pending">Chờ xác nhận</string>
     <string name="order_tab_processing">Đang xử lý</string>
     <string name="order_tab_delivering">Đang giao</string>
-    <string name="order_tab_delivered">Đã giao</string>
+    <string name="order_tab_completed">Hoàn thành</string>
     <string name="order_tab_cancelled">Đã hủy</string>
     <string name="order_btn_review">Đánh giá</string>
     <string name="order_btn_reorder">Đặt lại</string>

@@ -12,9 +12,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface JpaPostRepository extends JpaRepository<PostEntity, UUID> {
+    @Query("SELECT p FROM PostEntity p JOIN FETCH p.author ORDER BY p.createdAt DESC")
     List<PostEntity> findAllByOrderByCreatedAtDesc();
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM PostEntity p WHERE p.postId = :postId")
+    @Query("SELECT p FROM PostEntity p JOIN FETCH p.author WHERE p.postId = :postId")
     Optional<PostEntity> findByIdForUpdate(@Param("postId") UUID postId);
 }

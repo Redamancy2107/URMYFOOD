@@ -117,6 +117,15 @@ data class OrderItemResponse(
     val subtotal: Double
 )
 
+data class PayOsPaymentResponse(
+    @SerializedName("checkoutUrl")
+    val checkoutUrl: String,
+    @SerializedName("qrCode")
+    val qrCode: String,
+    @SerializedName("orderCode")
+    val orderCode: Long
+)
+
 fun CartItemResponse.toDomain(): CartItem = CartItem(
     cartItemId = cartItemId,
     postId = postId,

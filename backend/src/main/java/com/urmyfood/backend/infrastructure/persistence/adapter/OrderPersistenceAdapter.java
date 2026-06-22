@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.OffsetDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -47,12 +48,28 @@ public class OrderPersistenceAdapter implements OrderRepository {
 
     @Override
     public Optional<Order> findById(UUID orderId) {
-        return jpaOrderRepository.findById(orderId).map(this::toDomain);
+        return jpaOrderRepository.findByIdWithDetails(orderId).map(this::toDomain);
     }
 
     @Override
     public Optional<Order> findByIdForUpdate(UUID orderId) {
         return jpaOrderRepository.findByIdForUpdate(orderId).map(this::toDomain);
+    }
+
+    @Override
+    public List<Order> findByShopId(Long shopId) {
+        return jpaOrderRepository.findByShopIdOrderByCreatedAtDesc(shopId)
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Order> findPendingExpiredOrders(OffsetDateTime expiredBefore) {
+        return jpaOrderRepository.findPendingExpiredOrders(expiredBefore)
+                .stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     private Order toDomain(OrderEntity entity) {
@@ -74,6 +91,9 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .deliveryAddress(entity.getDeliveryAddress())
                 .note(entity.getNote())
                 .cancelReason(entity.getCancelReason())
+                .payosOrderCode(entity.getPayosOrderCode())
+                .payosCheckoutUrl(entity.getPayosCheckoutUrl())
+                .payosQrCode(entity.getPayosQrCode())
                 .items(items)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -117,6 +137,9 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .deliveryAddress(order.getDeliveryAddress())
                 .note(order.getNote())
                 .cancelReason(order.getCancelReason())
+                .payosOrderCode(order.getPayosOrderCode())
+                .payosCheckoutUrl(order.getPayosCheckoutUrl())
+                .payosQrCode(order.getPayosQrCode())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .items(new ArrayList<>())
@@ -141,5 +164,11 @@ public class OrderPersistenceAdapter implements OrderRepository {
                 .dishNameSnapshot(item.getDishNameSnapshot())
                 .imageUrlSnapshot(item.getImageUrlSnapshot())
                 .build();
+    }
+
+    @Override
+    public Optional<Order> findByPayosOrderCode(Long payosOrderCode) {
+        return jpaOrderRepository.findByPayosOrderCode(payosOrderCode)
+                .map(this::toDomain);
     }
 }

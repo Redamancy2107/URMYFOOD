@@ -4,6 +4,7 @@ import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderItemResponse;
 import com.urmyfood.backend.application.dto.OrderResponse;
+import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.CartItem;
 import com.urmyfood.backend.domain.model.Order;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
@@ -97,17 +99,127 @@ public class OrderService {
         return toResponse(order);
     }
 
+    public Order findOrderByIdAndCustomer(UUID orderId, Long customerId) {
+        return findOwnedOrder(customerId, orderId);
+    }
+
     @Transactional
     public OrderResponse cancelOrder(Long customerId, UUID orderId, CancelOrderRequest request) {
         Order order = findOwnedOrderForUpdate(customerId, orderId);
         if (order.getOrderStatus() != OrderStatus.PENDING) {
             throw new IllegalArgumentException("Chỉ có thể hủy đơn hàng đang chờ xác nhận");
         }
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Không thể hủy đơn hàng đã thanh toán. Vui lòng liên hệ quán.");
+        }
+        if (order.getCreatedAt() != null
+                && order.getCreatedAt().plusMinutes(5).isBefore(OffsetDateTime.now())) {
+            throw new IllegalArgumentException("Đã quá thời hạn 5 phút để hủy đơn hàng");
+        }
 
         restorePostQuantities(order.getItems());
         order.setOrderStatus(OrderStatus.CANCELLED);
         order.setCancelReason(request.getCancelReason());
         return toResponse(orderRepository.save(order));
+    }
+
+    public List<OrderResponse> getShopOrders(Long shopId) {
+        return orderRepository.findByShopId(shopId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public OrderResponse getShopOrderDetail(Long shopId, UUID orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        if (!order.getShop().getId().equals(shopId)) {
+            throw new IllegalArgumentException("Đơn hàng không thuộc quán của bạn");
+        }
+        return toResponse(order);
+    }
+
+    @Transactional
+    public OrderResponse updateOrderStatus(Long shopId, UUID orderId, UpdateOrderStatusRequest request) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        if (!order.getShop().getId().equals(shopId)) {
+            throw new IllegalArgumentException("Đơn hàng không thuộc quán của bạn");
+        }
+
+        OrderStatus newStatus = parseOrderStatus(request.getStatus());
+        validateStatusTransition(order, newStatus, request.getRejectReason());
+
+        if (newStatus == OrderStatus.REJECTED) {
+            restorePostQuantities(order.getItems());
+            order.setCancelReason(request.getRejectReason());
+        }
+        if (newStatus == OrderStatus.COMPLETED && order.getPaymentMethod() == PaymentMethod.COD) {
+            order.setPaymentStatus(PaymentStatus.PAID);
+        }
+
+        order.setOrderStatus(newStatus);
+        return toResponse(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void savePayosOrderCode(UUID orderId, Long payosOrderCode) {
+        savePayosPaymentData(orderId, payosOrderCode, null, null);
+    }
+
+    @Transactional
+    public void savePayosPaymentData(UUID orderId, Long payosOrderCode, String checkoutUrl, String qrCode) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        order.setPayosOrderCode(payosOrderCode);
+        order.setPayosCheckoutUrl(checkoutUrl);
+        order.setPayosQrCode(qrCode);
+        orderRepository.save(order);
+    }
+
+    @Transactional
+    public void markOrderAsPaidByOrderCode(Long payosOrderCode) {
+        Order order = orderRepository.findByPayosOrderCode(payosOrderCode)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng với mã PayOS: " + payosOrderCode));
+        order.setPaymentStatus(PaymentStatus.PAID);
+        orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean existsPayosOrderCode(Long payosOrderCode) {
+        return orderRepository.findByPayosOrderCode(payosOrderCode).isPresent();
+    }
+
+    private OrderStatus parseOrderStatus(String value) {
+        try {
+            return OrderStatus.valueOf(value.trim().toUpperCase());
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Trạng thái đơn hàng không hợp lệ");
+        }
+    }
+
+    private void validateStatusTransition(Order order, OrderStatus next, String rejectReason) {
+        OrderStatus current = order.getOrderStatus();
+        boolean valid = switch (current) {
+            case PENDING -> next == OrderStatus.ACCEPTED || next == OrderStatus.REJECTED;
+            case ACCEPTED -> next == OrderStatus.PICKING_UP;
+            case PICKING_UP -> next == OrderStatus.DELIVERING;
+            case DELIVERING -> next == OrderStatus.COMPLETED;
+            default -> false;
+        };
+        if (!valid) {
+            throw new IllegalArgumentException(
+                    "Không thể chuyển trạng thái từ " + current + " sang " + next);
+        }
+        if (current == OrderStatus.PENDING
+                && next == OrderStatus.ACCEPTED
+                && order.getPaymentMethod() == PaymentMethod.VIETQR
+                && order.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new IllegalArgumentException("Đơn VietQR chưa thanh toán");
+        }
+        if (next == OrderStatus.REJECTED && (rejectReason == null || rejectReason.isBlank())) {
+            throw new IllegalArgumentException("Phải nhập lý do khi từ chối đơn hàng");
+        }
     }
 
     private Order findOwnedOrderForUpdate(Long customerId, UUID orderId) {
@@ -240,6 +352,8 @@ public class OrderService {
         return OrderResponse.builder()
                 .orderId(order.getOrderId())
                 .customerId(order.getCustomer().getId())
+                .customerName(order.getCustomer().getFullName())
+                .customerPhone(order.getCustomer().getPhone())
                 .shopId(order.getShop().getId())
                 .shopName(order.getShop().getFullName())
                 .voucherId(order.getVoucher() == null ? null : order.getVoucher().getId())

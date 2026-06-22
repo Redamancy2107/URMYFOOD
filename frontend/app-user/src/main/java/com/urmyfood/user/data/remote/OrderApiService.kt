@@ -36,4 +36,16 @@ interface OrderApiService {
         @Path("orderId") orderId: String,
         @Body request: CancelOrderRequest
     ): Response<ApiResponse<OrderResponse>>
+
+    @POST("api/v1/payments/payos/create/{orderId}")
+    suspend fun createPayOsPayment(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String
+    ): Response<ApiResponse<com.urmyfood.user.data.model.PayOsPaymentResponse>>
+
+    @GET("api/v1/payments/payos/status/{orderId}")
+    suspend fun checkPayOsStatus(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: String
+    ): Response<ApiResponse<OrderResponse>>
 }

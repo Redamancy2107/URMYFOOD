@@ -8,16 +8,16 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.ItemOrderCardBinding
-import com.urmyfood.shop.presentation.main.orders.OrdersViewModel.OrderStatus
-import com.urmyfood.shop.presentation.main.orders.OrdersViewModel.ShopOrder
+import com.urmyfood.shop.domain.model.Order
 import java.text.NumberFormat
 import java.util.Locale
 
 class OrdersAdapter(
-    private val onActionClick: (ShopOrder) -> Unit,
-    private val onRejectClick: (ShopOrder) -> Unit,
-    private val onItemClick: (ShopOrder) -> Unit
-) : ListAdapter<ShopOrder, OrdersAdapter.ViewHolder>(DiffCallback()) {
+    private val onActionClick: (Order) -> Unit,
+    private val onAcceptClick: (Order) -> Unit,
+    private val onRejectClick: (Order) -> Unit,
+    private val onItemClick: (Order) -> Unit
+) : ListAdapter<Order, OrdersAdapter.ViewHolder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemOrderCardBinding.inflate(
@@ -34,53 +34,64 @@ class OrdersAdapter(
         private val binding: ItemOrderCardBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(order: ShopOrder) {
-            binding.tvOrderId.text = order.orderId
-            binding.tvTimestamp.text = order.timestamp
+        fun bind(order: Order) {
+            binding.tvOrderId.text = order.orderId.take(8).uppercase()
+            binding.tvTimestamp.text = order.createdAt
             binding.tvCustomerName.text = order.customerName
-            binding.tvItemsSummary.text = order.items
-            binding.tvTotalPrice.text = formatCurrency(order.totalPrice)
+            binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
+            binding.tvTotalPrice.text = formatCurrency(order.finalAmount.toLong())
 
-            // Status badge text
-            binding.tvStatusBadge.text = order.status.label
-
-            // Color-code status badge
-            val badgeColorRes = when (order.status) {
-                OrderStatus.WAITING -> R.color.warning
-                OrderStatus.PREPARING -> R.color.primary
-                OrderStatus.READY -> R.color.success
+            val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
+            val paymentLabel = when {
+                isWaitingForVietQrPayment -> " (Chờ thanh toán VietQR)"
+                order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus == PAYMENT_PAID -> " (VietQR - Đã thanh toán)"
+                order.paymentStatus == PAYMENT_PAID -> " (Đã thanh toán)"
+                else -> ""
             }
-            binding.tvStatusBadge.setTextColor(binding.root.context.getColor(badgeColorRes))
+            val (statusLabel, statusColorRes) = when (order.orderStatus) {
+                "PENDING" -> "Chờ xác nhận" to R.color.warning
+                "ACCEPTED" -> "Đã xác nhận" to R.color.primary
+                "PICKING_UP" -> "Đang lấy hàng" to R.color.primary
+                "DELIVERING" -> "Đang giao" to R.color.primary
+                "COMPLETED" -> "Hoàn thành" to R.color.success
+                "CANCELLED" -> "Đã hủy" to R.color.error
+                "REJECTED" -> "Đã từ chối" to R.color.error
+                "EXPIRED" -> "Hết hạn" to R.color.error
+                else -> order.orderStatus to R.color.text_secondary
+            }
+            binding.tvStatusBadge.text = statusLabel + paymentLabel
+            binding.tvStatusBadge.setTextColor(binding.root.context.getColor(statusColorRes))
 
-            // Action Button config
-            when (order.status) {
-                OrderStatus.WAITING -> {
-                    binding.btnAction.visibility = View.VISIBLE
-                    binding.btnAction.text = "Chuẩn bị"
+            when (order.orderStatus) {
+                "PENDING" -> {
+                    if (isWaitingForVietQrPayment) {
+                        binding.btnAction.visibility = View.GONE
+                        binding.btnAction.setOnClickListener(null)
+                    } else {
+                        binding.btnAction.visibility = View.VISIBLE
+                        binding.btnAction.text = "Xác nhận"
+                        binding.btnAction.setOnClickListener { onAcceptClick(order) }
+                    }
                     binding.btnReject.visibility = View.VISIBLE
                 }
-                OrderStatus.PREPARING -> {
+                "ACCEPTED", "PICKING_UP", "DELIVERING" -> {
                     binding.btnAction.visibility = View.VISIBLE
-                    binding.btnAction.text = "Sẵn sàng"
+                    binding.btnAction.text = when (order.orderStatus) {
+                        "ACCEPTED" -> "Lấy hàng"
+                        "PICKING_UP" -> "Bắt đầu giao"
+                        else -> "Hoàn thành"
+                    }
+                    binding.btnAction.setOnClickListener { onActionClick(order) }
                     binding.btnReject.visibility = View.GONE
                 }
-                OrderStatus.READY -> {
+                else -> {
                     binding.btnAction.visibility = View.GONE
                     binding.btnReject.visibility = View.GONE
                 }
             }
 
-            binding.btnAction.setOnClickListener {
-                onActionClick(order)
-            }
-
-            binding.btnReject.setOnClickListener {
-                onRejectClick(order)
-            }
-
-            binding.root.setOnClickListener {
-                onItemClick(order)
-            }
+            binding.btnReject.setOnClickListener { onRejectClick(order) }
+            binding.root.setOnClickListener { onItemClick(order) }
         }
 
         private fun formatCurrency(amount: Long): String {
@@ -89,11 +100,16 @@ class OrdersAdapter(
         }
     }
 
-    private class DiffCallback : DiffUtil.ItemCallback<ShopOrder>() {
-        override fun areItemsTheSame(oldItem: ShopOrder, newItem: ShopOrder): Boolean =
+    companion object {
+        private const val PAYMENT_VIETQR = "VIETQR"
+        private const val PAYMENT_PAID = "PAID"
+    }
+
+    private class DiffCallback : DiffUtil.ItemCallback<Order>() {
+        override fun areItemsTheSame(oldItem: Order, newItem: Order): Boolean =
             oldItem.orderId == newItem.orderId
 
-        override fun areContentsTheSame(oldItem: ShopOrder, newItem: ShopOrder): Boolean =
+        override fun areContentsTheSame(oldItem: Order, newItem: Order): Boolean =
             oldItem == newItem
     }
 }

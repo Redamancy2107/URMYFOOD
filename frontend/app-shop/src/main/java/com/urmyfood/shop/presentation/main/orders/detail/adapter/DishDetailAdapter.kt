@@ -7,11 +7,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.urmyfood.shop.R
 import com.urmyfood.shop.databinding.ItemDishDetailBinding
-import com.urmyfood.shop.presentation.main.orders.detail.OrderDetailViewModel.DishItem
 import java.text.NumberFormat
 import java.util.Locale
 
-class DishDetailAdapter : ListAdapter<DishItem, DishDetailAdapter.ViewHolder>(DiffCallback()) {
+class DishDetailAdapter : ListAdapter<DishDetailAdapter.DishItem, DishDetailAdapter.ViewHolder>(DiffCallback()) {
+
+    data class DishItem(
+        val name: String,
+        val quantity: Int,
+        val price: Long,
+        val imageUrl: String? = null
+    )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemDishDetailBinding.inflate(
@@ -32,8 +38,6 @@ class DishDetailAdapter : ListAdapter<DishItem, DishDetailAdapter.ViewHolder>(Di
             binding.tvDishName.text = item.name
             binding.tvQuantity.text = "${item.quantity}x"
             binding.tvDishPrice.text = formatCurrency(item.price)
-
-            // image binding (placeholder/simulator)
             binding.ivDishImage.setImageResource(R.drawable.bg_food_banner)
         }
 

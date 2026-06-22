@@ -2,18 +2,21 @@ package com.urmyfood.shop.di
 
 import android.content.Context
 import com.urmyfood.shop.BuildConfig
+import com.urmyfood.shop.data.remote.OrderApiService
 import com.urmyfood.shop.data.remote.ChatApiService
 import com.urmyfood.shop.data.remote.PostApiService
 import com.urmyfood.shop.data.remote.ShopVerificationApiService
 import com.urmyfood.shop.data.remote.ShopProfileApiService
 import com.urmyfood.shop.data.remote.ShopStatisticsApiService
 import com.urmyfood.shop.data.remote.UserApiService
+import com.urmyfood.shop.data.repository.OrderRepositoryImpl
 import com.urmyfood.shop.data.repository.ChatRepositoryImpl
 import com.urmyfood.shop.data.repository.PostRepositoryImpl
 import com.urmyfood.shop.data.repository.ShopProfileRepositoryImpl
 import com.urmyfood.shop.data.repository.ShopStatisticsRepositoryImpl
 import com.urmyfood.shop.data.repository.ShopVerificationRepositoryImpl
 import com.urmyfood.shop.data.repository.UserRepositoryImpl
+import com.urmyfood.shop.domain.repository.OrderRepository
 import com.urmyfood.shop.domain.repository.ChatRepository
 import com.urmyfood.shop.domain.repository.PostRepository
 import com.urmyfood.shop.domain.repository.ShopProfileRepository
@@ -22,6 +25,8 @@ import com.urmyfood.shop.domain.repository.ShopVerificationRepository
 import com.urmyfood.shop.domain.repository.UserRepository
 import com.urmyfood.shop.domain.usecase.AddCommentUseCase
 import com.urmyfood.shop.domain.usecase.ChangePasswordUseCase
+import com.urmyfood.shop.domain.usecase.GetShopOrderDetailUseCase
+import com.urmyfood.shop.domain.usecase.GetShopOrdersUseCase
 import com.urmyfood.shop.domain.usecase.CreatePostUseCase
 import com.urmyfood.shop.domain.usecase.DeletePostUseCase
 import com.urmyfood.shop.domain.usecase.GetChatSessionsUseCase
@@ -34,6 +39,7 @@ import com.urmyfood.shop.domain.usecase.GetShopStatisticsUseCase
 import com.urmyfood.shop.domain.usecase.MarkAsReadUseCase
 import com.urmyfood.shop.domain.usecase.SendMessageUseCase
 import com.urmyfood.shop.domain.usecase.SubmitShopVerificationUseCase
+import com.urmyfood.shop.domain.usecase.UpdateOrderStatusUseCase
 import com.urmyfood.shop.domain.usecase.TogglePostStatusUseCase
 import com.urmyfood.shop.domain.usecase.UpdatePostUseCase
 import com.urmyfood.shop.domain.usecase.UpdateShopProfileUseCase
@@ -60,6 +66,8 @@ import com.urmyfood.shop.presentation.main.account.AccountViewModel
 import com.urmyfood.shop.presentation.main.account.ChangePasswordViewModel
 import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
 import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
+import com.urmyfood.shop.presentation.main.orders.OrdersViewModel
+import com.urmyfood.shop.presentation.main.orders.detail.OrderDetailViewModel
 import com.urmyfood.shop.presentation.main.chat.ChatDetailViewModel
 import com.urmyfood.shop.presentation.main.chat.ChatViewModel
 import com.urmyfood.shop.presentation.main.posts.CommentViewModel
@@ -108,6 +116,12 @@ object ServiceLocator {
         UserRepositoryImpl(api)
     }
 
+    private val orderRepository: OrderRepository by lazy {
+        val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
+            .create(OrderApiService::class.java)
+        OrderRepositoryImpl(api)
+    }
+    
     private val postRepository: PostRepository by lazy {
         val api = NetworkModule.buildRetrofit(BuildConfig.BASE_URL, debug = BuildConfig.DEBUG)
             .create(PostApiService::class.java)
@@ -179,6 +193,15 @@ object ServiceLocator {
         GetShopStatisticsUseCase(shopStatisticsRepository, tokenManager)
     )
 
+    fun provideOrdersViewModelFactory() = OrdersViewModel.Factory(
+        GetShopOrdersUseCase(orderRepository, tokenManager),
+        UpdateOrderStatusUseCase(orderRepository, tokenManager)
+    )
+
+    fun provideOrderDetailViewModelFactory() = OrderDetailViewModel.Factory(
+        GetShopOrderDetailUseCase(orderRepository, tokenManager),
+        UpdateOrderStatusUseCase(orderRepository, tokenManager)
+    )
     fun providePostsViewModelFactory() = PostsViewModel.Factory(
         GetMyPostsUseCase(postRepository, tokenManager),
         DeletePostUseCase(postRepository, tokenManager),

@@ -113,6 +113,19 @@
             android:defaultValue="@null" />
     </fragment>
 
+    <fragment
+        android:id="@+id/paymentQrFragment"
+        android:name="com.urmyfood.user.presentation.main.payment.PaymentQrFragment"
+        tools:layout="@layout/fragment_payment_qr">
+        <argument
+            android:name="qrCode"
+            app:argType="string" />
+        <argument
+            android:name="amount"
+            app:argType="long" />
+        <argument
+            android:name="orderId"
+            app:argType="string" />
+    </fragment>
+
 </navigation>
-
-

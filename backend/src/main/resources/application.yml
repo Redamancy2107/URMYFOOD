@@ -16,10 +16,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: false
+    show-sql: true
     properties:
       hibernate:
-        format_sql: false
+        format_sql: true
     open-in-view: false
 
   flyway:
@@ -28,6 +28,7 @@ spring:
     baseline-on-migrate: false
     ignore-migration-patterns: "*:missing"
     out-of-order: true
+    validate-on-migrate: false
 
   mail:
     host: ${MAIL_HOST:localhost}
@@ -49,6 +50,11 @@ google:
   client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
   client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
   refresh-token: ${GOOGLE_REFRESH_TOKEN:your-refresh-token}
+
+payos:
+  client-id: ${PAYOS_CLIENT_ID:}
+  api-key: ${PAYOS_API_KEY:}
+  checksum-key: ${PAYOS_CHECKSUM_KEY:}
 
 jwt:
   secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
