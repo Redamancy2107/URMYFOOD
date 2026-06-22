@@ -53,7 +53,7 @@ class SettingsFragment : Fragment() {
         }
         
         binding.btnChangePassword.setOnClickListener {
-            Toast.makeText(requireContext(), "Tính năng đổi mật khẩu đang phát triển", Toast.LENGTH_SHORT).show()
+            showChangePasswordDialog()
         }
 
         binding.fabEditAvatar.setOnClickListener {
@@ -78,12 +78,7 @@ class SettingsFragment : Fragment() {
                 binding.tvAdminName.text = profile.fullName ?: "Admin"
                 binding.tvAdminRole.text = profile.position ?: "Hệ thống Quản trị"
 
-                profile.avatarUrl?.let { url ->
-                    Glide.with(this@SettingsFragment)
-                        .load(url)
-                        .placeholder(android.R.drawable.sym_def_app_icon)
-                        .into(binding.ivAdminAvatar)
-                }
+                binding.ivAdminAvatar.setImageResource(R.drawable.ic_logo_admin)
             }.onFailure { error ->
                 Toast.makeText(requireContext(), "Không thể tải hồ sơ: ${error.message}", Toast.LENGTH_SHORT).show()
             }
@@ -92,11 +87,11 @@ class SettingsFragment : Fragment() {
 
     private fun saveAdminProfile() {
         val updates = mapOf(
-            "fullName" to binding.etFullName.text.toString(),
-            "workEmail" to binding.etEmail.text.toString(),
-            "phoneNumber" to binding.etPhone.text.toString(),
+            "full_name" to binding.etFullName.text.toString(),
+            "work_email" to binding.etEmail.text.toString(),
+            "phone_number" to binding.etPhone.text.toString(),
             "position" to binding.etPosition.text.toString(),
-            "shortBio" to binding.etBio.text.toString()
+            "short_bio" to binding.etBio.text.toString()
         )
         
         lifecycleScope.launch {
@@ -105,6 +100,8 @@ class SettingsFragment : Fragment() {
                 Toast.makeText(requireContext(), "Đã lưu hồ sơ thành công", Toast.LENGTH_SHORT).show()
                 binding.tvAdminName.text = profile.fullName ?: "Admin"
                 binding.tvAdminRole.text = profile.position ?: "Hệ thống Quản trị"
+                // Update header in DashboardFragment
+                (parentFragment as? DashboardFragment)?.updateAdminHeader(profile.fullName ?: "Admin", profile.avatarUrl)
             }.onFailure { error ->
                 Toast.makeText(requireContext(), "Lưu hồ sơ thất bại: ${error.message}", Toast.LENGTH_SHORT).show()
             }
@@ -123,10 +120,83 @@ class SettingsFragment : Fragment() {
                         .placeholder(android.R.drawable.sym_def_app_icon)
                         .into(binding.ivAdminAvatar)
                 }
+                // Update header in DashboardFragment
+                (parentFragment as? DashboardFragment)?.updateAdminHeader(profile.fullName ?: "Admin", profile.avatarUrl)
             }.onFailure { error ->
                 Toast.makeText(requireContext(), "Tải ảnh đại diện thất bại: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showChangePasswordDialog() {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_change_password, null)
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        val etCurrentPassword = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_current_password)
+        val etNewPassword = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_new_password)
+        val etConfirmPassword = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.et_confirm_password)
+        val tvError = dialogView.findViewById<android.widget.TextView>(R.id.tv_dialog_error)
+        val btnCancel = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_cancel)
+        val btnSubmit = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btn_submit)
+
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        btnSubmit.setOnClickListener {
+            val currentPass = etCurrentPassword.text.toString().trim()
+            val newPass = etNewPassword.text.toString().trim()
+            val confirmPass = etConfirmPassword.text.toString().trim()
+
+            if (currentPass.isEmpty()) {
+                tvError.text = "Vui lòng nhập mật khẩu hiện tại"
+                tvError.visibility = View.VISIBLE
+                return@setOnClickListener
+            }
+            if (newPass.isEmpty()) {
+                tvError.text = "Vui lòng nhập mật khẩu mới"
+                tvError.visibility = View.VISIBLE
+                return@setOnClickListener
+            }
+            if (newPass.length < 6) {
+                tvError.text = "Mật khẩu mới phải từ 6 ký tự trở lên"
+                tvError.visibility = View.VISIBLE
+                return@setOnClickListener
+            }
+            if (newPass != confirmPass) {
+                tvError.text = "Xác nhận mật khẩu không trùng khớp"
+                tvError.visibility = View.VISIBLE
+                return@setOnClickListener
+            }
+
+            tvError.visibility = View.GONE
+            btnSubmit.isEnabled = false
+            btnSubmit.text = "Đang lưu..."
+
+            lifecycleScope.launch {
+                val result = repository.changePassword(
+                    com.urmyfood.admin.data.model.ChangePasswordRequest(
+                        currentPassword = currentPass,
+                        newPassword = newPass
+                    )
+                )
+                result.onSuccess {
+                    Toast.makeText(requireContext(), "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }.onFailure { error ->
+                    btnSubmit.isEnabled = true
+                    btnSubmit.text = "Cập nhật"
+                    tvError.text = error.message ?: "Đổi mật khẩu thất bại"
+                    tvError.visibility = View.VISIBLE
+                }
+            }
+        }
+
+        dialog.show()
     }
 
     private fun getFileFromUri(uri: Uri): File? {

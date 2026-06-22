@@ -7,8 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.urmyfood.admin.R
 import com.urmyfood.admin.databinding.FragmentDashboardBinding
+import kotlinx.coroutines.launch
 
 class DashboardFragment : Fragment() {
     private var _binding: FragmentDashboardBinding? = null
@@ -16,6 +20,7 @@ class DashboardFragment : Fragment() {
     
     private var mediaPlayer: MediaPlayer? = null
     private var isMusicPlaying = true
+    private val repository = com.urmyfood.admin.data.repository.AdminRepository()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -27,6 +32,8 @@ class DashboardFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        loadAdminProfileHeader()
         
         val showDevToast = { _: View ->
             Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
@@ -68,8 +75,8 @@ class DashboardFragment : Fragment() {
         binding.btnXuatBaoCao.setOnClickListener(showDevToast)
         binding.llHoTro.setOnClickListener(showDevToast)
         binding.llDangXuat.setOnClickListener {
-            // Simple navigation back to login (mocking logout)
-            findNavController().navigateUp()
+            com.urmyfood.admin.data.local.SessionManager.clearSession()
+            findNavController().navigate(R.id.action_dashboardFragment_to_loginFragment)
         }
 
         // Topbar clicks
@@ -101,11 +108,23 @@ class DashboardFragment : Fragment() {
             binding.menuBaoCao, binding.menuCaiDat
         )
         
+        val activeColor = androidx.core.content.ContextCompat.getColor(requireContext(), com.urmyfood.admin.R.color.dark_green)
+        val inactiveColor = androidx.core.content.ContextCompat.getColor(requireContext(), com.urmyfood.admin.R.color.text_secondary)
+        
         menus.forEach { menu ->
+            val imageView = menu.getChildAt(0) as? android.widget.ImageView
+            val textView = menu.getChildAt(1) as? android.widget.TextView
+            
             if (menu == selectedView) {
                 menu.setBackgroundResource(com.urmyfood.admin.R.drawable.bg_menu_item_active)
+                imageView?.imageTintList = android.content.res.ColorStateList.valueOf(activeColor)
+                textView?.setTextColor(activeColor)
+                textView?.setTypeface(null, android.graphics.Typeface.BOLD)
             } else {
                 menu.setBackgroundResource(android.R.color.transparent)
+                imageView?.imageTintList = android.content.res.ColorStateList.valueOf(inactiveColor)
+                textView?.setTextColor(inactiveColor)
+                textView?.setTypeface(null, android.graphics.Typeface.NORMAL)
             }
         }
     }
@@ -156,5 +175,20 @@ class DashboardFragment : Fragment() {
         mediaPlayer?.release()
         mediaPlayer = null
         _binding = null
+    }
+
+    fun updateAdminHeader(name: String, avatarUrl: String?) {
+        if (_binding == null) return
+        binding.tvAdminNameTop.text = name
+        binding.ivAdminAvatarTop.setImageResource(R.drawable.ic_logo_admin)
+    }
+
+    private fun loadAdminProfileHeader() {
+        lifecycleScope.launch {
+            val result = repository.getAdminProfile()
+            result.onSuccess { profile ->
+                updateAdminHeader(profile.fullName ?: "Admin", profile.avatarUrl)
+            }
+        }
     }
 }
