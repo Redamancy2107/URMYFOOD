@@ -17,6 +17,8 @@ import com.urmyfood.backend.domain.repository.CartItemRepository;
 import com.urmyfood.backend.domain.repository.OrderRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import com.urmyfood.backend.domain.repository.VoucherRepository;
+import com.urmyfood.backend.domain.model.ShopProfile;
+import com.urmyfood.backend.domain.repository.ShopProfileRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -57,6 +59,9 @@ class OrderServiceTest {
     @Mock
     private VoucherRepository voucherRepository;
 
+    @Mock
+    private ShopProfileRepository shopProfileRepository;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -79,6 +84,7 @@ class OrderServiceTest {
         when(postRepository.findByIdForUpdate(earlierPostId)).thenReturn(Optional.of(earlierLockedPost));
         when(postRepository.findByIdForUpdate(laterPostId)).thenReturn(Optional.of(laterLockedPost));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
 
         orderService.checkout(customer.getId(), checkoutRequest());
 
@@ -102,6 +108,7 @@ class OrderServiceTest {
         when(cartItemRepository.findByCustomerId(customer.getId()))
                 .thenReturn(List.of(cartItem(customer, cartPost, 2)));
         when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
 
         assertThatThrownBy(() -> orderService.checkout(customer.getId(), checkoutRequest()))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -125,6 +132,7 @@ class OrderServiceTest {
                 .thenReturn(List.of(cartItem(customer, cartPost, 2)));
         when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
 
         orderService.checkout(customer.getId(), checkoutRequest());
 
@@ -147,6 +155,7 @@ class OrderServiceTest {
                 .thenReturn(List.of(cartItem(customer, cartPost, 1)));
         when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
 
         orderService.checkout(customer.getId(), checkoutRequest("VIETQR"));
 
@@ -519,6 +528,13 @@ class OrderServiceTest {
                         .priceAtPurchase(BigDecimal.valueOf(10_000))
                         .dishNameSnapshot(orderPost.getDishName())
                         .build()))
+                .build();
+    }
+
+    private ShopProfile shopProfile() {
+        return ShopProfile.builder()
+                .isOpen(true)
+                .openingHours("00:00 - 23:59")
                 .build();
     }
 }

@@ -100,6 +100,9 @@ public class ShopProfileService {
                 .build();
 
         ShopProfile saved = shopProfileRepository.save(profile);
+        shop.setFullName(shopName);
+        shop.setAvatarUrl(saved.getLogoUrl());
+        accountRepository.save(shop);
         deleteReplacedProfileImages(shopId, oldLogoUrl, saved.getLogoUrl(), oldCoverUrl, saved.getCoverUrl());
         log.info("Updated shop profile successfully. shopId={}, profileId={}", shopId, saved.getId());
         saved.setVerificationStatus(statusOf(verification));
