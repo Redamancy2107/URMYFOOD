@@ -6,22 +6,6 @@ data class Category(
     val icon: String // Emoji or Drawable ID
 )
 
-data class Post(
-    val id: Int,
-    val shopName: String,
-    val shopAvatar: Int,
-    val time: String,
-    val description: String,
-    val image: Int,
-    val badge: String?,
-    val price: String,
-    val oldPrice: String? = null,
-    var likeCount: Int,
-    val commentCount: Int,
-    var isLiked: Boolean = false,
-    var isFlashSale: Boolean = false
-)
-
 data class ChatSession(
     val id: Int,
     val name: String,
