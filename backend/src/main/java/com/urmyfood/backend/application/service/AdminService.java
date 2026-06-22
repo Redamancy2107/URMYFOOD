@@ -268,6 +268,7 @@ public class AdminService {
 
     public List<VoucherDto> getAllVouchers() {
         return voucherRepository.findAll().stream()
+                .filter(Voucher::isActive)
                 .map(v -> VoucherDto.builder()
                         .id(v.getId())
                         .code(v.getCode())
@@ -308,7 +309,10 @@ public class AdminService {
 
     @Transactional
     public void deleteVoucher(Long id) {
-        voucherRepository.deleteById(id);
+        voucherRepository.findById(id).ifPresent(v -> {
+            v.setActive(false);
+            voucherRepository.save(v);
+        });
     }
 
     public PageResponse<PostResponse> getAllPosts(int page, int size) {
