@@ -40,7 +40,7 @@
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Giảm giá" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Đơn tối thiểu" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Hết hạn" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
-                <TextView android:layout_width="50dp" android:layout_height="wrap_content" android:text="Xóa" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="50dp" android:layout_height="wrap_content" android:text="Xóa" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp" android:gravity="center"/>
             </LinearLayout>
             <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
             <androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_vouchers" android:layout_width="match_parent" android:layout_height="match_parent"/>

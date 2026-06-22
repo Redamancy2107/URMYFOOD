@@ -74,15 +74,37 @@ class VoucherManagementFragment : Fragment() {
             .setView(dialogBinding.root)
             .create()
 
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        var selectedExpiryDateBackend = ""
+
+        dialogBinding.etExpiryDate.setOnClickListener {
+            val calendar = java.util.Calendar.getInstance()
+            val year = calendar.get(java.util.Calendar.YEAR)
+            val month = calendar.get(java.util.Calendar.MONTH)
+            val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+
+            android.app.DatePickerDialog(requireContext(), { _, selYear, selMonth, selDay ->
+                val displayDay = String.format("%02d", selDay)
+                val displayMonth = String.format("%02d", selMonth + 1)
+                dialogBinding.etExpiryDate.setText("$displayDay/$displayMonth/$selYear")
+                selectedExpiryDateBackend = String.format("%d-%02d-%02d", selYear, selMonth + 1, selDay)
+            }, year, month, day).show()
+        }
+
+        dialogBinding.btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
         dialogBinding.btnCreate.setOnClickListener {
             val code = dialogBinding.etCode.text.toString().trim()
             val title = dialogBinding.etTitle.text.toString().trim()
             val description = dialogBinding.etDescription.text.toString().trim()
             val discountValue = dialogBinding.etDiscountValue.text.toString().toDoubleOrNull()
             val minOrderValue = dialogBinding.etMinOrder.text.toString().toDoubleOrNull()
-            val expiryDate = dialogBinding.etExpiryDate.text.toString().trim()
+            val expiryDateText = dialogBinding.etExpiryDate.text.toString().trim()
 
-            if (code.isEmpty() || title.isEmpty() || discountValue == null || minOrderValue == null || expiryDate.isEmpty()) {
+            if (code.isEmpty() || title.isEmpty() || discountValue == null || minOrderValue == null || expiryDateText.isEmpty() || selectedExpiryDateBackend.isEmpty()) {
                 Toast.makeText(requireContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -94,7 +116,7 @@ class VoucherManagementFragment : Fragment() {
                 description = description,
                 discountValue = discountValue,
                 minOrderValue = minOrderValue,
-                expiryDate = expiryDate
+                expiryDate = selectedExpiryDateBackend
             )
 
             lifecycleScope.launch {
@@ -168,7 +190,20 @@ class VoucherManagementFragment : Fragment() {
             holder.title.text = item.title
             holder.discount.text = currencyFormat.format(item.discountValue ?: 0.0)
             holder.minOrder.text = currencyFormat.format(item.minOrderValue ?: 0.0)
-            holder.expiry.text = item.expiryDate ?: ""
+            
+            val rawDate = item.expiryDate ?: ""
+            val formattedDate = try {
+                val parts = rawDate.split("-")
+                if (parts.size == 3) {
+                    "${parts[2]}/${parts[1]}/${parts[0]}"
+                } else {
+                    rawDate
+                }
+            } catch (e: Exception) {
+                rawDate
+            }
+            holder.expiry.text = formattedDate
+            
             holder.btnDelete.setOnClickListener { onDelete(item) }
         }
 
