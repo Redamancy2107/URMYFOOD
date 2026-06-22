@@ -8,5 +8,8 @@ public interface VoucherRepository {
     List<Voucher> findAllActive();
     Optional<Voucher> findById(Long id);
     Optional<Voucher> findByCode(String code);
+    Voucher save(Voucher voucher);
+    void deleteById(Long id);
+    List<Voucher> findAll();
 }
 

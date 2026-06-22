@@ -5,8 +5,12 @@ import com.urmyfood.backend.domain.repository.AccountRepository;
 import com.urmyfood.backend.infrastructure.persistence.entity.AccountEntity;
 import com.urmyfood.backend.infrastructure.persistence.repository.JpaAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -46,7 +50,25 @@ public class AccountPersistenceAdapter implements AccountRepository {
                 .password(account.getPassword())
                 .role(account.getRole())
                 .avatarUrl(account.getAvatarUrl())
+                .isActive(account.isActive())
                 .build();
+    }
+
+    @Override
+    public List<Account> findAll(int page, int size, String role) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        if (role == null || role.trim().isEmpty()) {
+            return jpaAccountRepository.findAll(pageable).stream().map(this::toDomain).toList();
+        }
+        return jpaAccountRepository.findByRole(role, pageable).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public long count(String role) {
+        if (role == null || role.trim().isEmpty()) {
+            return jpaAccountRepository.count();
+        }
+        return jpaAccountRepository.countByRole(role);
     }
 
     Account toDomain(AccountEntity entity) {
@@ -58,6 +80,7 @@ public class AccountPersistenceAdapter implements AccountRepository {
                 .password(entity.getPassword())
                 .role(entity.getRole())
                 .avatarUrl(entity.getAvatarUrl())
+                .isActive(entity.isActive())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

@@ -43,7 +43,6 @@ public class OtpService {
     @Value("${google.refresh-token}")
     private String refreshToken;
 
-    @Async
     public void sendOtp(String email, String purpose) {
         String code = String.format("%06d", new java.security.SecureRandom().nextInt(1000000));
         Otp otp = Otp.builder()
@@ -54,43 +53,46 @@ public class OtpService {
                 .build();
 
         otpRepository.save(otp);
+        log.info("Successfully generated and saved OTP to database for email: {}", email);
 
-        try {
-            Session session = Session.getDefaultInstance(new Properties(), null);
-            MimeMessage mimeMessage = new MimeMessage(session);
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        // Send email asynchronously in the background so that mail API errors do not roll back the database transaction
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                Session session = Session.getDefaultInstance(new Properties(), null);
+                MimeMessage mimeMessage = new MimeMessage(session);
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-            helper.setTo(email);
-            helper.setSubject(String.format("[URMYFOOD] Mã xác thực (OTP) %s", purpose.toLowerCase()));
+                helper.setTo(email);
+                helper.setSubject(String.format("[URMYFOOD] Mã xác thực (OTP) %s", purpose.toLowerCase()));
 
-            String htmlContent = buildHtmlTemplate(purpose, code);
-            helper.setText(htmlContent, true);
+                String htmlContent = buildHtmlTemplate(purpose, code);
+                helper.setText(htmlContent, true);
 
-            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-            mimeMessage.writeTo(buffer);
-            byte[] rawMessageBytes = buffer.toByteArray();
-            String encodedEmail = Base64.getUrlEncoder().encodeToString(rawMessageBytes);
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                mimeMessage.writeTo(buffer);
+                byte[] rawMessageBytes = buffer.toByteArray();
+                String encodedEmail = Base64.getUrlEncoder().encodeToString(rawMessageBytes);
 
-            Message message = new Message();
-            message.setRaw(encodedEmail);
+                Message message = new Message();
+                message.setRaw(encodedEmail);
 
-            UserCredentials credentials = UserCredentials.newBuilder()
-                    .setClientId(clientId)
-                    .setClientSecret(clientSecret)
-                    .setRefreshToken(refreshToken)
-                    .build();
+                UserCredentials credentials = UserCredentials.newBuilder()
+                        .setClientId(clientId)
+                        .setClientSecret(clientSecret)
+                        .setRefreshToken(refreshToken)
+                        .build();
 
-            Gmail service = new Gmail.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-                    GsonFactory.getDefaultInstance(), new HttpCredentialsAdapter(credentials))
-                    .setApplicationName("URMYFOOD")
-                    .build();
+                Gmail service = new Gmail.Builder(GoogleNetHttpTransport.newTrustedTransport(),
+                        GsonFactory.getDefaultInstance(), new HttpCredentialsAdapter(credentials))
+                        .setApplicationName("URMYFOOD")
+                        .build();
 
-            service.users().messages().send("me", message).execute();
-            log.info("Successfully sent OTP email to {} via Gmail HTTP API", email);
-        } catch (Exception e) {
-            log.error("Failed to send OTP email to {}", email, e);
-            throw new RuntimeException("Không thể gửi email OTP qua Gmail API", e);
-        }
+                service.users().messages().send("me", message).execute();
+                log.info("Successfully sent OTP email to {} via Gmail HTTP API", email);
+            } catch (Exception e) {
+                log.error("Failed to send OTP email to {} via Gmail HTTP API: {}", email, e.getMessage(), e);
+            }
+        });
     }
 
     private String buildHtmlTemplate(String purpose, String code) {

@@ -56,6 +56,7 @@ public class AuthService {
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(role)
+                .isActive(true)
                 .build();
 
         accountRepository.save(account);
@@ -77,7 +78,7 @@ public class AuthService {
     public AuthResponse login(LoginRequest request) {
         Account account = accountRepository.findByEmail(request.getEmailOrPhone())
                 .or(() -> accountRepository.findByPhone(request.getEmailOrPhone()))
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+                .orElseThrow(() -> new RuntimeException("Tài khoản hoặc số điện thoại không tồn tại"));
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -125,6 +126,7 @@ public class AuthService {
                                 .fullName(name)
                                 .role("CUSTOMER")
                                 .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString())) // Secure random dummy password
+                                .isActive(true)
                                 .build();
                         return accountRepository.save(newAccount);
                     });
@@ -148,10 +150,32 @@ public class AuthService {
                             .fullName("User " + email.split("@")[0])
                             .role("CUSTOMER")
                             .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
+                            .isActive(true)
                             .build();
                     return accountRepository.save(newAccount);
                 });
 
+        return generateAuthResponse(account);
+    }
+
+    public void sendAdminOtp(String email) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Tài khoản admin không tồn tại"));
+        if (!"ADMIN".equals(account.getRole())) {
+            throw new RuntimeException("Chỉ tài khoản admin mới được thực hiện chức năng này");
+        }
+        otpService.sendOtp(email, "Đăng nhập Admin");
+    }
+
+    public AuthResponse loginAdminWithOtp(String email, String code) {
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Tài khoản admin không tồn tại"));
+        if (!"ADMIN".equals(account.getRole())) {
+            throw new RuntimeException("Chỉ tài khoản admin mới được thực hiện chức năng này");
+        }
+        if (!otpService.verifyOtp(email, code)) {
+            throw new RuntimeException("Mã OTP không chính xác hoặc đã hết hạn");
+        }
         return generateAuthResponse(account);
     }
 
@@ -187,6 +211,7 @@ public class AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
+                .accountId(account.getId())
                 .fullName(account.getFullName())
                 .role(account.getRole())
                 .build();

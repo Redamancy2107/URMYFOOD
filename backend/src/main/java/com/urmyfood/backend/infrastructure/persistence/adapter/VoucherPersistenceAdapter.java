@@ -34,6 +34,34 @@ public class VoucherPersistenceAdapter implements VoucherRepository {
         return jpaVoucherRepository.findByCode(code).map(this::toDomain);
     }
 
+    @Override
+    public Voucher save(Voucher voucher) {
+        return toDomain(jpaVoucherRepository.save(toEntity(voucher)));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaVoucherRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Voucher> findAll() {
+        return jpaVoucherRepository.findAll().stream().map(this::toDomain).toList();
+    }
+
+    VoucherEntity toEntity(Voucher v) {
+        return VoucherEntity.builder()
+                .id(v.getId())
+                .code(v.getCode())
+                .title(v.getTitle())
+                .description(v.getDescription())
+                .discountValue(v.getDiscountValue())
+                .minOrderValue(v.getMinOrderValue())
+                .expiryDate(v.getExpiryDate())
+                .isActive(v.isActive())
+                .build();
+    }
+
     Voucher toDomain(VoucherEntity e) {
         return Voucher.builder()
                 .id(e.getId())

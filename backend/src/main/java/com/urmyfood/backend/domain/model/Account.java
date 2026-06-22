@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -18,4 +19,6 @@ public class Account extends BaseDomainModel {
     private String password;
     private String role;
     private String avatarUrl;
+    @Builder.Default
+    private boolean isActive = true;
 }
