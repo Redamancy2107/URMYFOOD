@@ -39,6 +39,9 @@ class HomeViewModel(
     private val _sortOrder = MutableLiveData<String?>(null)
     val sortOrder: LiveData<String?> = _sortOrder
 
+    private val _isFlashSaleFilterActive = MutableLiveData<Boolean>(false)
+    val isFlashSaleFilterActive: LiveData<Boolean> = _isFlashSaleFilterActive
+
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
     private var hasNextPage = false
@@ -54,11 +57,22 @@ class HomeViewModel(
         applySortingAndEmit()
     }
 
+    fun toggleFlashSaleFilter() {
+        _isFlashSaleFilterActive.value = !(_isFlashSaleFilterActive.value ?: false)
+        applySortingAndEmit()
+    }
+
     private fun applySortingAndEmit() {
+        var baseList = loadedPosts.toList()
+        if (_isFlashSaleFilterActive.value == true) {
+            baseList = baseList.filter { it.isFlashSale }
+        }
         val sortedList = when (_sortOrder.value) {
-            "LOW_TO_HIGH" -> loadedPosts.sortedBy { it.price }
-            "HIGH_TO_LOW" -> loadedPosts.sortedByDescending { it.price }
-            else -> loadedPosts.toList()
+            "LOW_TO_HIGH" -> baseList.sortedBy { it.price }
+            "HIGH_TO_LOW" -> baseList.sortedByDescending { it.price }
+            "NEWEST" -> baseList.sortedByDescending { it.createdAt ?: "" }
+            "OLDEST" -> baseList.sortedBy { it.createdAt ?: "" }
+            else -> baseList
         }
         _uiState.value = NewsfeedUiState.Success(sortedList)
     }

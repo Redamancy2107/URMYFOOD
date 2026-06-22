@@ -67,7 +67,8 @@ class CartFragment : Fragment() {
         }
 
         binding.btnCheckout.setOnClickListener {
-            val paymentSheet = PaymentMethodSheetFragment()
+            val subtotal = (viewModel.uiState.value?.totalAmount ?: 0.0).toLong()
+            val paymentSheet = PaymentMethodSheetFragment.newInstance(subtotal)
             paymentSheet.show(childFragmentManager, PaymentMethodSheetFragment.TAG)
         }
     }

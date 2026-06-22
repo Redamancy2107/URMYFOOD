@@ -107,7 +107,15 @@ class OrderHistoryViewModel(
                 paymentMethod = paymentMethod,
                 paymentStatus = paymentStatus,
                 finalAmount = finalAmount.toLong(),
-                imageUrl = item?.imageUrl
+                imageUrl = item?.imageUrl?.let { url ->
+                    if (url.isEmpty()) null
+                    else if (url.startsWith("http://") || url.startsWith("https://")) url
+                    else {
+                        val baseUrl = com.urmyfood.user.BuildConfig.BASE_URL.removeSuffix("/")
+                        val path = if (url.startsWith("/")) url else "/$url"
+                        "$baseUrl$path"
+                    }
+                }
             )
         }
     }

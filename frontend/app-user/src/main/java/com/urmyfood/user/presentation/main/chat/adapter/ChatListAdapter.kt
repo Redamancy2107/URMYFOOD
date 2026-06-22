@@ -27,7 +27,15 @@ class ChatListAdapter(
         with(holder.binding) {
             tvChatName.text = session.shopName
             tvLastMessage.text = session.lastMessage ?: ""
-            tvChatTime.text = session.lastMessageAt?.take(5) ?: ""
+            val timeStr = session.lastMessageAt?.let { at ->
+                if (at.length >= 16 && at.contains("T")) {
+                    val tIndex = at.indexOf("T")
+                    at.substring(tIndex + 1, tIndex + 6)
+                } else {
+                    at.take(5)
+                }
+            } ?: ""
+            tvChatTime.text = timeStr
             Glide.with(ivChatAvatar)
                 .load(session.shopAvatarUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
@@ -38,8 +46,12 @@ class ChatListAdapter(
             if (session.unreadCount > 0) {
                 unreadBadge.visibility = View.VISIBLE
                 unreadBadge.text = session.unreadCount.toString()
+                tvLastMessage.setTypeface(null, android.graphics.Typeface.BOLD)
+                tvLastMessage.setTextColor(root.context.getColor(com.urmyfood.user.R.color.text_primary))
             } else {
                 unreadBadge.visibility = View.GONE
+                tvLastMessage.setTypeface(null, android.graphics.Typeface.NORMAL)
+                tvLastMessage.setTextColor(root.context.getColor(com.urmyfood.user.R.color.text_secondary))
             }
 
             root.setOnClickListener { onItemClick(session) }

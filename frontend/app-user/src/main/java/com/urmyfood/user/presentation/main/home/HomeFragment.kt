@@ -58,6 +58,7 @@ class HomeFragment : Fragment() {
         observeLoadingMore()
         observeLikeError()
         observeSharedEvents()
+        observeFilters()
     }
 
     private fun observeSharedEvents() {
@@ -227,6 +228,14 @@ class HomeFragment : Fragment() {
             showPriceFilterMenu(view)
         }
 
+        binding.btnFilterDate.setOnClickListener { view ->
+            showDateFilterMenu(view)
+        }
+
+        binding.btnFilterFlash.setOnClickListener {
+            viewModel.toggleFlashSaleFilter()
+        }
+
         adapter.onCommentClick = { postId -> showCommentSheet(postId) }
         adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
@@ -369,6 +378,65 @@ class HomeFragment : Fragment() {
                 dismiss()
             }
             show()
+        }
+    }
+
+    private fun showDateFilterMenu(anchor: View) {
+        val items = listOf(
+            Pair("Mới nhất", R.drawable.ic_trending_up),
+            Pair("Cũ nhất", R.drawable.ic_trending_down)
+        )
+
+        val adapter = object : ArrayAdapter<Pair<String, Int>>(
+            requireContext(),
+            R.layout.item_dropdown_menu,
+            items
+        ) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.item_dropdown_menu, parent, false)
+                
+                val item = getItem(position)
+                val tvTitle = view.findViewById<TextView>(R.id.tvTitle)
+                val ivIcon = view.findViewById<ImageView>(R.id.ivIcon)
+                
+                tvTitle.text = item?.first
+                item?.second?.let { ivIcon.setImageResource(it) }
+                
+                return view
+            }
+        }
+
+        ListPopupWindow(requireContext()).apply {
+            setAdapter(adapter)
+            setAnchorView(anchor)
+            width = 500 // pixels
+            height = ListPopupWindow.WRAP_CONTENT
+            isModal = true
+            setBackgroundDrawable(requireContext().getDrawable(R.drawable.bg_dropdown_menu))
+            verticalOffset = 8 
+            
+            setOnItemClickListener { _, _, position, _ ->
+                val selected = items[position].first
+                val order = if (position == 0) "NEWEST" else "OLDEST"
+                viewModel.setSortOrder(order)
+                Toast.makeText(requireContext(), "Sắp xếp: $selected", Toast.LENGTH_SHORT).show()
+                dismiss()
+            }
+            show()
+        }
+    }
+
+    private fun observeFilters() {
+        viewModel.isFlashSaleFilterActive.observe(viewLifecycleOwner) { isActive ->
+            val ctx = requireContext()
+            if (isActive) {
+                binding.btnFilterFlash.setBackgroundColor(ctx.getColor(R.color.primary))
+                binding.btnFilterFlash.setTextColor(ctx.getColor(android.R.color.white))
+            } else {
+                binding.btnFilterFlash.setBackgroundColor(ctx.getColor(R.color.white))
+                binding.btnFilterFlash.setTextColor(ctx.getColor(R.color.primary))
+            }
         }
     }
 

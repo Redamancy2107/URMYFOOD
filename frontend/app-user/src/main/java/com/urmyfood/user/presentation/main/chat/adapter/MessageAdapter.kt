@@ -82,15 +82,14 @@ class MessageAdapter(
     class SentViewHolder(private val binding: ItemMessageSentBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: ChatMessage) {
             binding.tvSentMessage.text = msg.content
-            // Backend returns ISO_LOCAL_DATE_TIME: "2025-06-20T14:30:00" — HH:mm starts at index 11
-            binding.tvSentStatus.text = if (msg.sentAt.length >= 16) msg.sentAt.substring(11, 16) else msg.sentAt
+            binding.tvSentStatus.text = formatTime(msg.sentAt)
         }
     }
 
     class ReceivedViewHolder(private val binding: ItemMessageReceivedBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: ChatMessage, avatarUrl: String?) {
             binding.tvReceivedMessage.text = msg.content
-            binding.tvReceivedTime.text = if (msg.sentAt.length >= 16) msg.sentAt.substring(11, 16) else msg.sentAt
+            binding.tvReceivedTime.text = formatTime(msg.sentAt)
             Glide.with(itemView.context)
                 .load(avatarUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
@@ -101,7 +100,7 @@ class MessageAdapter(
 
     class SentImageViewHolder(private val binding: ItemMessageSentImageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: ChatMessage) {
-            binding.tvSentTime.text = if (msg.sentAt.length >= 16) msg.sentAt.substring(11, 16) else msg.sentAt
+            binding.tvSentTime.text = formatTime(msg.sentAt)
             Glide.with(itemView.context)
                 .load(msg.imageUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
@@ -111,7 +110,7 @@ class MessageAdapter(
 
     class ReceivedImageViewHolder(private val binding: ItemMessageReceivedImageBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(msg: ChatMessage, avatarUrl: String?) {
-            binding.tvReceivedTime.text = if (msg.sentAt.length >= 16) msg.sentAt.substring(11, 16) else msg.sentAt
+            binding.tvReceivedTime.text = formatTime(msg.sentAt)
             Glide.with(itemView.context)
                 .load(avatarUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
@@ -122,5 +121,20 @@ class MessageAdapter(
                 .placeholder(R.drawable.ic_person_placeholder)
                 .into(binding.ivReceivedImage)
         }
+    }
+
+}
+
+private fun formatTime(sentAt: String): String {
+    if (sentAt.isEmpty()) return ""
+    return if (sentAt.contains("T")) {
+        val tIndex = sentAt.indexOf("T")
+        if (sentAt.length >= tIndex + 6) {
+            sentAt.substring(tIndex + 1, tIndex + 6)
+        } else {
+            sentAt
+        }
+    } else {
+        if (sentAt.length >= 16) sentAt.substring(11, 16) else sentAt
     }
 }
