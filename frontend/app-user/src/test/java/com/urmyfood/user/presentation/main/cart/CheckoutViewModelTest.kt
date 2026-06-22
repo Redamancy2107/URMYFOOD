@@ -71,8 +71,7 @@ class CheckoutViewModelTest {
         assertEquals("order-1", state.orderId)
         assertEquals("VIETQR", state.paymentMethod)
         assertEquals(50000L, state.finalAmount)
-        assertNull(state.qrCode)
-        assertTrue(state.message!!.contains("Đã tạo đơn"))
+        assertTrue(state.message!!.contains("chờ quán xác nhận"))
     }
 
     private fun checkoutViewModel(orderRepository: OrderRepository): CheckoutViewModel {
@@ -113,8 +112,7 @@ class CheckoutViewModelTest {
             CheckoutUseCase(orderRepository, tokenProvider),
             DirectCheckoutUseCase(orderRepository, tokenProvider),
             GetAddressesUseCase(addressRepository, tokenProvider),
-            GetVouchersUseCase(voucherRepository),
-            CreatePayOsPaymentUseCase(orderRepository, tokenProvider)
+            GetVouchersUseCase(voucherRepository)
         )
     }
 

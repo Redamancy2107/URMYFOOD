@@ -290,8 +290,7 @@ object ServiceLocator {
             checkoutUseCase,
             directCheckoutUseCase,
             getAddressesUseCase,
-            getVouchersUseCase,
-            createPayOsPaymentUseCase
+            getVouchersUseCase
         )
     }
 
