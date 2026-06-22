@@ -39,6 +39,7 @@ public interface PostRepository {
     List<PostRanked> findByAuthorId(Long accountId, int page, int size);
     long countByAuthorId(Long accountId);
     void updatePost(UUID postId, Long authorId, UpdatePostRequest req);
+    void updateRemainingQuantity(UUID postId, Long authorId, int remainingQuantity);
     void deletePost(UUID postId, Long authorId);
     void updatePostStatus(UUID postId, Long authorId, PostStatus status);
 

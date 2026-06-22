@@ -41,20 +41,24 @@ public class PostPersistenceAdapter implements PostRepository {
 
     private static final String SEARCH_DOCUMENT = "unaccent(lower(concat_ws(' ', p.dish_name, p.content, a.full_name)))";
     private static final String SEARCH_DISH = "unaccent(lower(p.dish_name))";
-    private static final String SEARCH_SHOP = "unaccent(lower(a.full_name))";
+    private static final String SEARCH_SHOP = "unaccent(lower(COALESCE(sp.shop_name, a.full_name)))";
 
     private static final String SELECT_FRAGMENT = """
             SELECT p.post_id, p.dish_name, p.price, p.original_price, p.max_quantity,
                    p.remaining_quantity, p.end_time, p.is_flash_sale, p.status::text,
                    p.content, p.image_url, p.category, p.created_at,
-                   a.id AS shop_account_id, a.full_name AS shop_name, a.avatar_url AS shop_avatar_url,
+                   a.id AS shop_account_id, COALESCE(sp.shop_name, a.full_name) AS shop_name, a.avatar_url AS shop_avatar_url,
                    sp.address AS shop_address,
                    COALESCE(COUNT(DISTINCT l.like_id), 0) AS like_count,
                    COALESCE(COUNT(DISTINCT c.comment_id), 0) AS comment_count,
                    CASE WHEN :viewerAccountId IS NOT NULL
                         THEN (SELECT COUNT(*) > 0 FROM likes vl
                               WHERE vl.post_id = p.post_id AND vl.account_id = :viewerAccountId)
-                        ELSE FALSE END AS is_liked
+                        ELSE FALSE END AS is_liked,
+                   CASE WHEN :viewerAccountId IS NOT NULL
+                        THEN (SELECT COUNT(*) > 0 FROM shop_follows sf
+                              WHERE sf.shop_id = a.id AND sf.customer_id = :viewerAccountId)
+                        ELSE FALSE END AS is_following_shop
             FROM posts p
             JOIN accounts a ON a.id = p.author_id
             LEFT JOIN shop_profiles sp ON sp.shop_id = a.id
@@ -77,7 +81,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public Optional<PostRanked> findRankedPostById(UUID postId, Long viewerAccountId) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.post_id = :postId
-                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.address
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.address
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("postId", postId)
@@ -113,7 +117,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
-                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.address
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.address
                 ORDER BY (
                     :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
                     :w2 * COALESCE(COUNT(DISTINCT c.comment_id), 0) +
@@ -153,7 +157,7 @@ public class PostPersistenceAdapter implements PostRepository {
                     AND (
                 """ + searchPredicate(terms) + """
                     )
-                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.address
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.address
                 ORDER BY
                 """ + relevanceExpression(terms) + """
                     DESC,
@@ -390,6 +394,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getLong("like_count"),
                 rs.getLong("comment_count"),
                 rs.getBoolean("is_liked"),
+                rs.getBoolean("is_following_shop"),
                 rs.getObject("created_at", OffsetDateTime.class),
                 rs.getString("category")
         );
@@ -410,7 +415,7 @@ public class PostPersistenceAdapter implements PostRepository {
     public List<PostRanked> findByAuthorId(Long accountId, int page, int size) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.author_id = :authorId
-                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.address
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.address
                 ORDER BY p.created_at DESC
                 LIMIT :size OFFSET :offset
                 """;
@@ -459,6 +464,19 @@ public class PostPersistenceAdapter implements PostRepository {
                 .addValue("postId", postId)
                 .addValue("authorId", authorId);
         jdbc.update(sql, params);
+    }
+
+    @Override
+    public void updateRemainingQuantity(UUID postId, Long authorId, int remainingQuantity) {
+        String sql = """
+                UPDATE posts SET
+                    remaining_quantity = LEAST(GREATEST(:remaining, 0), max_quantity)
+                WHERE post_id = :postId AND author_id = :authorId
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("remaining", remainingQuantity)
+                .addValue("postId", postId)
+                .addValue("authorId", authorId));
     }
 
     @Override
