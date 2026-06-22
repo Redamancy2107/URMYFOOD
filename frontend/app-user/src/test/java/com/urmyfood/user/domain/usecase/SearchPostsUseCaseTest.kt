@@ -16,7 +16,22 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class SearchPostsUseCaseTest {
 
-    private fun fakePost(id: String) = FoodPost(id, "Post $id", 60000.0, 70000.0, 50, 30, null, false, "ACTIVE", null, null, "Shop", null)
+    private fun fakePost(id: String) = FoodPost(
+        postId = id,
+        dishName = "Post $id",
+        price = 60000.0,
+        originalPrice = 70000.0,
+        maxQuantity = 50,
+        remainingQuantity = 30,
+        endTime = null,
+        isFlashSale = false,
+        status = "ACTIVE",
+        content = null,
+        imageUrl = null,
+        shopAccountId = 1L,
+        shopName = "Shop",
+        shopAvatarUrl = null
+    )
 
     private val fakeToken = object : TokenProvider {
         override fun getAccessToken() = "tok"

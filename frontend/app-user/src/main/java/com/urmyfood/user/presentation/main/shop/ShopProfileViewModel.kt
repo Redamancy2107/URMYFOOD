@@ -7,7 +7,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.user.domain.model.FoodPost
+import com.urmyfood.user.domain.model.Result as UserResult
+import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetChatSessionUseCase
+import com.urmyfood.user.domain.usecase.GetShopProfileUseCase
+import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
 import kotlinx.coroutines.launch
 
 data class ShopVoucher(
@@ -18,7 +22,10 @@ data class ShopVoucher(
 )
 
 class ShopProfileViewModel(
-    private val getChatSessionUseCase: GetChatSessionUseCase
+    private val getChatSessionUseCase: GetChatSessionUseCase,
+    private val getShopProfileUseCase: GetShopProfileUseCase,
+    private val followShopUseCase: FollowShopUseCase,
+    private val unfollowShopUseCase: UnfollowShopUseCase
 ) : ViewModel() {
 
     sealed class ChatUiState {
@@ -47,11 +54,19 @@ class ShopProfileViewModel(
     }
 
     class Factory(
-        private val getChatSessionUseCase: GetChatSessionUseCase
+        private val getChatSessionUseCase: GetChatSessionUseCase,
+        private val getShopProfileUseCase: GetShopProfileUseCase,
+        private val followShopUseCase: FollowShopUseCase,
+        private val unfollowShopUseCase: UnfollowShopUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ShopProfileViewModel(getChatSessionUseCase) as T
+            ShopProfileViewModel(
+                getChatSessionUseCase,
+                getShopProfileUseCase,
+                followShopUseCase,
+                unfollowShopUseCase
+            ) as T
     }
 
     private val _shopName = MutableLiveData<String>()
@@ -65,6 +80,9 @@ class ShopProfileViewModel(
 
     private val _isFollowing = MutableLiveData<Boolean>()
     val isFollowing: LiveData<Boolean> = _isFollowing
+
+    private val _followError = MutableLiveData<String?>()
+    val followError: LiveData<String?> = _followError
 
     private val _productsCount = MutableLiveData<Int>()
     val productsCount: LiveData<Int> = _productsCount
@@ -109,7 +127,9 @@ class ShopProfileViewModel(
 
     private val allProducts = mutableListOf<FoodPost>()
 
-    fun initShop(name: String, avatarUrl: String?) {
+    fun initShop(shopId: Long, fallbackName: String, fallbackAvatarUrl: String?) {
+        val name = fallbackName
+        val avatarUrl = fallbackAvatarUrl
         _shopName.value = name
         _shopAvatarUrl.value = avatarUrl
 
@@ -157,7 +177,7 @@ class ShopProfileViewModel(
         val hash = name.hashCode().let { if (it < 0) -it else it }
         val mockFollowersCount = 500 + (hash % 4500)
         _followers.value = String.format("%.1fk Người theo dõi", mockFollowersCount / 1000f)
-        _isFollowing.value = hash % 2 == 0
+        _isFollowing.value = false
         
         val mockProdCount = 15 + (hash % 45)
         _productsCount.value = mockProdCount
@@ -205,6 +225,7 @@ class ShopProfileViewModel(
                         "Quán Bà Chiểu" -> "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500"
                         else -> "https://images.unsplash.com/photo-1562967914-608f82629710?w=500"
                     },
+                    shopAccountId = shopId,
                     shopName = name,
                     shopAvatarUrl = avatarUrl
                 )
@@ -270,6 +291,7 @@ class ShopProfileViewModel(
                         "Quán Bà Chiểu" -> "https://images.unsplash.com/photo-1625398407796-82650a8c135f?w=500"
                         else -> "https://images.unsplash.com/photo-1562967914-608f82629710?w=500"
                     },
+                    shopAccountId = shopId,
                     shopName = name,
                     shopAvatarUrl = avatarUrl,
                     category = productCategory
@@ -277,6 +299,30 @@ class ShopProfileViewModel(
             )
         }
         _products.value = allProducts
+        loadProfile(shopId)
+    }
+
+    private fun loadProfile(shopId: Long) {
+        if (shopId <= 0L) return
+        viewModelScope.launch {
+            when (val result = getShopProfileUseCase(shopId)) {
+                is UserResult.Success -> {
+                    val profile = result.data
+                    _shopName.value = profile.shopName
+                    _shopAvatarUrl.value = profile.logoUrl
+                    _address.value = profile.address.orEmpty()
+                    _operatingHours.value = profile.openingHours.orEmpty()
+                    _shopCategory.value = profile.category.orEmpty()
+                    _isOpen.value = profile.isOpen
+                    _followers.value = formatFollowerCount(profile.followerCount)
+                    _isFollowing.value = profile.isFollowing
+                    applyFollowStateToPosts(profile.shopId, profile.isFollowing)
+                }
+                is UserResult.Error -> {
+                    _followError.value = result.message
+                }
+            }
+        }
     }
 
     /**
@@ -293,8 +339,80 @@ class ShopProfileViewModel(
         }
     }
 
-    fun toggleFollow() {
-        _isFollowing.value = _isFollowing.value?.not()
+    fun toggleFollow(shopId: Long) {
+        if (shopId <= 0L) return
+        val previous = _isFollowing.value ?: false
+        applyFollowState(shopId, !previous, null)
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, !previous))
+
+        viewModelScope.launch {
+            val result = if (previous) {
+                unfollowShopUseCase(shopId)
+            } else {
+                followShopUseCase(shopId)
+            }
+            when (result) {
+                is UserResult.Success -> {
+                    applyFollowState(result.data.shopId, result.data.isFollowing, result.data.followerCount)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                        Pair(result.data.shopId, result.data.isFollowing)
+                    )
+                }
+                is UserResult.Error -> {
+                    applyFollowState(shopId, previous, null)
+                    com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, previous))
+                    _followError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun applyFollowState(shopId: Long, isFollowing: Boolean, followerCount: Long?) {
+        val previous = _isFollowing.value ?: false
+        _isFollowing.value = isFollowing
+        if (followerCount != null) {
+            _followers.value = formatFollowerCount(followerCount)
+        } else if (previous != isFollowing) {
+            val currentCount = parseFollowerCount(_followers.value)
+            val nextCount = if (isFollowing) currentCount + 1 else (currentCount - 1).coerceAtLeast(0)
+            _followers.value = formatFollowerCount(nextCount)
+        }
+        applyFollowStateToPosts(shopId, isFollowing)
+    }
+
+    fun clearFollowError() {
+        _followError.value = null
+    }
+
+    private fun applyFollowStateToPosts(shopId: Long, isFollowing: Boolean) {
+        _posts.value = _posts.value?.map { post ->
+            if (post.shopAccountId == shopId) post.copy(isFollowingShop = isFollowing) else post
+        }
+        for (index in allProducts.indices) {
+            val post = allProducts[index]
+            if (post.shopAccountId == shopId && post.isFollowingShop != isFollowing) {
+                allProducts[index] = post.copy(isFollowingShop = isFollowing)
+            }
+        }
+        filterProductsByCategory(_selectedCategory.value)
+    }
+
+    private fun formatFollowerCount(count: Long): String {
+        return if (count >= 1000) {
+            String.format("%.1fk Người theo dõi", count / 1000f)
+        } else {
+            "$count Người theo dõi"
+        }
+    }
+
+    private fun parseFollowerCount(text: String?): Long {
+        if (text.isNullOrBlank()) return 0L
+        val raw = text.substringBefore(" ").replace(",", ".").trim()
+        return if (raw.endsWith("k", ignoreCase = true)) {
+            ((raw.dropLast(1).toFloatOrNull() ?: 0f) * 1000).toLong()
+        } else {
+            raw.toLongOrNull() ?: 0L
+        }
     }
 
     fun toggleLike(postId: String) {

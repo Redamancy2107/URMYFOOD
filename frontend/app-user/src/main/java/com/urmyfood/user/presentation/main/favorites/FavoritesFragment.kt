@@ -75,6 +75,11 @@ class FavoritesFragment : Fragment() {
             }
             loadFavorites()
         }
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
+            val (shopId, isFollowing) = event
+            updateFavoritesFollowState(shopId, isFollowing)
+            loadFavorites()
+        }
     }
 
     override fun onResume() {
@@ -115,6 +120,40 @@ class FavoritesFragment : Fragment() {
                         loadFavorites()
                         com.urmyfood.user.di.ServiceLocator.postLikeEvent.postValue(Pair(post.postId, Pair(post.isLiked, currentCount)))
                         Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+
+        adapter.onFollowClick = { post ->
+            val shopId = post.shopAccountId
+            if (shopId > 0L) {
+                val previous = post.isFollowingShop
+                val next = !previous
+                updateFavoritesFollowState(shopId, next)
+                loadFavorites()
+                com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, next))
+
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val result = if (previous) {
+                        com.urmyfood.user.di.ServiceLocator.unfollowShopUseCase(shopId)
+                    } else {
+                        com.urmyfood.user.di.ServiceLocator.followShopUseCase(shopId)
+                    }
+                    when (result) {
+                        is Result.Success -> {
+                            updateFavoritesFollowState(result.data.shopId, result.data.isFollowing)
+                            loadFavorites()
+                            com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(
+                                Pair(result.data.shopId, result.data.isFollowing)
+                            )
+                        }
+                        is Result.Error -> {
+                            updateFavoritesFollowState(shopId, previous)
+                            loadFavorites()
+                            com.urmyfood.user.di.ServiceLocator.shopFollowEvent.postValue(Pair(shopId, previous))
+                            Toast.makeText(requireContext(), result.message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }
@@ -181,6 +220,13 @@ class FavoritesFragment : Fragment() {
         return list
     }
 
+    private fun updateFavoritesFollowState(shopId: Long, isFollowing: Boolean) {
+        val favorites = favoritesManager.getFavorites()
+        favorites
+            .filter { it.shopAccountId == shopId && it.isFollowingShop != isFollowing }
+            .forEach { favoritesManager.updateFavorite(it.copy(isFollowingShop = isFollowing)) }
+    }
+
     private fun syncFavoritesWithBackend(list: List<com.urmyfood.user.domain.model.FoodPost>) {
         syncJob?.cancel()
         syncJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -193,7 +239,8 @@ class FavoritesFragment : Fragment() {
                         val backendPost = result.data
                         if (backendPost.commentCount != post.commentCount ||
                             backendPost.likeCount != post.likeCount ||
-                            backendPost.isLiked != post.isLiked
+                            backendPost.isLiked != post.isLiked ||
+                            backendPost.isFollowingShop != post.isFollowingShop
                         ) {
                             favoritesManager.updateFavorite(backendPost)
                             changed = true

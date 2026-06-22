@@ -69,7 +69,7 @@ class ShopProfileFragment : Fragment() {
         setupClickListeners()
         observeViewModel()
 
-        viewModel.initShop(shopNameArg, shopAvatarUrlArg)
+        viewModel.initShop(shopId, shopNameArg, shopAvatarUrlArg)
     }
 
     private fun setupToolbarScrollAnimation() {
@@ -107,7 +107,7 @@ class ShopProfileFragment : Fragment() {
 
 
         binding.btnFollow.setOnClickListener {
-            viewModel.toggleFollow()
+            viewModel.toggleFollow(shopId)
         }
 
         binding.btnChat.setOnClickListener {
@@ -129,6 +129,9 @@ class ShopProfileFragment : Fragment() {
         }
         shopPostsAdapter.onLikeClick = { post ->
             viewModel.toggleLike(post.postId)
+        }
+        shopPostsAdapter.onFollowClick = { post ->
+            viewModel.toggleFollow(post.shopAccountId)
         }
         shopPostsAdapter.onSaveClick = { post ->
             Toast.makeText(requireContext(), "Đã lưu bài viết của shop", Toast.LENGTH_SHORT).show()
@@ -154,6 +157,19 @@ class ShopProfileFragment : Fragment() {
                     viewModel.resetChatState()
                 }
                 else -> Unit
+            }
+        }
+
+        viewModel.followError.observe(viewLifecycleOwner) { message ->
+            message ?: return@observe
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            viewModel.clearFollowError()
+        }
+
+        com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
+            val (eventShopId, isFollowing) = event
+            if (eventShopId == shopId) {
+                viewModel.applyFollowState(eventShopId, isFollowing, null)
             }
         }
 
