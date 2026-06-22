@@ -177,6 +177,21 @@ public class OrderService {
         return toResponse(orderRepository.save(order));
     }
 
+    @Transactional
+    public void cancelOrderSystem(UUID orderId, String reason) {
+        Order order = orderRepository.findByIdForUpdate(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn hàng"));
+        
+        if (order.getOrderStatus() == OrderStatus.CANCELLED || order.getOrderStatus() == OrderStatus.COMPLETED) {
+            return;
+        }
+
+        restorePostQuantities(order.getItems());
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        order.setCancelReason(reason);
+        orderRepository.save(order);
+    }
+
     public OrderReviewResponse getReview(Long customerId, UUID orderId) {
         findOwnedOrder(customerId, orderId);
         OrderReview review = orderReviewRepository.findByOrderIdAndCustomerId(orderId, customerId)
