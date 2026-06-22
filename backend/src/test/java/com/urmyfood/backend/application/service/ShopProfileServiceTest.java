@@ -8,6 +8,7 @@ import com.urmyfood.backend.domain.model.ShopProfileImageType;
 import com.urmyfood.backend.domain.model.ShopVerification;
 import com.urmyfood.backend.domain.model.ShopVerificationStatus;
 import com.urmyfood.backend.domain.repository.AccountRepository;
+import com.urmyfood.backend.domain.repository.ShopFollowRepository;
 import com.urmyfood.backend.domain.repository.ShopProfileRepository;
 import com.urmyfood.backend.domain.repository.ShopVerificationRepository;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,9 @@ class ShopProfileServiceTest {
 
     @Mock
     private ShopVerificationRepository shopVerificationRepository;
+
+    @Mock
+    private ShopFollowRepository shopFollowRepository;
 
     @Mock
     private ProfileImageStorageClient profileImageStorageClient;
