@@ -42,6 +42,7 @@ class OrderHistoryFragment : Fragment() {
         val statusLabel: String,
         val originalStatus: String,
         val rawCreatedAt: String,
+        val rawUpdatedAt: String,
         val paymentMethod: String,
         val paymentStatus: String,
         val finalAmount: Long,
@@ -279,28 +280,6 @@ class OrderHistoryFragment : Fragment() {
                 && order.originalStatus == "PENDING"
                 && order.paymentStatus != PAYMENT_PAID
             ) {
-                if (order.paymentMethod == PAYMENT_VIETQR) {
-                    val btnRow = LinearLayout(ctx).apply {
-                        orientation = LinearLayout.HORIZONTAL
-                        gravity = Gravity.END
-                        setPadding(0, dp(12), 0, 0)
-                    }
-
-                    val btnPay = TextView(ctx).apply {
-                        text = "Thanh toán VietQR"
-                        textSize = 14f
-                        setTextColor(Color.WHITE)
-                        setTypeface(typeface, Typeface.BOLD)
-                        setPadding(dp(20), dp(10), dp(20), dp(10))
-                        setBackgroundResource(R.drawable.bg_btn_primary)
-                        setOnClickListener {
-                            viewModel.createVietQrPayment(order.orderId, order.finalAmount)
-                        }
-                    }
-                    btnRow.addView(btnPay)
-                    content.addView(btnRow)
-                }
-
                 try {
                     val createdAt = java.time.OffsetDateTime.parse(order.rawCreatedAt)
                     val now = java.time.OffsetDateTime.now()
@@ -329,6 +308,71 @@ class OrderHistoryFragment : Fragment() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+            } else if (selectedTab == OrderHistoryStatusMapper.TAB_PROCESSING
+                && order.originalStatus == "ACCEPTED"
+                && order.paymentStatus != PAYMENT_PAID
+                && order.paymentMethod == PAYMENT_VIETQR
+            ) {
+                val btnRow = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = Gravity.END
+                    setPadding(0, dp(12), 0, 0)
+                }
+
+                try {
+                    val updatedAt = java.time.OffsetDateTime.parse(order.rawUpdatedAt)
+                    val expiredAt = updatedAt.plusMinutes(15).atZoneSameInstant(java.time.ZoneId.systemDefault())
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm", java.util.Locale.forLanguageTag("vi-VN"))
+                    val expiredStr = expiredAt.format(formatter)
+
+                    val txtExpired = TextView(ctx).apply {
+                        text = "Hết hạn thanh toán lúc: $expiredStr"
+                        textSize = 13f
+                        setTextColor(Color.RED)
+                        setTypeface(typeface, Typeface.ITALIC)
+                        setPadding(0, 0, 0, dp(8))
+                    }
+                    btnRow.addView(txtExpired)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+
+                val btnPay = TextView(ctx).apply {
+                    text = "Thanh toán VietQR"
+                    textSize = 14f
+                    setTextColor(Color.WHITE)
+                    setTypeface(typeface, Typeface.BOLD)
+                    setPadding(dp(20), dp(10), dp(20), dp(10))
+                    setBackgroundResource(R.drawable.bg_btn_primary)
+                    setOnClickListener {
+                        viewModel.createVietQrPayment(order.orderId, order.finalAmount)
+                    }
+                }
+                
+                val btnContainer = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.END
+                }
+                
+                val btnCancel = TextView(ctx).apply {
+                    text = "Hủy đơn"
+                    textSize = 14f
+                    setTextColor(ctx.getColor(R.color.text_primary))
+                    setTypeface(typeface, Typeface.BOLD)
+                    setPadding(dp(20), dp(10), dp(20), dp(10))
+                    setBackgroundResource(R.drawable.bg_btn_outlined)
+                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                        marginEnd = dp(8)
+                    }
+                    setOnClickListener {
+                        showCancelDialog(order.orderId)
+                    }
+                }
+                btnContainer.addView(btnCancel)
+                btnContainer.addView(btnPay)
+                btnRow.addView(btnContainer)
+                
+                content.addView(btnRow)
             }
 
             card.addView(content)
@@ -340,6 +384,7 @@ class OrderHistoryFragment : Fragment() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             state.message?.let {
                 Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                viewModel.clearMessage()
             }
             orders = state.orders
             renderOrders()

@@ -101,7 +101,7 @@ class CheckoutViewModel(
                             is Result.Error -> {
                                 _uiState.value = CheckoutUiState(
                                     isSuccess = true,
-                                    message = "Đã tạo đơn, chưa tạo được mã VietQR. Bạn có thể thanh toán lại trong lịch sử đơn hàng.",
+                                    message = "Đặt hàng thành công! Vui lòng chờ quán xác nhận trước khi thanh toán.",
                                     orderId = order.orderId,
                                     finalAmount = order.finalAmount.toLong(),
                                     paymentMethod = paymentMethod

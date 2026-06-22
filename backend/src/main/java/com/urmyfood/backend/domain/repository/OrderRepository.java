@@ -15,4 +15,5 @@ public interface OrderRepository {
     Optional<Order> findByIdForUpdate(UUID orderId);
     Optional<Order> findByPayosOrderCode(Long payosOrderCode);
     List<Order> findPendingExpiredOrders(OffsetDateTime expiredBefore);
+    List<Order> findAcceptedUnpaidExpiredOrders(OffsetDateTime expiredBefore);
 }
