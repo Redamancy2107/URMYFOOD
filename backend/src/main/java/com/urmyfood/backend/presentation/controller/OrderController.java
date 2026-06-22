@@ -3,6 +3,7 @@ package com.urmyfood.backend.presentation.controller;
 import com.urmyfood.backend.application.dto.ApiResponse;
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderResponse;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.application.service.OrderService;
@@ -39,6 +40,18 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Đặt hàng thành công",
                 orderService.checkout(accountId, request)
+        ));
+    }
+
+    @PostMapping("/direct-checkout")
+    public ResponseEntity<ApiResponse<OrderResponse>> directCheckout(
+            Authentication authentication,
+            @Valid @RequestBody DirectCheckoutRequest request
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Dat hang thanh cong",
+                orderService.directCheckout(accountId, request)
         ));
     }
 

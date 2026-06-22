@@ -2,6 +2,7 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.domain.model.CartItem;
@@ -163,6 +164,109 @@ class OrderServiceTest {
         verify(orderRepository).save(orderCaptor.capture());
         assertThat(orderCaptor.getValue().getPaymentMethod()).isEqualTo(PaymentMethod.VIETQR);
         assertThat(orderCaptor.getValue().getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
+    }
+
+    @Test
+    void directCheckoutCreatesOneItemOrderAndDoesNotDeleteCart() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID postId = UUID.randomUUID();
+        Post lockedPost = post(postId, "Com ga", shop, 5, PostStatus.ACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
+
+        orderService.directCheckout(customer.getId(), directCheckoutRequest(postId, 2));
+
+        ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepository).save(orderCaptor.capture());
+        Order savedOrder = orderCaptor.getValue();
+
+        assertThat(savedOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(savedOrder.getPaymentMethod()).isEqualTo(PaymentMethod.COD);
+        assertThat(savedOrder.getPaymentStatus()).isEqualTo(PaymentStatus.UNPAID);
+        assertThat(savedOrder.getItems()).hasSize(1);
+        assertThat(savedOrder.getItems().get(0).getPost().getPostId()).isEqualTo(postId);
+        assertThat(savedOrder.getItems().get(0).getQuantity()).isEqualTo(2);
+        assertThat(savedOrder.getTotalAmount()).isEqualByComparingTo(BigDecimal.valueOf(20_000));
+        assertThat(lockedPost.getRemainingQuantity()).isEqualTo(3);
+        verify(cartItemRepository, never()).deleteByCustomerId(customer.getId());
+    }
+
+    @Test
+    void directCheckoutFailsWhenLockedPostDoesNotHaveEnoughStock() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID postId = UUID.randomUUID();
+        Post lockedPost = post(postId, "Com ga", shop, 1, PostStatus.ACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
+
+        assertThatThrownBy(() -> orderService.directCheckout(customer.getId(), directCheckoutRequest(postId, 2)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Mon Com ga khong con du so luong");
+
+        assertThat(lockedPost.getRemainingQuantity()).isEqualTo(1);
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(cartItemRepository, never()).deleteByCustomerId(customer.getId());
+    }
+
+    @Test
+    void directCheckoutFailsWhenShopIsClosed() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID postId = UUID.randomUUID();
+        Post lockedPost = post(postId, "Com ga", shop, 5, PostStatus.ACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile(false)));
+
+        assertThatThrownBy(() -> orderService.directCheckout(customer.getId(), directCheckoutRequest(postId, 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Shop hien dang khong hoat dong");
+
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
+    void directCheckoutFailsWhenPostIsNotActive() {
+        Account customer = account(1L, "Customer");
+        Account shop = account(2L, "Shop");
+        UUID postId = UUID.randomUUID();
+        Post lockedPost = post(postId, "Com ga", shop, 5, PostStatus.INACTIVE);
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+        when(postRepository.findByIdForUpdate(postId)).thenReturn(Optional.of(lockedPost));
+        when(shopProfileRepository.findByShopId(shop.getId())).thenReturn(Optional.of(shopProfile()));
+
+        assertThatThrownBy(() -> orderService.directCheckout(customer.getId(), directCheckoutRequest(postId, 1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Mon Com ga hien khong the dat");
+
+        verify(orderRepository, never()).save(any(Order.class));
+        verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
+    void directCheckoutRejectsInvalidPaymentMethod() {
+        Account customer = account(1L, "Customer");
+        UUID postId = UUID.randomUUID();
+
+        when(accountRepository.findById(customer.getId())).thenReturn(Optional.of(customer));
+
+        assertThatThrownBy(() -> orderService.directCheckout(
+                customer.getId(),
+                directCheckoutRequest(postId, 1, "MO" + "MO")))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verify(postRepository, never()).findByIdForUpdate(any(UUID.class));
+        verify(orderRepository, never()).save(any(Order.class));
     }
 
     @Test
@@ -481,6 +585,19 @@ class OrderServiceTest {
         return request;
     }
 
+    private DirectCheckoutRequest directCheckoutRequest(UUID postId, int quantity) {
+        return directCheckoutRequest(postId, quantity, "COD");
+    }
+
+    private DirectCheckoutRequest directCheckoutRequest(UUID postId, int quantity, String paymentMethod) {
+        DirectCheckoutRequest request = new DirectCheckoutRequest();
+        request.setPostId(postId);
+        request.setQuantity(quantity);
+        request.setPaymentMethod(paymentMethod);
+        request.setDeliveryAddress("123 Test");
+        return request;
+    }
+
     private Account account(Long id, String fullName) {
         return Account.builder()
                 .id(id)
@@ -532,8 +649,12 @@ class OrderServiceTest {
     }
 
     private ShopProfile shopProfile() {
+        return shopProfile(true);
+    }
+
+    private ShopProfile shopProfile(boolean isOpen) {
         return ShopProfile.builder()
-                .isOpen(true)
+                .isOpen(isOpen)
                 .openingHours("00:00 - 23:59")
                 .build();
     }

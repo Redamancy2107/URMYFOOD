@@ -2,6 +2,7 @@ package com.urmyfood.backend.application.service;
 
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
 import com.urmyfood.backend.application.dto.OrderItemResponse;
 import com.urmyfood.backend.application.dto.OrderResponse;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
@@ -88,6 +89,38 @@ public class OrderService {
         cartItemRepository.deleteByCustomerId(customerId);
 
         return toResponse(savedOrder);
+    }
+
+    @Transactional
+    public OrderResponse directCheckout(Long customerId, DirectCheckoutRequest request) {
+        Account customer = accountRepository.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay tai khoan"));
+
+        PaymentMethod paymentMethod = parsePaymentMethod(request.getPaymentMethod());
+        Post post = lockPostsById(List.of(request.getPostId())).get(request.getPostId());
+        Account shop = validatePostForCheckout(post, request.getQuantity());
+        BigDecimal totalAmount = post.getPrice().multiply(BigDecimal.valueOf(request.getQuantity()));
+        Voucher voucher = resolveVoucher(request.getVoucherId(), request.getVoucherCode(), totalAmount);
+        BigDecimal discountAmount = voucher == null ? BigDecimal.ZERO : voucher.getDiscountValue().min(totalAmount);
+        BigDecimal finalAmount = totalAmount.subtract(discountAmount).max(BigDecimal.ZERO);
+
+        Order order = Order.builder()
+                .customer(customer)
+                .shop(shop)
+                .voucher(voucher)
+                .totalAmount(totalAmount)
+                .discountAmount(discountAmount)
+                .finalAmount(finalAmount)
+                .orderStatus(OrderStatus.PENDING)
+                .paymentMethod(paymentMethod)
+                .paymentStatus(PaymentStatus.UNPAID)
+                .deliveryAddress(request.getDeliveryAddress())
+                .note(request.getNote())
+                .items(List.of(toOrderItemSnapshot(post, request.getQuantity())))
+                .build();
+
+        decreasePostQuantity(post, request.getQuantity());
+        return toResponse(orderRepository.save(order));
     }
 
     public List<OrderResponse> getMyOrders(Long customerId) {
@@ -275,6 +308,22 @@ public class OrderService {
         return shop;
     }
 
+    private Account validatePostForCheckout(Post post, int quantity) {
+        Account shop = post.getAuthor();
+        ShopProfile profile = shopProfileRepository.findByShopId(shop.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Khong tim thay thong tin cua hang"));
+        if (!Boolean.TRUE.equals(profile.getIsOpen()) || !isWithinOpeningHours(profile.getOpeningHours())) {
+            throw new IllegalArgumentException("Shop hien dang khong hoat dong");
+        }
+        if (post.getStatus() != PostStatus.ACTIVE) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " hien khong the dat");
+        }
+        if (quantity > post.getRemainingQuantity()) {
+            throw new IllegalArgumentException("Mon " + post.getDishName() + " khong con du so luong");
+        }
+        return shop;
+    }
+
     private boolean isWithinOpeningHours(String openingHours) {
         if (openingHours == null || openingHours.trim().isEmpty()) {
             return true;
@@ -359,13 +408,17 @@ public class OrderService {
     private void decreasePostQuantities(List<CartItem> cartItems) {
         cartItems.forEach(item -> {
             Post post = item.getPost();
-            int remainingQuantity = post.getRemainingQuantity() - item.getQuantity();
-            post.setRemainingQuantity(remainingQuantity);
-            if (remainingQuantity == 0) {
-                post.setStatus(PostStatus.SOLD_OUT);
-            }
-            postRepository.save(post);
+            decreasePostQuantity(post, item.getQuantity());
         });
+    }
+
+    private void decreasePostQuantity(Post post, int quantity) {
+        int remainingQuantity = post.getRemainingQuantity() - quantity;
+        post.setRemainingQuantity(remainingQuantity);
+        if (remainingQuantity == 0) {
+            post.setStatus(PostStatus.SOLD_OUT);
+        }
+        postRepository.save(post);
     }
 
     private void restorePostQuantities(List<OrderItem> orderItems) {
