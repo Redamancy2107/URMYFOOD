@@ -56,6 +56,11 @@ class HomeViewModel(
     private val _isFlashSaleFilterActive = MutableLiveData<Boolean>(false)
     val isFlashSaleFilterActive: LiveData<Boolean> = _isFlashSaleFilterActive
 
+    private val _selectedCategory = MutableLiveData<String?>(null)
+    val selectedCategory: LiveData<String?> = _selectedCategory
+
+    private var currentCategory: String? = null
+
     private val loadedPosts = mutableListOf<FoodPost>()
     private var currentPage = 0
     private var hasNextPage = false
@@ -69,6 +74,13 @@ class HomeViewModel(
     fun setSortOrder(order: String?) {
         _sortOrder.value = order
         applySortingAndEmit()
+    }
+
+    fun selectCategory(category: String?) {
+        if (category == currentCategory) return
+        currentCategory = category
+        _selectedCategory.value = category
+        loadPosts()
     }
 
     fun toggleFlashSaleFilter() {
@@ -101,7 +113,7 @@ class HomeViewModel(
         _uiState.value = NewsfeedUiState.Loading
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = 0, anchor = null)) {
+            when (val result = getPostsUseCase(page = 0, anchor = null, category = currentCategory)) {
                 is Result.Success -> {
                     loadedPosts.addAll(result.data.items)
                     hasNextPage = result.data.hasNext
@@ -120,7 +132,7 @@ class HomeViewModel(
         _isLoadingMore.value = true
 
         viewModelScope.launch {
-            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor)) {
+            when (val result = getPostsUseCase(page = currentPage + 1, anchor = currentAnchor, category = currentCategory)) {
                 is Result.Success -> {
                     val newPosts = result.data.items.filter { new ->
                         loadedPosts.none { it.postId == new.postId }

@@ -92,14 +92,21 @@ class HomeFragment : Fragment() {
 
     private fun setupCategories() {
         val categories = listOf(
-            com.urmyfood.user.presentation.model.Category(1, "Cơm", "🍜"),
-            com.urmyfood.user.presentation.model.Category(2, "Bún/Phở", "🥣"),
-            com.urmyfood.user.presentation.model.Category(3, "Trà sữa", "🧋"),
+            com.urmyfood.user.presentation.model.Category(0, "Tất cả", "🍽️"),
+            com.urmyfood.user.presentation.model.Category(1, "Món chính", "🍛"),
+            com.urmyfood.user.presentation.model.Category(2, "Đồ uống", "🥤"),
+            com.urmyfood.user.presentation.model.Category(3, "Tráng miệng", "🍰"),
             com.urmyfood.user.presentation.model.Category(4, "Ăn vặt", "🍢"),
-            com.urmyfood.user.presentation.model.Category(5, "Bánh mì", "🥖")
+            com.urmyfood.user.presentation.model.Category(5, "Combo", "🍱"),
+            com.urmyfood.user.presentation.model.Category(6, "Bún/Phở", "🥣"),
+            com.urmyfood.user.presentation.model.Category(7, "Cơm", "🍜"),
+            com.urmyfood.user.presentation.model.Category(8, "Trà sữa", "🧋"),
+            com.urmyfood.user.presentation.model.Category(9, "Bánh mì", "🥖")
         )
         binding.rvCategories.adapter =
-            com.urmyfood.user.presentation.main.home.adapter.CategoryAdapter(categories)
+            com.urmyfood.user.presentation.main.home.adapter.CategoryAdapter(categories) { category ->
+                viewModel.selectCategory(category)
+            }
     }
 
     private fun setupSwipeRefresh() {
@@ -191,8 +198,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.tvSeeAll.setOnClickListener { showFeatureInDevelopment() }
-        
         binding.btnFilterPrice.setOnClickListener { view ->
             showPriceFilterMenu(view)
         }
@@ -206,7 +211,6 @@ class HomeFragment : Fragment() {
         }
 
         adapter.onCommentClick = { postId -> showCommentSheet(postId) }
-        adapter.onShareClick = { showShareSheet() }
         adapter.onOrderClick = { foodPost ->
             showGuestDialogOrRun {
                 val orderSheet = OrderBottomSheetFragment(foodPost)
@@ -235,13 +239,6 @@ class HomeFragment : Fragment() {
                 putLong("shopId", post.shopAccountId)
             }
             findNavController().navigate(R.id.shopProfileFragment, bundle)
-        }
-    }
-
-    private fun showShareSheet() {
-        showGuestDialogOrRun {
-            val shareSheet = ShareBottomSheetFragment()
-            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
     }
 
@@ -401,14 +398,6 @@ class HomeFragment : Fragment() {
                 binding.btnFilterFlash.setTextColor(ctx.getColor(R.color.primary))
             }
         }
-    }
-
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun onResume() {

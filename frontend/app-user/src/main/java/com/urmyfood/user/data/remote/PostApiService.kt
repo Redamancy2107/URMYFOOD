@@ -29,7 +29,8 @@ interface PostApiService {
         @Header("Authorization") token: String?,
         @Query("page") page: Int,
         @Query("size") size: Int,
-        @Query("anchor") anchor: String?
+        @Query("anchor") anchor: String?,
+        @Query("category") category: String?
     ): Response<ApiResponse<PageResponse<PostResponse>>>
 
     @GET("api/v1/shops/{shopId}/posts")

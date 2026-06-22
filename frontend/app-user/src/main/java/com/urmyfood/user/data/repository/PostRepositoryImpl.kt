@@ -15,9 +15,9 @@ class PostRepositoryImpl(
     private val postApiService: PostApiService
 ) : PostRepository {
 
-    override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
+    override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?): Result<PageResult<FoodPost>> {
         return try {
-            val response = postApiService.getPosts(token, page, size, anchor)
+            val response = postApiService.getPosts(token, page, size, anchor, category)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
