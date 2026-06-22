@@ -6,6 +6,7 @@ import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.ShopFollowResponse
 import com.urmyfood.user.data.model.ShopProfileResponse
 import com.urmyfood.user.data.remote.ShopApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.ShopRepository
 import kotlinx.coroutines.CancellationException
@@ -46,7 +47,7 @@ class ShopRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 

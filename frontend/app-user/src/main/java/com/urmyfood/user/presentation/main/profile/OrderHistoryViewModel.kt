@@ -10,7 +10,9 @@ import com.urmyfood.user.data.model.OrderResponse
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.CancelOrderUseCase
 import com.urmyfood.user.domain.usecase.CreatePayOsPaymentUseCase
+import com.urmyfood.user.domain.usecase.CreateOrderReviewUseCase
 import com.urmyfood.user.domain.usecase.GetOrdersUseCase
+import com.urmyfood.user.domain.usecase.ReorderUseCase
 import kotlinx.coroutines.launch
 
 data class OrderHistoryUiState(
@@ -28,7 +30,9 @@ data class PaymentQrNavigation(
 class OrderHistoryViewModel(
     private val getOrdersUseCase: GetOrdersUseCase,
     private val cancelOrderUseCase: CancelOrderUseCase,
-    private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
+    private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase,
+    private val createOrderReviewUseCase: CreateOrderReviewUseCase,
+    private val reorderUseCase: ReorderUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableLiveData(OrderHistoryUiState(isLoading = true))
@@ -36,6 +40,9 @@ class OrderHistoryViewModel(
 
     private val _paymentQrNavigation = MutableLiveData<PaymentQrNavigation?>()
     val paymentQrNavigation: LiveData<PaymentQrNavigation?> = _paymentQrNavigation
+
+    private val _cartNavigation = MutableLiveData(false)
+    val cartNavigation: LiveData<Boolean> = _cartNavigation
 
     fun loadOrders() {
         viewModelScope.launch {
@@ -89,6 +96,48 @@ class OrderHistoryViewModel(
         _paymentQrNavigation.value = null
     }
 
+    fun createReview(orderId: String, rating: Int, comment: String?) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isLoading = true, message = null)
+            when (val result = createOrderReviewUseCase(orderId, rating, comment)) {
+                is Result.Success -> {
+                    _uiState.value = _uiState.value?.copy(message = "Đánh giá đơn hàng thành công")
+                    loadOrders()
+                }
+                is Result.Error -> _uiState.value = _uiState.value?.copy(
+                    isLoading = false,
+                    message = result.message
+                )
+            }
+        }
+    }
+
+    fun reorder(orderId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isLoading = true, message = null)
+            when (val result = reorderUseCase(orderId)) {
+                is Result.Success -> {
+                    val skippedCount = result.data.skippedItems.size
+                    val message = if (skippedCount > 0) {
+                        "Đã thêm ${result.data.addedCount} món vào giỏ, bỏ qua $skippedCount món"
+                    } else {
+                        "Đã thêm món vào giỏ hàng"
+                    }
+                    _uiState.value = _uiState.value?.copy(isLoading = false, message = message)
+                    _cartNavigation.value = true
+                }
+                is Result.Error -> _uiState.value = _uiState.value?.copy(
+                    isLoading = false,
+                    message = result.message
+                )
+            }
+        }
+    }
+
+    fun clearCartNavigation() {
+        _cartNavigation.value = false
+    }
+
     fun clearMessage() {
         _uiState.value = _uiState.value?.copy(message = null)
     }
@@ -112,6 +161,7 @@ class OrderHistoryViewModel(
                 paymentMethod = paymentMethod,
                 paymentStatus = paymentStatus,
                 finalAmount = finalAmount.toLong(),
+                reviewed = reviewed,
                 imageUrl = item?.imageUrl?.let { url ->
                     if (url.isEmpty()) null
                     else if (url.startsWith("http://") || url.startsWith("https://")) url
@@ -139,12 +189,20 @@ class OrderHistoryViewModel(
     class Factory(
         private val getOrdersUseCase: GetOrdersUseCase,
         private val cancelOrderUseCase: CancelOrderUseCase,
-        private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
+        private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase,
+        private val createOrderReviewUseCase: CreateOrderReviewUseCase,
+        private val reorderUseCase: ReorderUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(OrderHistoryViewModel::class.java)) {
-                return OrderHistoryViewModel(getOrdersUseCase, cancelOrderUseCase, createPayOsPaymentUseCase) as T
+                return OrderHistoryViewModel(
+                    getOrdersUseCase,
+                    cancelOrderUseCase,
+                    createPayOsPaymentUseCase,
+                    createOrderReviewUseCase,
+                    reorderUseCase
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

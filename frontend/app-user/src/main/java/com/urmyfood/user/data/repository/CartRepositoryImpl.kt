@@ -7,6 +7,7 @@ import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CartResponse
 import com.urmyfood.user.data.model.UpdateCartItemRequest
 import com.urmyfood.user.data.remote.CartApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.CartRepository
 import kotlinx.coroutines.CancellationException
@@ -41,7 +42,7 @@ class CartRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -61,7 +62,7 @@ class CartRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 

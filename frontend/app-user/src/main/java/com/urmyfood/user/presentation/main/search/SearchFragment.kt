@@ -16,7 +16,6 @@ import com.urmyfood.user.databinding.FragmentMainSearchBinding
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
-import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
 import androidx.navigation.fragment.findNavController
 
 class SearchFragment : Fragment() {
@@ -53,6 +52,7 @@ class SearchFragment : Fragment() {
         observeLoadingMore()
         observeLikeError()
         observeFollowError()
+        observeSaveError()
         observeFollowEvents()
     }
 
@@ -74,10 +74,6 @@ class SearchFragment : Fragment() {
             QuickCommentFragment.newInstance(postId)
                 .show(childFragmentManager, QuickCommentFragment.TAG)
         }
-        searchAdapter.onShareClick = {
-            val sheet = ShareBottomSheetFragment()
-            sheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
-        }
         searchAdapter.onOrderClick = { post ->
             val sheet = OrderBottomSheetFragment(post)
             sheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
@@ -88,8 +84,9 @@ class SearchFragment : Fragment() {
         searchAdapter.onFollowClick = { post ->
             viewModel.toggleFollow(post.shopAccountId, post.isFollowingShop)
         }
-        searchAdapter.onSaveClick = { showFeatureInDevelopment() }
-        searchAdapter.checkIsBookmarked = { false }
+        searchAdapter.onSaveClick = { post ->
+            viewModel.toggleSave(post.postId, post.isSaved)
+        }
         searchAdapter.onShopClick = { post ->
             val bundle = Bundle().apply {
                 putString("shopName", post.shopName)
@@ -216,24 +213,27 @@ class SearchFragment : Fragment() {
         }
     }
 
+    private fun observeSaveError() {
+        viewModel.saveError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearSaveError()
+        }
+    }
+
     private fun observeFollowEvents() {
         com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
             val (shopId, isFollowing) = event
             viewModel.updateFollowStateForShop(shopId, isFollowing)
         }
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, isSaved) = event
+            viewModel.updateSavedState(postId, isSaved)
+        }
     }
 
     private fun setupClickListeners() {
-        binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
         binding.tvClearAll.setOnClickListener { viewModel.clearRecentSearches() }
-    }
-
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun onDestroyView() {

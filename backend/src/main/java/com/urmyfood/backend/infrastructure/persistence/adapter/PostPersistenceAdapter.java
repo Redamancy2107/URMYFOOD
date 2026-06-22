@@ -58,7 +58,11 @@ public class PostPersistenceAdapter implements PostRepository {
                    CASE WHEN :viewerAccountId IS NOT NULL
                         THEN (SELECT COUNT(*) > 0 FROM shop_follows sf
                               WHERE sf.shop_id = a.id AND sf.customer_id = :viewerAccountId)
-                        ELSE FALSE END AS is_following_shop
+                        ELSE FALSE END AS is_following_shop,
+                   CASE WHEN :viewerAccountId IS NOT NULL
+                        THEN (SELECT COUNT(*) > 0 FROM saved_posts sv
+                              WHERE sv.post_id = p.post_id AND sv.customer_id = :viewerAccountId)
+                        ELSE FALSE END AS is_saved
             FROM posts p
             JOIN accounts a ON a.id = p.author_id
             LEFT JOIN shop_profiles sp ON sp.shop_id = a.id
@@ -114,9 +118,10 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor) {
+    public List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor, String category) {
         String sql = SELECT_FRAGMENT + """
                 WHERE p.status = 'ACTIVE' AND p.created_at <= :anchor
+                    AND (:category IS NULL OR p.category = :category)
                 GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.logo_url, sp.address
                 ORDER BY (
                     :w1 * COALESCE(COUNT(DISTINCT l.like_id), 0) +
@@ -132,6 +137,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 .addValue("w2", w2)
                 .addValue("w3", w3)
                 .addValue("anchor", Timestamp.from(anchor.toInstant()), Types.TIMESTAMP)
+                .addValue("category", category, Types.VARCHAR)
                 .addValue("size", size)
                 .addValue("offset", (long) page * size);
 
@@ -139,9 +145,13 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public long countActive(OffsetDateTime anchor) {
-        String sql = "SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE' AND created_at <= :anchor";
-        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("anchor", Timestamp.from(anchor.toInstant())), Long.class);
+    public long countActive(OffsetDateTime anchor, String category) {
+        String sql = "SELECT COUNT(*) FROM posts WHERE status = 'ACTIVE' AND created_at <= :anchor "
+                + "AND (:category IS NULL OR category = :category)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("anchor", Timestamp.from(anchor.toInstant()), Types.TIMESTAMP)
+                .addValue("category", category, Types.VARCHAR);
+        Long count = jdbc.queryForObject(sql, params, Long.class);
         return count != null ? count : 0L;
     }
 
@@ -226,6 +236,71 @@ public class PostPersistenceAdapter implements PostRepository {
                 .addValue("postId", postId)
                 .addValue("accountId", accountId));
         return countLikes(postId);
+    }
+
+    @Override
+    public List<PostRanked> findSavedByCustomerId(Long customerId, Long viewerAccountId, int page, int size) {
+        String sql = SELECT_FRAGMENT + """
+                JOIN saved_posts sv ON sv.post_id = p.post_id AND sv.customer_id = :customerId
+                WHERE p.status = 'ACTIVE'
+                GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.logo_url, sp.address, sv.created_at
+                ORDER BY sv.created_at DESC
+                LIMIT :size OFFSET :offset
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("customerId", customerId)
+                .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
+                .addValue("size", size)
+                .addValue("offset", (long) page * size);
+        return jdbc.query(sql, params, this::mapRow);
+    }
+
+    @Override
+    public long countSavedByCustomerId(Long customerId) {
+        String sql = """
+                SELECT COUNT(*)
+                FROM saved_posts sv
+                JOIN posts p ON p.post_id = sv.post_id
+                WHERE sv.customer_id = :customerId AND p.status = 'ACTIVE'
+                """;
+        Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("customerId", customerId), Long.class);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public boolean isSaved(UUID postId, Long customerId) {
+        String sql = """
+                SELECT COUNT(*) > 0
+                FROM saved_posts
+                WHERE post_id = :postId AND customer_id = :customerId
+                """;
+        Boolean saved = jdbc.queryForObject(sql, new MapSqlParameterSource()
+                .addValue("postId", postId)
+                .addValue("customerId", customerId), Boolean.class);
+        return Boolean.TRUE.equals(saved);
+    }
+
+    @Override
+    public void savePost(UUID postId, Long customerId) {
+        String sql = """
+                INSERT INTO saved_posts (customer_id, post_id)
+                VALUES (:customerId, :postId)
+                ON CONFLICT (customer_id, post_id) DO NOTHING
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("customerId", customerId)
+                .addValue("postId", postId));
+    }
+
+    @Override
+    public void unsavePost(UUID postId, Long customerId) {
+        String sql = """
+                DELETE FROM saved_posts
+                WHERE customer_id = :customerId AND post_id = :postId
+                """;
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("customerId", customerId)
+                .addValue("postId", postId));
     }
 
     @Override
@@ -396,6 +471,7 @@ public class PostPersistenceAdapter implements PostRepository {
                 rs.getLong("comment_count"),
                 rs.getBoolean("is_liked"),
                 rs.getBoolean("is_following_shop"),
+                rs.getBoolean("is_saved"),
                 rs.getObject("created_at", OffsetDateTime.class),
                 rs.getString("category")
         );
@@ -413,16 +489,16 @@ public class PostPersistenceAdapter implements PostRepository {
     }
 
     @Override
-    public List<PostRanked> findByAuthorId(Long accountId, int page, int size) {
+    public List<PostRanked> findByAuthorId(Long authorId, Long viewerAccountId, int page, int size) {
         String sql = SELECT_FRAGMENT + """
-                WHERE p.author_id = :authorId
+                WHERE p.author_id = :authorId AND p.status <> 'DELETED'
                 GROUP BY p.post_id, a.id, a.full_name, a.avatar_url, sp.shop_name, sp.logo_url, sp.address
                 ORDER BY p.created_at DESC
                 LIMIT :size OFFSET :offset
                 """;
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("viewerAccountId", accountId, Types.BIGINT)
-                .addValue("authorId", accountId)
+                .addValue("viewerAccountId", viewerAccountId, Types.BIGINT)
+                .addValue("authorId", authorId)
                 .addValue("size", size)
                 .addValue("offset", (long) page * size);
         return jdbc.query(sql, params, this::mapRow);
@@ -430,7 +506,7 @@ public class PostPersistenceAdapter implements PostRepository {
 
     @Override
     public long countByAuthorId(Long accountId) {
-        String sql = "SELECT COUNT(*) FROM posts WHERE author_id = :authorId";
+        String sql = "SELECT COUNT(*) FROM posts WHERE author_id = :authorId AND status <> 'DELETED'";
         Long count = jdbc.queryForObject(sql, new MapSqlParameterSource("authorId", accountId), Long.class);
         return count != null ? count : 0L;
     }
@@ -482,7 +558,7 @@ public class PostPersistenceAdapter implements PostRepository {
 
     @Override
     public void deletePost(UUID postId, Long authorId) {
-        String sql = "DELETE FROM posts WHERE post_id = :postId AND author_id = :authorId";
+        String sql = "UPDATE posts SET status = 'DELETED' WHERE post_id = :postId AND author_id = :authorId";
         jdbc.update(sql, new MapSqlParameterSource()
                 .addValue("postId", postId)
                 .addValue("authorId", authorId));

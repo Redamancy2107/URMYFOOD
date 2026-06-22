@@ -24,6 +24,7 @@ public record PostRanked(
         long commentCount,
         boolean liked,
         boolean followingShop,
+        boolean saved,
         OffsetDateTime createdAt,
         String category
 ) {}

@@ -26,12 +26,10 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
 
     var onCommentClick: ((String) -> Unit)? = null
-    var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
     var onLikeClick: ((FoodPost) -> Unit)? = null
     var onFollowClick: ((FoodPost) -> Unit)? = null
-    var checkIsBookmarked: ((FoodPost) -> Boolean)? = null
     var onShopClick: ((FoodPost) -> Unit)? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -146,17 +144,13 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
                 }
 
                 // Bookmark toggle
-                val isBookmarked = checkIsBookmarked?.invoke(post) ?: false
-                btnBookmark.setImageResource(if (isBookmarked) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
+                btnBookmark.setImageResource(if (post.isSaved) R.drawable.ic_bookmark else R.drawable.ic_bookmark_border)
                 btnBookmark.setOnClickListener {
                     onSaveClick?.invoke(post)
                 }
 
                 btnComment.setOnClickListener {
                     onCommentClick?.invoke(post.postId)
-                }
-                btnShare.setOnClickListener {
-                    onShareClick?.invoke()
                 }
                 btnOrder.setOnClickListener {
                     onOrderClick?.invoke(post)

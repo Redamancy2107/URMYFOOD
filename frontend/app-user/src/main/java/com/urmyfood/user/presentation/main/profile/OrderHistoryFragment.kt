@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import android.widget.RatingBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.cardview.widget.CardView
@@ -46,6 +47,7 @@ class OrderHistoryFragment : Fragment() {
         val paymentMethod: String,
         val paymentStatus: String,
         val finalAmount: Long,
+        val reviewed: Boolean = false,
         val imageUrl: String? = null
     )
 
@@ -73,6 +75,7 @@ class OrderHistoryFragment : Fragment() {
         setupSwipeRefresh()
         observeOrders()
         observePaymentQrNavigation()
+        observeCartNavigation()
         viewModel.loadOrders()
     }
 
@@ -251,19 +254,21 @@ class OrderHistoryFragment : Fragment() {
                     setPadding(0, dp(12), 0, 0)
                 }
 
-                val btnReview = TextView(ctx).apply {
-                    text = ctx.getString(R.string.order_btn_review)
-                    textSize = 14f
-                    setTextColor(ctx.getColor(R.color.text_primary))
-                    setTypeface(typeface, Typeface.BOLD)
-                    setPadding(dp(20), dp(10), dp(20), dp(10))
-                    setBackgroundResource(R.drawable.bg_btn_outlined)
-                    layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                        marginEnd = dp(8)
+                if (!order.reviewed) {
+                    val btnReview = TextView(ctx).apply {
+                        text = ctx.getString(R.string.order_btn_review)
+                        textSize = 14f
+                        setTextColor(ctx.getColor(R.color.text_primary))
+                        setTypeface(typeface, Typeface.BOLD)
+                        setPadding(dp(20), dp(10), dp(20), dp(10))
+                        setBackgroundResource(R.drawable.bg_btn_outlined)
+                        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                            marginEnd = dp(8)
+                        }
+                        setOnClickListener { showReviewDialog(order.orderId) }
                     }
-                    setOnClickListener { Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show() }
+                    btnRow.addView(btnReview)
                 }
-                btnRow.addView(btnReview)
 
                 val btnReorder = TextView(ctx).apply {
                     text = ctx.getString(R.string.order_btn_reorder)
@@ -272,7 +277,7 @@ class OrderHistoryFragment : Fragment() {
                     setTypeface(typeface, Typeface.BOLD)
                     setPadding(dp(20), dp(10), dp(20), dp(10))
                     setBackgroundResource(R.drawable.bg_btn_primary)
-                    setOnClickListener { Toast.makeText(ctx, ctx.getString(R.string.toast_feature_in_development), Toast.LENGTH_SHORT).show() }
+                    setOnClickListener { viewModel.reorder(order.orderId) }
                 }
                 btnRow.addView(btnReorder)
                 content.addView(btnRow)
@@ -405,6 +410,63 @@ class OrderHistoryFragment : Fragment() {
             findNavController().navigate(R.id.paymentQrFragment, bundle)
             viewModel.clearPaymentQrNavigation()
         }
+    }
+
+    private fun observeCartNavigation() {
+        viewModel.cartNavigation.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate != true) return@observe
+            findNavController().navigate(R.id.cartFragment)
+            viewModel.clearCartNavigation()
+        }
+    }
+
+    private fun showReviewDialog(orderId: String) {
+        val ctx = requireContext()
+        val dp = { v: Int -> (v * ctx.resources.displayMetrics.density).toInt() }
+
+        val container = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(8), dp(24), 0)
+        }
+        val ratingBar = RatingBar(ctx).apply {
+            numStars = 5
+            stepSize = 1f
+            rating = 5f
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(12) }
+        }
+        val commentInput = android.widget.EditText(ctx).apply {
+            hint = "Nhận xét thêm"
+            minLines = 3
+            gravity = Gravity.TOP
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
+        container.addView(ratingBar)
+        container.addView(commentInput)
+
+        val dialog = android.app.AlertDialog.Builder(ctx)
+            .setTitle("Đánh giá đơn hàng")
+            .setView(container)
+            .setPositiveButton("Gửi", null)
+            .setNegativeButton("Đóng", null)
+            .create()
+
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val rating = ratingBar.rating.toInt()
+                if (rating !in 1..5) {
+                    Toast.makeText(ctx, "Vui lòng chọn số sao", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                val comment = commentInput.text?.toString()?.trim().orEmpty().ifBlank { null }
+                viewModel.createReview(orderId, rating, comment)
+                dialog.dismiss()
+            }
+        }
+        dialog.show()
     }
 
     private fun showCancelDialog(orderId: String) {

@@ -1,6 +1,8 @@
 package com.urmyfood.backend.presentation.controller;
 
 import com.urmyfood.backend.application.dto.ApiResponse;
+import com.urmyfood.backend.application.dto.PageResponse;
+import com.urmyfood.backend.application.dto.PostResponse;
 import com.urmyfood.backend.application.dto.ProfileImageUploadResponse;
 import com.urmyfood.backend.application.dto.ShopFollowResponse;
 import com.urmyfood.backend.application.dto.ShopProfileRequest;
@@ -8,6 +10,7 @@ import com.urmyfood.backend.application.dto.ShopProfileResponse;
 import com.urmyfood.backend.application.dto.ShopStatisticsResponse;
 import com.urmyfood.backend.application.dto.ShopVerificationRequest;
 import com.urmyfood.backend.application.dto.ShopVerificationResponse;
+import com.urmyfood.backend.application.service.PostService;
 import com.urmyfood.backend.application.service.ShopFollowService;
 import com.urmyfood.backend.application.service.ShopProfileService;
 import com.urmyfood.backend.application.service.ShopStatisticsService;
@@ -39,6 +42,7 @@ public class ShopController {
     private final ShopProfileService shopProfileService;
     private final ShopStatisticsService shopStatisticsService;
     private final ShopFollowService shopFollowService;
+    private final PostService postService;
 
     @GetMapping("/me/profile")
     public ResponseEntity<ApiResponse<ShopProfileResponse>> getMyProfile(Authentication authentication) {
@@ -59,6 +63,16 @@ public class ShopController {
     ) {
         ShopProfileResponse response = shopProfileService.getProfileForViewer(shopId, getAccountId(authentication));
         return ResponseEntity.ok(ApiResponse.success("Lay ho so quan thanh cong", response));
+    }
+
+    @GetMapping("/{shopId}/posts")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getShopPosts(
+            @PathVariable Long shopId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<PostResponse> result = postService.getShopPosts(shopId, page, size);
+        return ResponseEntity.ok(ApiResponse.success("Tải bài đăng của quán thành công", result));
     }
 
     @GetMapping("/{shopId}/follow")

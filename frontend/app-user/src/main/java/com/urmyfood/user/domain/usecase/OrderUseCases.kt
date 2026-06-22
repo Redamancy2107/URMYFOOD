@@ -66,6 +66,26 @@ class CancelOrderUseCase(
     }
 }
 
+class CreateOrderReviewUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String, rating: Int, comment: String?): Result<com.urmyfood.user.data.model.OrderReviewResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui long dang nhap")
+        return orderRepository.createReview("Bearer $token", orderId, rating, comment)
+    }
+}
+
+class ReorderUseCase(
+    private val orderRepository: OrderRepository,
+    private val tokenManager: TokenProvider
+) {
+    suspend operator fun invoke(orderId: String): Result<com.urmyfood.user.data.model.ReorderResponse> {
+        val token = tokenManager.getAccessToken() ?: return Result.Error("Vui long dang nhap")
+        return orderRepository.reorder("Bearer $token", orderId)
+    }
+}
+
 class CreatePayOsPaymentUseCase(
     private val orderRepository: OrderRepository,
     private val tokenManager: TokenProvider

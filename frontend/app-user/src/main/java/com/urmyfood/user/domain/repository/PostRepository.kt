@@ -7,7 +7,8 @@ import com.urmyfood.user.domain.model.PageResult
 import com.urmyfood.user.domain.model.Result
 
 interface PostRepository {
-    suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>>
+    suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?): Result<PageResult<FoodPost>>
+    suspend fun getShopPosts(token: String?, shopId: Long, page: Int, size: Int): Result<PageResult<FoodPost>>
     suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>>
     suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult>
     suspend fun getComments(postId: String, token: String, cursor: String?, size: Int): Result<PageResult<Comment>>

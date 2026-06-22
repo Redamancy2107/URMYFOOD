@@ -2,6 +2,7 @@ package com.urmyfood.user.data.repository
 
 import com.urmyfood.user.data.model.toDomain
 import com.urmyfood.user.data.remote.UserApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.UserProfile
 import com.urmyfood.user.domain.repository.UserRepository
@@ -22,7 +23,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -46,7 +47,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -64,7 +65,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -87,7 +88,7 @@ class UserRepositoryImpl(private val userApiService: UserApiService) : UserRepos
                 Result.Error("Lỗi máy chủ: ${response.code()}")
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 }

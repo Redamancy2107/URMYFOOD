@@ -7,6 +7,7 @@ import com.urmyfood.backend.application.dto.CreatePostRequest;
 import com.urmyfood.backend.application.dto.PageResponse;
 import com.urmyfood.backend.application.dto.PostImageUploadResponse;
 import com.urmyfood.backend.application.dto.PostResponse;
+import com.urmyfood.backend.application.dto.SavedPostResponse;
 import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.application.dto.UpdatePostStatusRequest;
 import com.urmyfood.backend.application.dto.UpdateRemainingQuantityRequest;
@@ -51,12 +52,13 @@ public class PostService {
     @Value("${recommendation.weight.recency:100.0}")
     private double wRecency;
 
-    public PageResponse<PostResponse> getNewsfeed(int page, int size, OffsetDateTime anchor) {
+    public PageResponse<PostResponse> getNewsfeed(int page, int size, OffsetDateTime anchor, String category) {
         int clampedSize = Math.min(size, 50);
         Long viewerAccountId = resolveViewerAccountId();
         OffsetDateTime effectiveAnchor = anchor != null ? anchor : OffsetDateTime.now();
-        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize, effectiveAnchor);
-        long total = postRepository.countActive(effectiveAnchor);
+        String filterCategory = (category != null && !category.isBlank()) ? category : null;
+        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize, effectiveAnchor, filterCategory);
+        long total = postRepository.countActive(effectiveAnchor, filterCategory);
         List<PostResponse> content = ranked.stream().map(this::toResponse).toList();
         return PageResponse.ofAnchored(content, page, clampedSize, total, effectiveAnchor.toString());
     }
@@ -125,8 +127,26 @@ public class PostService {
     public PageResponse<PostResponse> getMyPosts(int page, int size) {
         Account account = requireCurrentAccount();
         int clampedSize = Math.min(size, 50);
-        List<PostRanked> posts = postRepository.findByAuthorId(account.getId(), page, clampedSize);
+        List<PostRanked> posts = postRepository.findByAuthorId(account.getId(), account.getId(), page, clampedSize);
         long total = postRepository.countByAuthorId(account.getId());
+        List<PostResponse> content = posts.stream().map(this::toResponse).toList();
+        return PageResponse.ofAnchored(content, page, clampedSize, total, null);
+    }
+
+    public PageResponse<PostResponse> getShopPosts(Long shopId, int page, int size) {
+        int clampedSize = Math.min(size, 50);
+        Long viewerAccountId = resolveViewerAccountId();
+        List<PostRanked> posts = postRepository.findByAuthorId(shopId, viewerAccountId, page, clampedSize);
+        long total = postRepository.countByAuthorId(shopId);
+        List<PostResponse> content = posts.stream().map(this::toResponse).toList();
+        return PageResponse.ofAnchored(content, page, clampedSize, total, null);
+    }
+
+    public PageResponse<PostResponse> getSavedPosts(int page, int size) {
+        Account account = requireCurrentAccount();
+        int clampedSize = Math.min(size, 50);
+        List<PostRanked> posts = postRepository.findSavedByCustomerId(account.getId(), account.getId(), page, clampedSize);
+        long total = postRepository.countSavedByCustomerId(account.getId());
         List<PostResponse> content = posts.stream().map(this::toResponse).toList();
         return PageResponse.ofAnchored(content, page, clampedSize, total, null);
     }
@@ -222,6 +242,35 @@ public class PostService {
                 .build();
     }
 
+    public SavedPostResponse getSavedState(UUID postId) {
+        Account account = requireCurrentAccount();
+        ensurePostExists(postId);
+        return SavedPostResponse.builder()
+                .postId(postId)
+                .isSaved(postRepository.isSaved(postId, account.getId()))
+                .build();
+    }
+
+    public SavedPostResponse savePost(UUID postId) {
+        Account account = requireCurrentAccount();
+        ensurePostExists(postId);
+        postRepository.savePost(postId, account.getId());
+        return SavedPostResponse.builder()
+                .postId(postId)
+                .isSaved(true)
+                .build();
+    }
+
+    public SavedPostResponse unsavePost(UUID postId) {
+        Account account = requireCurrentAccount();
+        ensurePostExists(postId);
+        postRepository.unsavePost(postId, account.getId());
+        return SavedPostResponse.builder()
+                .postId(postId)
+                .isSaved(false)
+                .build();
+    }
+
     public PageResponse<CommentResponse> getComments(UUID postId, String cursor, int size) {
         ensurePostExists(postId);
         int clampedSize = Math.min(size, 50);
@@ -271,6 +320,7 @@ public class PostService {
                 .isLiked(pr.liked())
                 .commentCount(pr.commentCount())
                 .isFollowingShop(pr.followingShop())
+                .isSaved(pr.saved())
                 .build();
     }
 

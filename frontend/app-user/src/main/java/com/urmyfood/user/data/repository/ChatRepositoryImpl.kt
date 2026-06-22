@@ -9,6 +9,7 @@ import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.GetOrCreateSessionRequest
 import com.urmyfood.user.data.model.toDomain
 import com.urmyfood.user.data.remote.ChatApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.repository.ChatRepository
 import okhttp3.MultipartBody
 import retrofit2.Response
@@ -38,7 +39,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: "Lỗi máy chủ: ${response.code()}")
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun getOrCreateSession(token: String, shopId: Long): Result<ChatSession> = try {
@@ -49,7 +50,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: "Lỗi máy chủ: ${response.code()}")
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun getMessages(token: String, sessionId: Long): Result<List<ChatMessage>> = try {
@@ -60,7 +61,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: "Lỗi máy chủ: ${response.code()}")
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override suspend fun markAsRead(token: String, sessionId: Long): Result<Unit> = try {
@@ -71,7 +72,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: "Lỗi máy chủ: ${response.code()}")
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override fun connectWebSocket(wsUrl: String, token: String) {
@@ -91,7 +92,7 @@ class ChatRepositoryImpl(
         else
             Result.Error(body?.message ?: response.errorMessage(), response.code())
     } catch (e: Exception) {
-        Result.Error(e.message ?: "Lỗi kết nối")
+        Result.Error(e.toUserMessage())
     }
 
     override fun sendMessageViaWebSocket(sessionId: Long, content: String) {

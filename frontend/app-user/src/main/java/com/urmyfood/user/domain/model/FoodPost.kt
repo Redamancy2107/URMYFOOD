@@ -18,6 +18,7 @@ data class FoodPost(
     val likeCount: Int = 0,
     val isLiked: Boolean = false,
     val isFollowingShop: Boolean = false,
+    val isSaved: Boolean = false,
     val commentCount: Int = 0,
     val category: String? = null,
     val shopAddress: String? = null,

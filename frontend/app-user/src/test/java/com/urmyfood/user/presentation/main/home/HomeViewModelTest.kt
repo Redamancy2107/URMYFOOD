@@ -82,7 +82,7 @@ class HomeViewModelTest {
     private fun makeFullFakeRepo(
         getPostsResult: (Int) -> Result<PageResult<FoodPost>> = { Result.Success(PageResult(emptyList(), it, false)) }
     ): PostRepository = object : PostRepository {
-        override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = getPostsResult(page)
+        override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = getPostsResult(page)
         override suspend fun searchPosts(token: String?, q: String, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
         override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
         override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult<Comment>(emptyList(), 0, false))

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,4 +21,7 @@ public class VoucherDto {
     private BigDecimal discountValue;
     private BigDecimal minOrderValue;
     private LocalDate expiryDate;
+
+    @JsonProperty("is_saved")
+    private boolean isSaved;
 }
