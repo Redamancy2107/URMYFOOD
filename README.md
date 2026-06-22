@@ -154,7 +154,38 @@ cd URMYFOOD
 Backend của dự án giao tiếp với cơ sở dữ liệu Supabase PostgreSQL thông qua file cấu hình môi trường `.env`.
 
 1. **Cấu hình môi trường Backend**:
-   - Tạo file `.env` tại thư mục gốc của dự án `URMYFOOD/` (sử dụng nội dung cấu hình môi trường được cung cấp).
+   - Tạo file `.env` tại thư mục gốc của dự án `URMYFOOD/` (dựa trên file mẫu `.env.example`).
+   - Nội dung file `.env` mẫu để chạy dự án:
+     ```env
+     # Database Configuration
+        DB_URL=jdbc:postgresql://<your_supabase_db_host>:5432/postgres
+        DB_USERNAME=<your_database_username>
+        DB_PASSWORD=<your_database_password>
+
+        # Security Configuration
+        JWT_SECRET=<your_jwt_secret_64_character_hex_string>
+        JWT_EXPIRATION=86400000
+        JWT_REFRESH_EXPIRATION=604800000
+
+        # Social Login & Gmail API Configuration (Google Console)
+        GOOGLE_CLIENT_ID=<your_google_web_client_id>.apps.googleusercontent.com
+        GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+        GOOGLE_REFRESH_TOKEN=<your_google_refresh_token_for_gmail_api>
+
+        # Supabase Storage Configuration
+        SUPABASE_URL=https://<your_supabase_project_ref>.supabase.co
+        SUPABASE_ANON_KEY=<your_supabase_anonymous_key>
+        SUPABASE_STORAGE_BUCKET=urmyfood-bucket
+        SUPABASE_PROFILE_IMAGE_MAX_SIZE=1048576
+        SUPABASE_PROFILE_IMAGE_ALLOWED_TYPES=image/jpeg,image/png,image/gif
+        SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
+
+        # PayOS Configuration (Payment Gateway)
+        PAYOS_CLIENT_ID=<your_payos_client_id>
+        PAYOS_API_KEY=<your_payos_api_key>
+        PAYOS_CHECKSUM_KEY=<your_payos_checksum_key>
+
+     ```
 
 2. **Chạy Backend**:
    - Di chuyển vào thư mục `backend`:

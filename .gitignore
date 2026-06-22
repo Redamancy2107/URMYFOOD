@@ -8,6 +8,7 @@ application-dev.properties
 # Android Signing Keys (Tuyệt đối không lên Git)
 *.jks
 *.keystore
+!**/debug.keystore
 *keystore.properties
 
 # Firebase / Google Services (Nếu có dùng)
