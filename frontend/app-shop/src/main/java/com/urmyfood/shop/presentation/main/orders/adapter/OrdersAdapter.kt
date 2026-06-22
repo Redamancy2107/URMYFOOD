@@ -35,11 +35,17 @@ class OrdersAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(order: Order) {
-            binding.tvOrderId.text = order.orderId.take(8).uppercase()
+            binding.tvOrderId.text = "#${order.orderId.take(8).uppercase()}"
             binding.tvTimestamp.text = order.createdAt
             binding.tvCustomerName.text = order.customerName
             binding.tvItemsSummary.text = order.items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" }
             binding.tvTotalPrice.text = formatCurrency(order.finalAmount.toLong())
+
+            val imageUrl = order.items.firstOrNull()?.imageUrlSnapshot
+            com.bumptech.glide.Glide.with(binding.root.context)
+                .load(imageUrl ?: R.drawable.bg_food_banner)
+                .centerCrop()
+                .into(binding.ivOrderImage)
 
             val isWaitingForVietQrPayment = order.paymentMethod == PAYMENT_VIETQR && order.paymentStatus != PAYMENT_PAID
             val paymentLabel = when {

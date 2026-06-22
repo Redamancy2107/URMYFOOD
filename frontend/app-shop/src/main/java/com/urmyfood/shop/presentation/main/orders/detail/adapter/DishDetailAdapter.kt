@@ -38,7 +38,10 @@ class DishDetailAdapter : ListAdapter<DishDetailAdapter.DishItem, DishDetailAdap
             binding.tvDishName.text = item.name
             binding.tvQuantity.text = "${item.quantity}x"
             binding.tvDishPrice.text = formatCurrency(item.price)
-            binding.ivDishImage.setImageResource(R.drawable.bg_food_banner)
+            com.bumptech.glide.Glide.with(binding.root.context)
+                .load(item.imageUrl ?: R.drawable.bg_food_banner)
+                .centerCrop()
+                .into(binding.ivDishImage)
         }
 
         private fun formatCurrency(amount: Long): String {

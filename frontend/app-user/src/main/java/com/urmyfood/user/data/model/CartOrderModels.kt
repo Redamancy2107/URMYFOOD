@@ -166,9 +166,9 @@ data class OrderItemResponse(
     val orderItemId: String,
     @SerializedName("post_id")
     val postId: String,
-    @SerializedName("dish_name")
+    @SerializedName("dish_name_snapshot")
     val dishName: String,
-    @SerializedName("image_url")
+    @SerializedName("image_url_snapshot")
     val imageUrl: String?,
     @SerializedName("quantity")
     val quantity: Int,

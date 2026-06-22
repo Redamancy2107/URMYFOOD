@@ -34,12 +34,17 @@ class ActiveOrdersAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(order: ActiveOrder) {
-            binding.tvOrderId.text = order.orderId
+            binding.tvOrderId.text = "#${order.orderId.take(8).uppercase()}"
             binding.tvOrderTime.text = order.time
             binding.tvCustomerName.text = order.customerName
             binding.tvStatusBadge.text = order.status.label
             binding.tvItemsSummary.text = order.itemsSummary
             binding.tvTotalPrice.text = formatCurrency(order.totalPrice)
+
+            com.bumptech.glide.Glide.with(binding.root.context)
+                .load(order.imageUrl ?: R.drawable.bg_food_banner)
+                .centerCrop()
+                .into(binding.ivOrderImage)
 
             // Set status badge color
             val badgeColor = when (order.status) {

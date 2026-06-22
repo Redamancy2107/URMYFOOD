@@ -24,7 +24,8 @@ class HomeViewModel(
         val customerName: String,
         val status: OrderStatus,
         val itemsSummary: String,
-        val totalPrice: Long
+        val totalPrice: Long,
+        val imageUrl: String?
     )
 
     enum class OrderStatus(val label: String) {
@@ -98,7 +99,8 @@ class HomeViewModel(
             customerName = customerName.ifBlank { "Khách hàng" },
             status = mappedStatus,
             itemsSummary = items.joinToString(", ") { "${it.quantity}x ${it.dishNameSnapshot}" },
-            totalPrice = finalAmount.toLong()
+            totalPrice = finalAmount.toLong(),
+            imageUrl = items.firstOrNull()?.imageUrlSnapshot
         )
     }
 
