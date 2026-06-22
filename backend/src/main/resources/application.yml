@@ -62,6 +62,11 @@ jwt:
   refresh-token:
     expiration: ${JWT_REFRESH_EXPIRATION:604800000}
 
+app:
+  order:
+    pending-timeout-minutes: ${ORDER_PENDING_TIMEOUT:10}
+    payment-timeout-minutes: ${ORDER_PAYMENT_TIMEOUT:15}
+
 server:
   port: 8080
 
@@ -94,6 +99,7 @@ logging:
     org.hibernate.SQL: WARN
     org.hibernate.orm.jdbc.bind: WARN
     org.hibernate.orm.jdbc.extract: WARN
+    org.springframework.web: DEBUG
 
 management:
   endpoints:

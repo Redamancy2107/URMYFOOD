@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
-import vn.payos.type.CheckoutResponseData;
-import vn.payos.type.PaymentData;
-import vn.payos.type.PaymentLinkData;
-import vn.payos.type.WebhookData;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.v2.paymentRequests.PaymentLink;
+import vn.payos.model.webhooks.WebhookData;
 
 import jakarta.annotation.PostConstruct;
 
@@ -33,14 +33,14 @@ public class PayOsService {
                     + "Ứng dụng vẫn chạy bình thường, nhưng chức năng thanh toán VietQR sẽ không khả dụng.");
             return;
         }
-        this.payOS = new PayOS(clientId, apiKey, checksumKey);
+        this.payOS = new PayOS(clientId.trim(), apiKey.trim(), checksumKey.trim());
         log.info("PayOS đã được khởi tạo thành công.");
     }
 
-    public CheckoutResponseData createPaymentLink(PaymentData paymentData) {
+    public CreatePaymentLinkResponse createPaymentLink(CreatePaymentLinkRequest paymentData) {
         ensureConfigured();
         try {
-            return payOS.createPaymentLink(paymentData);
+            return payOS.paymentRequests().create(paymentData);
         } catch (Exception e) {
             throw new RuntimeException("Lỗi tạo mã thanh toán VietQR: " + e.getMessage());
         }
@@ -49,19 +49,42 @@ public class PayOsService {
     public String getPaymentStatus(Long orderCode) {
         ensureConfigured();
         try {
-            PaymentLinkData data = payOS.getPaymentLinkInformation(orderCode);
-            return data.getStatus();
+            PaymentLink data = payOS.paymentRequests().get(String.valueOf(orderCode));
+            return data.getStatus().name();
         } catch (Exception e) {
             throw new RuntimeException("Lỗi kiểm tra trạng thái thanh toán PayOS: " + e.getMessage());
         }
     }
 
-    public WebhookData verifyPaymentWebhookData(vn.payos.type.Webhook webhookBody) {
+    public WebhookData verifyPaymentWebhookData(vn.payos.model.webhooks.Webhook webhookBody) {
         ensureConfigured();
         try {
-            return payOS.verifyPaymentWebhookData(webhookBody);
+            return payOS.webhooks().verify(webhookBody);
         } catch (Exception e) {
             throw new RuntimeException("Lỗi xác thực webhook PayOS: " + e.getMessage());
+        }
+    }
+
+    public String cancelPaymentLink(Long orderCode, String reason) {
+        ensureConfigured();
+        try {
+            org.springframework.web.client.RestTemplate restTemplate = new org.springframework.web.client.RestTemplate();
+            String url = "https://api-merchant.payos.vn/v2/payment-requests/" + orderCode + "/cancel";
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+            headers.set("x-client-id", clientId);
+            headers.set("x-api-key", apiKey);
+
+            String body = "{\"cancellationReason\": \"" + reason + "\"}";
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(body, headers);
+
+            org.springframework.http.ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+            log.info("Đã hủy mã thanh toán PayOS (orderCode = {}), response: {}", orderCode, response.getBody());
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Lỗi hủy mã thanh toán PayOS (orderCode = {}): {}", orderCode, e.getMessage());
+            return null;
         }
     }
 

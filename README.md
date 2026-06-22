@@ -134,12 +134,11 @@ Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đ
 2. **Android Studio**: Phiên bản mới nhất (Koala trở lên được khuyến nghị).
 3. **Android SDK**: API Level 36 (Android 14/15) và API Level 29 (Android 10) là mức tối thiểu.
 4. **Git**: Để clone mã nguồn.
-5. **Tài khoản Supabase**: Để làm database (PostgreSQL) và bộ lưu trữ đám mây (Storage).
-6. **Maven** (đã tích hợp sẵn wrapper trong thư mục backend).
+5. **Maven** (đã tích hợp sẵn wrapper trong thư mục backend).
 
 ---
 
-### ⚙️ Hướng Dẫn Cài Đặt & Cấu Hình
+### ⚙️ Hướng Dẫn Cài Đặt & Cấu Hìnnh
 
 #### Bước 1: Clone Mã Nguồn Dự Án
 Mở terminal và chạy lệnh sau để tải project về máy:
@@ -152,31 +151,12 @@ cd URMYFOOD
 
 #### Bước 2: Thiết Lập & Khởi Chạy Backend (Spring Boot)
 
-Backend của dự án giao tiếp với cơ sở dữ liệu Supabase PostgreSQL.
+Backend của dự án giao tiếp với cơ sở dữ liệu Supabase PostgreSQL thông qua file cấu hình môi trường `.env`.
 
-1. **Cấu hình Database trên Supabase**:
-   - Tạo một project mới trên [Supabase](https://supabase.com/).
-   - Lấy chuỗi kết nối **URI Connection** (ở mục Database Settings) và các khóa API (`anon-key`).
-   - Tạo một Bucket trong mục **Storage** trên Supabase (ví dụ đặt tên là `urmyfood-bucket`) và thiết lập quyền Public Read/Write cho bucket đó.
+1. **Cấu hình môi trường Backend**:
+   - Tạo file `.env` tại thư mục gốc của dự án `URMYFOOD/` (sử dụng nội dung cấu hình môi trường được cung cấp).
 
-2. **Cấu hình môi trường Backend**:
-   - Mở file `backend/src/main/resources/application.yml`.
-   - Cập nhật các cấu hình kết nối sau:
-     ```yaml
-     spring:
-       datasource:
-         url: jdbc:postgresql://<YOUR_SUPABASE_DB_HOST>:5432/postgres
-         username: postgres
-         password: <YOUR_SUPABASE_DB_PASSWORD>
-       
-     supabase:
-       url: <YOUR_SUPABASE_PROJECT_URL>
-       anon-key: <YOUR_SUPABASE_ANON_KEY>
-       storage:
-         bucket: <YOUR_STORAGE_BUCKET_NAME>
-     ```
-
-3. **Chạy Backend**:
+2. **Chạy Backend**:
    - Di chuyển vào thư mục `backend`:
      ```bash
      cd backend
@@ -231,7 +211,6 @@ Thư mục `frontend` chứa 3 ứng dụng Android dạng Gradle multi-module: 
 ### 🔍 Kiểm Tự Kết Nối (Troubleshooting)
 
 - **Lỗi không kết nối được API**: Đảm bảo rằng thiết bị Android của bạn cùng kết nối chung mạng Wi-Fi với máy tính chạy Backend (nếu dùng thiết bị thật) và cấu hình đúng địa chỉ IP trong `local.properties`.
-- **Lỗi Supabase Storage**: Đảm bảo bạn đã cấp quyền Policy (Read/Write) cho bucket trên trang quản trị Supabase để tránh lỗi HTTP 403 Forbidden khi upload ảnh profile/ảnh món ăn.
 
 ---
 

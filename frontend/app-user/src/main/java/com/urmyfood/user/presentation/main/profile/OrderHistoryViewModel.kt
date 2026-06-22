@@ -89,6 +89,10 @@ class OrderHistoryViewModel(
         _paymentQrNavigation.value = null
     }
 
+    fun clearMessage() {
+        _uiState.value = _uiState.value?.copy(message = null)
+    }
+
     private fun OrderResponse.toDisplayOrders(): List<OrderHistoryFragment.Order> {
         val statusTab = OrderHistoryStatusMapper.tabFor(orderStatus)
         return items.ifEmpty {
@@ -104,6 +108,7 @@ class OrderHistoryViewModel(
                 statusLabel = OrderHistoryStatusMapper.labelFor(orderStatus) + paymentStatusLabel(),
                 originalStatus = orderStatus,
                 rawCreatedAt = createdAt ?: "",
+                rawUpdatedAt = updatedAt ?: "",
                 paymentMethod = paymentMethod,
                 paymentStatus = paymentStatus,
                 finalAmount = finalAmount.toLong(),

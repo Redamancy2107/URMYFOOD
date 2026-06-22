@@ -33,6 +33,10 @@ class AdminRepository {
         api.getAdminProfile()
     }
 
+    suspend fun changePassword(request: ChangePasswordRequest): Result<Unit> = safeApiCall {
+        api.changePassword(request)
+    }
+
     suspend fun updateAdminProfile(updates: Map<String, String>): Result<AdminProfile> = safeApiCallWithData {
         api.updateAdminProfile(updates)
     }

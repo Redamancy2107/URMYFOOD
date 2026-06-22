@@ -85,6 +85,21 @@ public interface JpaOrderRepository extends JpaRepository<OrderEntity, UUID> {
             LEFT JOIN FETCH o.items i
             LEFT JOIN FETCH i.post p
             LEFT JOIN FETCH p.author
+            WHERE o.orderStatus = 'ACCEPTED'
+              AND o.paymentMethod = 'VIETQR'
+              AND o.paymentStatus = 'UNPAID'
+              AND o.updatedAt < :expiredBefore
+            """)
+    List<OrderEntity> findAcceptedUnpaidExpiredOrders(@Param("expiredBefore") OffsetDateTime expiredBefore);
+
+    @Query("""
+            SELECT DISTINCT o FROM OrderEntity o
+            JOIN FETCH o.customer
+            JOIN FETCH o.shop
+            LEFT JOIN FETCH o.voucher
+            LEFT JOIN FETCH o.items i
+            LEFT JOIN FETCH i.post p
+            LEFT JOIN FETCH p.author
             WHERE o.shop.id = :shopId
               AND o.createdAt >= :startAt
               AND o.createdAt < :endAt
