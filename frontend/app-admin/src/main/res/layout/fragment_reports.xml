@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="24dp">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Báo Cáo Thống Kê"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <!-- Tab Selection (Stores / Customers) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_input"
+            android:padding="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_tab_stores"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_menu_item_active"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Cửa hàng"
+                android:textColor="@color/dark_green"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_tab_customers"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:text="Khách hàng"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Report Table Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="24dp"
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeColor="@color/border_color"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Headers for Store Report (default) -->
+            <LinearLayout
+                android:id="@+id/ll_store_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:background="@color/bg_main">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.8" android:text="Tên shop" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Email" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="Doanh thu" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Tổng đơn" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Hoàn thành" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+            </LinearLayout>
+
+            <!-- Headers for Customer Report (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/ll_customer_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:background="@color/bg_main"
+                android:visibility="gone">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.8" android:text="Tên KH" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Email" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:text="Đã chi tiêu" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Tổng đơn" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Hoàn thành" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
+
+            <!-- RecyclerView for either reports -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_reports"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

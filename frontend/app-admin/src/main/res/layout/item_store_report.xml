@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical"
+    android:background="?selectableItemBackground">
+
+    <TextView android:id="@+id/tv_shop_name" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.8" android:textColor="@color/text_primary" android:textStyle="bold" android:textSize="14sp"/>
+    <TextView android:id="@+id/tv_email" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:textColor="@color/text_secondary" android:textSize="13sp"/>
+    <TextView android:id="@+id/tv_revenue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.2" android:textColor="@color/dark_green" android:textStyle="bold" android:textSize="13sp"/>
+    <TextView android:id="@+id/tv_total_orders" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/text_primary" android:textSize="13sp"/>
+    <TextView android:id="@+id/tv_completed_orders" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/mint_green" android:textStyle="bold" android:textSize="13sp"/>
+</LinearLayout>
