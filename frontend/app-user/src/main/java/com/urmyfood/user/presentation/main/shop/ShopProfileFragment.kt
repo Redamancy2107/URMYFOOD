@@ -115,8 +115,8 @@ class ShopProfileFragment : Fragment() {
         }
 
         // Setup callbacks for the feed list (Home Tab)
-        shopPostsAdapter.onCommentClick = {
-            val commentSheet = QuickCommentFragment()
+        shopPostsAdapter.onCommentClick = { postId ->
+            val commentSheet = QuickCommentFragment.newInstance(postId)
             commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
         }
         shopPostsAdapter.onShareClick = {
@@ -127,15 +127,11 @@ class ShopProfileFragment : Fragment() {
             val orderSheet = OrderBottomSheetFragment(foodPost)
             orderSheet.show(childFragmentManager, OrderBottomSheetFragment.TAG)
         }
-        shopPostsAdapter.onLikeClick = { post ->
-            viewModel.toggleLike(post.postId)
-        }
+        shopPostsAdapter.onLikeClick = { post -> viewModel.toggleLike(post) }
         shopPostsAdapter.onFollowClick = { post ->
             viewModel.toggleFollow(post.shopAccountId)
         }
-        shopPostsAdapter.onSaveClick = { post ->
-            Toast.makeText(requireContext(), "Đã lưu bài viết của shop", Toast.LENGTH_SHORT).show()
-        }
+        shopPostsAdapter.onSaveClick = { post -> viewModel.toggleSave(post) }
     }
 
 
@@ -166,11 +162,30 @@ class ShopProfileFragment : Fragment() {
             viewModel.clearFollowError()
         }
 
+        viewModel.actionError.observe(viewLifecycleOwner) { message ->
+            message ?: return@observe
+            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            viewModel.clearActionError()
+        }
+
         com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
             val (eventShopId, isFollowing) = event
             if (eventShopId == shopId) {
                 viewModel.applyFollowState(eventShopId, isFollowing, null)
             }
+        }
+        com.urmyfood.user.di.ServiceLocator.postLikeEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, likeData) = event
+            val (isLiked, likeCount) = likeData
+            viewModel.applyLikeState(postId, isLiked, likeCount)
+        }
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, isSaved) = event
+            viewModel.applySavedState(postId, isSaved)
+        }
+        com.urmyfood.user.di.ServiceLocator.voucherSavedEvent.observe(viewLifecycleOwner) { event ->
+            val (voucherId, isSaved) = event
+            viewModel.applyVoucherSaved(voucherId, isSaved)
         }
 
         viewModel.shopName.observe(viewLifecycleOwner) { name ->
@@ -235,7 +250,9 @@ class ShopProfileFragment : Fragment() {
         viewModel.vouchers.observe(viewLifecycleOwner) { vouchersList ->
             binding.rvVouchers.apply {
                 layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-                adapter = VoucherAdapter(vouchersList)
+                adapter = VoucherAdapter(vouchersList) { voucher ->
+                    viewModel.saveVoucher(voucher.voucherId)
+                }
             }
         }
 
@@ -264,30 +281,38 @@ class ShopProfileFragment : Fragment() {
 
     // --- Inner adapters ---
 
-    private class VoucherAdapter(private val vouchers: List<ShopVoucher>) :
+    private class VoucherAdapter(
+        private val vouchers: List<ShopVoucher>,
+        private val onSaveClick: (ShopVoucher) -> Unit
+    ) :
         RecyclerView.Adapter<VoucherAdapter.ViewHolder>() {
 
-        class ViewHolder(private val binding: ItemShopVoucherBinding) :
+        class ViewHolder(
+            private val binding: ItemShopVoucherBinding,
+            private val onSaveClick: (ShopVoucher) -> Unit
+        ) :
             RecyclerView.ViewHolder(binding.root) {
             fun bind(voucher: ShopVoucher) {
                 binding.tvVoucherTitle.text = voucher.title
                 binding.tvVoucherDesc.text = voucher.description
                 binding.tvVoucherExpiry.text = voucher.expiryDate
-                
-                binding.btnSaveVoucher.setOnClickListener {
-                    Toast.makeText(
+
+                binding.btnSaveVoucher.text = if (voucher.isSaved) "Đã lưu" else "Lưu"
+                binding.btnSaveVoucher.isEnabled = !voucher.isSaved
+                binding.btnSaveVoucher.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                    androidx.core.content.ContextCompat.getColor(
                         itemView.context,
-                        "Đã lưu Voucher: ${voucher.title} thành công!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    binding.btnSaveVoucher.text = "Đã lưu"
-                    binding.btnSaveVoucher.isEnabled = false
-                    binding.btnSaveVoucher.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        androidx.core.content.ContextCompat.getColor(itemView.context, R.color.input_bg)
+                        if (voucher.isSaved) R.color.input_bg else R.color.primary
                     )
-                    binding.btnSaveVoucher.setTextColor(
-                        androidx.core.content.ContextCompat.getColor(itemView.context, R.color.text_secondary)
+                )
+                binding.btnSaveVoucher.setTextColor(
+                    androidx.core.content.ContextCompat.getColor(
+                        itemView.context,
+                        if (voucher.isSaved) R.color.text_secondary else R.color.white
                     )
+                )
+                binding.btnSaveVoucher.setOnClickListener {
+                    onSaveClick(voucher)
                 }
 
                 binding.btnVoucherTerms.setOnClickListener {
@@ -305,7 +330,7 @@ class ShopProfileFragment : Fragment() {
             val binding = ItemShopVoucherBinding.inflate(
                 LayoutInflater.from(parent.context), parent, false
             )
-            return ViewHolder(binding)
+            return ViewHolder(binding, onSaveClick)
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {

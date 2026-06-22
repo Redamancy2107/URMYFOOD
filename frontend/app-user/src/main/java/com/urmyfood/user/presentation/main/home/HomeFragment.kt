@@ -35,7 +35,6 @@ class HomeFragment : Fragment() {
     }
 
     private val adapter = FoodPostAdapter()
-    private val favoritesManager = com.urmyfood.user.di.ServiceLocator.favoritesManager
     private var isFirstResume = true
 
     override fun onCreateView(
@@ -59,6 +58,7 @@ class HomeFragment : Fragment() {
         observeLoadingMore()
         observeLikeError()
         observeFollowError()
+        observeSaveError()
         observeSharedEvents()
         observeFilters()
     }
@@ -77,6 +77,10 @@ class HomeFragment : Fragment() {
         com.urmyfood.user.di.ServiceLocator.shopFollowEvent.observe(viewLifecycleOwner) { event ->
             val (shopId, isFollowing) = event
             viewModel.updateFollowStateForShop(shopId, isFollowing)
+        }
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.observe(viewLifecycleOwner) { event ->
+            val (postId, isSaved) = event
+            viewModel.updateSavedState(postId, isSaved)
         }
     }
 
@@ -142,6 +146,14 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun observeSaveError() {
+        viewModel.saveError.observe(viewLifecycleOwner) { msg ->
+            msg ?: return@observe
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
+            viewModel.clearSaveError()
+        }
+    }
+
     private fun observeUiState() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
             when (state) {
@@ -179,7 +191,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
-        binding.btnNotification.setOnClickListener { showFeatureInDevelopment() }
         binding.tvSeeAll.setOnClickListener { showFeatureInDevelopment() }
         
         binding.btnFilterPrice.setOnClickListener { view ->
@@ -212,19 +223,9 @@ class HomeFragment : Fragment() {
                 viewModel.toggleFollow(post.shopAccountId, post.isFollowingShop)
             }
         }
-        adapter.checkIsBookmarked = { post ->
-            if (viewModel.isGuest) {
-                false
-            } else {
-                favoritesManager.isFavorite(post.postId)
-            }
-        }
         adapter.onSaveClick = { post ->
             showGuestDialogOrRun {
-                val isSaved = favoritesManager.toggleFavorite(post)
-                val msg = if (isSaved) "Đã lưu bài viết" else "Đã bỏ lưu bài viết"
-                Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
-                adapter.notifyDataSetChanged()
+                viewModel.toggleSave(post.postId, post.isSaved)
             }
         }
         adapter.onShopClick = { post ->

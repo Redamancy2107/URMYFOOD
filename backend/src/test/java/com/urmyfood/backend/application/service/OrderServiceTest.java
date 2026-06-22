@@ -15,6 +15,7 @@ import com.urmyfood.backend.domain.model.Post;
 import com.urmyfood.backend.domain.model.PostStatus;
 import com.urmyfood.backend.domain.repository.AccountRepository;
 import com.urmyfood.backend.domain.repository.CartItemRepository;
+import com.urmyfood.backend.domain.repository.OrderReviewRepository;
 import com.urmyfood.backend.domain.repository.OrderRepository;
 import com.urmyfood.backend.domain.repository.PostRepository;
 import com.urmyfood.backend.domain.repository.VoucherRepository;
@@ -44,6 +45,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceTest {
+
+    @Mock
+    private OrderReviewRepository orderReviewRepository;
 
     @Mock
     private OrderRepository orderRepository;

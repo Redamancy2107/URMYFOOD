@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface JpaVoucherRepository extends JpaRepository<VoucherEntity, Long> {
     List<VoucherEntity> findByIsActiveTrueAndExpiryDateAfterOrderByExpiryDateAsc(LocalDate date);
+    List<VoucherEntity> findByIsActiveTrueAndExpiryDateGreaterThanEqualOrderByExpiryDateAsc(LocalDate date);
     Optional<VoucherEntity> findByCode(String code);
 }
 

@@ -8,6 +8,7 @@ import com.urmyfood.backend.application.dto.LikeToggleResponse;
 import com.urmyfood.backend.application.dto.PageResponse;
 import com.urmyfood.backend.application.dto.PostImageUploadResponse;
 import com.urmyfood.backend.application.dto.PostResponse;
+import com.urmyfood.backend.application.dto.SavedPostResponse;
 import com.urmyfood.backend.application.dto.UpdatePostRequest;
 import com.urmyfood.backend.application.dto.UpdatePostStatusRequest;
 import com.urmyfood.backend.application.dto.UpdateRemainingQuantityRequest;
@@ -67,6 +68,15 @@ public class PostController {
         OffsetDateTime anchorDt = anchor != null ? OffsetDateTime.parse(anchor) : null;
         PageResponse<PostResponse> result = postService.searchPosts(query, page, size, anchorDt);
         return ResponseEntity.ok(ApiResponse.success("Tìm kiếm thành công", result));
+    }
+
+    @GetMapping("/saved")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getSavedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        PageResponse<PostResponse> result = postService.getSavedPosts(page, size);
+        return ResponseEntity.ok(ApiResponse.success("Saved posts loaded", result));
     }
 
     @GetMapping("/{postId}")
@@ -132,6 +142,24 @@ public class PostController {
     public ResponseEntity<ApiResponse<LikeToggleResponse>> unlikePost(@PathVariable UUID postId) {
         LikeToggleResponse response = postService.unlikePost(postId);
         return ResponseEntity.ok(ApiResponse.success("Cập nhật lượt thích thành công", response));
+    }
+
+    @GetMapping("/{postId}/saved")
+    public ResponseEntity<ApiResponse<SavedPostResponse>> getSavedState(@PathVariable UUID postId) {
+        SavedPostResponse response = postService.getSavedState(postId);
+        return ResponseEntity.ok(ApiResponse.success("Saved state loaded", response));
+    }
+
+    @PostMapping("/{postId}/saved")
+    public ResponseEntity<ApiResponse<SavedPostResponse>> savePost(@PathVariable UUID postId) {
+        SavedPostResponse response = postService.savePost(postId);
+        return ResponseEntity.ok(ApiResponse.success("Post saved", response));
+    }
+
+    @DeleteMapping("/{postId}/saved")
+    public ResponseEntity<ApiResponse<SavedPostResponse>> unsavePost(@PathVariable UUID postId) {
+        SavedPostResponse response = postService.unsavePost(postId);
+        return ResponseEntity.ok(ApiResponse.success("Post unsaved", response));
     }
 
     @GetMapping("/{postId}/comments")

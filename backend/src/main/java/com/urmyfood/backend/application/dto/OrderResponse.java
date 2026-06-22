@@ -63,6 +63,8 @@ public class OrderResponse {
     @JsonProperty("cancel_reason")
     private String cancelReason;
 
+    private boolean reviewed;
+
     private List<OrderItemResponse> items;
 
     @JsonProperty("created_at")

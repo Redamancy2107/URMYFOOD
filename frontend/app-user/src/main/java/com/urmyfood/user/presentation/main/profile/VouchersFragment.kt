@@ -65,7 +65,7 @@ class VouchersFragment : Fragment() {
 
         if (vouchers.isEmpty()) {
             val emptyText = TextView(ctx).apply {
-                text = "Hiện tại chưa có voucher nào khả dụng"
+                text = "Bạn chưa lưu voucher nào"
                 textSize = 15f
                 setTextColor(ctx.getColor(R.color.text_secondary))
                 gravity = Gravity.CENTER

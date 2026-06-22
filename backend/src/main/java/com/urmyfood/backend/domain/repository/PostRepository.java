@@ -30,13 +30,19 @@ public interface PostRepository {
     long likePost(UUID postId, Long accountId);
     long unlikePost(UUID postId, Long accountId);
 
+    List<PostRanked> findSavedByCustomerId(Long customerId, Long viewerAccountId, int page, int size);
+    long countSavedByCustomerId(Long customerId);
+    boolean isSaved(UUID postId, Long customerId);
+    void savePost(UUID postId, Long customerId);
+    void unsavePost(UUID postId, Long customerId);
+
     // Cursor-based for comments
     List<PostComment> findComments(UUID postId, OffsetDateTime cursor, int size);
     long countComments(UUID postId);
     PostComment saveComment(UUID postId, Long accountId, String content, UUID parentId);
 
     // Shop owner post management
-    List<PostRanked> findByAuthorId(Long accountId, int page, int size);
+    List<PostRanked> findByAuthorId(Long authorId, Long viewerAccountId, int page, int size);
     long countByAuthorId(Long accountId);
     void updatePost(UUID postId, Long authorId, UpdatePostRequest req);
     void updateRemainingQuantity(UUID postId, Long authorId, int remainingQuantity);

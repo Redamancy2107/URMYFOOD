@@ -3,8 +3,11 @@ package com.urmyfood.backend.presentation.controller;
 import com.urmyfood.backend.application.dto.ApiResponse;
 import com.urmyfood.backend.application.dto.CancelOrderRequest;
 import com.urmyfood.backend.application.dto.CheckoutRequest;
+import com.urmyfood.backend.application.dto.CreateOrderReviewRequest;
 import com.urmyfood.backend.application.dto.DirectCheckoutRequest;
+import com.urmyfood.backend.application.dto.OrderReviewResponse;
 import com.urmyfood.backend.application.dto.OrderResponse;
+import com.urmyfood.backend.application.dto.ReorderResponse;
 import com.urmyfood.backend.application.dto.UpdateOrderStatusRequest;
 import com.urmyfood.backend.application.service.OrderService;
 import com.urmyfood.backend.infrastructure.security.CustomAccountDetails;
@@ -86,6 +89,43 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Hủy đơn hàng thành công",
                 orderService.cancelOrder(accountId, orderId, request)
+        ));
+    }
+
+    @GetMapping("/{orderId}/review")
+    public ResponseEntity<ApiResponse<OrderReviewResponse>> getReview(
+            Authentication authentication,
+            @PathVariable UUID orderId
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Review loaded",
+                orderService.getReview(accountId, orderId)
+        ));
+    }
+
+    @PostMapping("/{orderId}/review")
+    public ResponseEntity<ApiResponse<OrderReviewResponse>> createReview(
+            Authentication authentication,
+            @PathVariable UUID orderId,
+            @Valid @RequestBody CreateOrderReviewRequest request
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Review created",
+                orderService.createReview(accountId, orderId, request)
+        ));
+    }
+
+    @PostMapping("/{orderId}/reorder")
+    public ResponseEntity<ApiResponse<ReorderResponse>> reorder(
+            Authentication authentication,
+            @PathVariable UUID orderId
+    ) {
+        Long accountId = getAccountId(authentication);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Items added to cart",
+                orderService.reorder(accountId, orderId)
         ));
     }
 

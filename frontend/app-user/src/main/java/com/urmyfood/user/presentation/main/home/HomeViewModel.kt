@@ -10,8 +10,10 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.repository.GuestRepository
 import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetPostsUseCase
+import com.urmyfood.user.domain.usecase.SavePostUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
 import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
+import com.urmyfood.user.domain.usecase.UnsavePostUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -26,6 +28,8 @@ class HomeViewModel(
     private val toggleLikeUseCase: ToggleLikeUseCase,
     private val followShopUseCase: FollowShopUseCase,
     private val unfollowShopUseCase: UnfollowShopUseCase,
+    private val savePostUseCase: SavePostUseCase,
+    private val unsavePostUseCase: UnsavePostUseCase,
     private val guestRepository: GuestRepository
 ) : ViewModel() {
 
@@ -42,6 +46,9 @@ class HomeViewModel(
 
     private val _followError = MutableLiveData<String?>()
     val followError: LiveData<String?> = _followError
+
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
 
     private val _sortOrder = MutableLiveData<String?>(null)
     val sortOrder: LiveData<String?> = _sortOrder
@@ -152,6 +159,7 @@ class HomeViewModel(
 
     fun clearLikeError() { _likeError.value = null }
     fun clearFollowError() { _followError.value = null }
+    fun clearSaveError() { _saveError.value = null }
 
     private fun updatePostLike(postId: String, isLiked: Boolean, likeCount: Int) {
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
@@ -167,6 +175,38 @@ class HomeViewModel(
         val idx = loadedPosts.indexOfFirst { it.postId == postId }
         if (idx >= 0 && (loadedPosts[idx].isLiked != isLiked || loadedPosts[idx].likeCount != likeCount)) {
             loadedPosts[idx] = loadedPosts[idx].copy(isLiked = isLiked, likeCount = likeCount)
+            applySortingAndEmit()
+        }
+    }
+
+    fun toggleSave(postId: String, isCurrentlySaved: Boolean) {
+        updateSavedState(postId, !isCurrentlySaved)
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, !isCurrentlySaved))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlySaved) {
+                unsavePostUseCase(postId)
+            } else {
+                savePostUseCase(postId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateSavedState(result.data.postId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(result.data.postId, result.data.isSaved))
+                }
+                is Result.Error -> {
+                    updateSavedState(postId, isCurrentlySaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, isCurrentlySaved))
+                    _saveError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateSavedState(postId: String, isSaved: Boolean) {
+        val idx = loadedPosts.indexOfFirst { it.postId == postId }
+        if (idx >= 0 && loadedPosts[idx].isSaved != isSaved) {
+            loadedPosts[idx] = loadedPosts[idx].copy(isSaved = isSaved)
             applySortingAndEmit()
         }
     }
@@ -223,7 +263,9 @@ class HomeViewModel(
         private val getPostsUseCase: GetPostsUseCase,
         private val toggleLikeUseCase: ToggleLikeUseCase,
         private val followShopUseCase: FollowShopUseCase,
-        private val unfollowShopUseCase: UnfollowShopUseCase
+        private val unfollowShopUseCase: UnfollowShopUseCase,
+        private val savePostUseCase: SavePostUseCase,
+        private val unsavePostUseCase: UnsavePostUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -233,6 +275,8 @@ class HomeViewModel(
                     toggleLikeUseCase,
                     followShopUseCase,
                     unfollowShopUseCase,
+                    savePostUseCase,
+                    unsavePostUseCase,
                     com.urmyfood.user.di.ServiceLocator.guestSessionManager
                 ) as T
             }

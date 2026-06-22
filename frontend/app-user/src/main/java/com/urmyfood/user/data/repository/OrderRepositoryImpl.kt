@@ -5,8 +5,11 @@ import com.google.gson.reflect.TypeToken
 import com.urmyfood.user.data.model.ApiResponse
 import com.urmyfood.user.data.model.CancelOrderRequest
 import com.urmyfood.user.data.model.CheckoutRequest
+import com.urmyfood.user.data.model.CreateOrderReviewRequest
 import com.urmyfood.user.data.model.DirectCheckoutRequest
 import com.urmyfood.user.data.model.OrderResponse
+import com.urmyfood.user.data.model.OrderReviewResponse
+import com.urmyfood.user.data.model.ReorderResponse
 import com.urmyfood.user.data.remote.OrderApiService
 import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Result
@@ -61,6 +64,19 @@ class OrderRepositoryImpl(
 
     override suspend fun cancelOrder(token: String, orderId: String, cancelReason: String): Result<OrderResponse> {
         return safeApiCall { orderApiService.cancelOrder(token, orderId, CancelOrderRequest(cancelReason)) }
+    }
+
+    override suspend fun createReview(
+        token: String,
+        orderId: String,
+        rating: Int,
+        comment: String?
+    ): Result<OrderReviewResponse> {
+        return safeApiCall { orderApiService.createReview(token, orderId, CreateOrderReviewRequest(rating, comment)) }
+    }
+
+    override suspend fun reorder(token: String, orderId: String): Result<ReorderResponse> {
+        return safeApiCall { orderApiService.reorder(token, orderId) }
     }
 
     override suspend fun createPayOsPayment(token: String, orderId: String): Result<com.urmyfood.user.data.model.PayOsPaymentResponse> {

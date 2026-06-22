@@ -42,6 +42,33 @@ class PostRepositoryImpl(
         }
     }
 
+    override suspend fun getShopPosts(token: String?, shopId: Long, page: Int, size: Int): Result<PageResult<FoodPost>> {
+        return try {
+            val response = postApiService.getShopPosts(token, shopId, page, size)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val pageData = body.data
+                    Result.Success(PageResult(
+                        items = pageData.content.map { it.toDomain() },
+                        page = pageData.page,
+                        hasNext = pageData.hasNext,
+                        nextCursor = pageData.nextCursor,
+                        anchor = pageData.anchor
+                    ))
+                } else {
+                    Result.Error(body?.message ?: "Không thể tải bài đăng của quán")
+                }
+            } else {
+                Result.Error("Lỗi server: ${response.code()}")
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.Error(e.toUserMessage())
+        }
+    }
+
     override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
         return try {
             val response = postApiService.searchPosts(token, query, page, size, anchor)

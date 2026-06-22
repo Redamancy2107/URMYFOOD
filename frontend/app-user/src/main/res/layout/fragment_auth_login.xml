@@ -243,17 +243,19 @@
             android:id="@+id/llOtpContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:orientation="vertical"
-            android:visibility="gone"
+            android:visibility="visible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            tools:layout_editor_absoluteY="16dp">
+            app:layout_constraintTop_toBottomOf="@+id/btnGoogleLogin">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilOtp"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 app:boxCornerRadiusBottomEnd="12dp"
                 app:boxCornerRadiusBottomStart="12dp"
                 app:boxCornerRadiusTopEnd="12dp"
@@ -276,8 +278,7 @@
                 android:id="@+id/btnLoginOtp"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginTop="12dp"
-                android:text="Xác nhận OTP &amp; Đăng nhập"
+                android:text="Đăng nhập bằng OTP"
                 android:textColor="@color/white"
                 android:textSize="15sp"
                 android:textStyle="bold"
@@ -295,7 +296,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnGoogleLogin">
+            app:layout_constraintTop_toBottomOf="@+id/llOtpContainer">
 
             <TextView
                 android:layout_width="wrap_content"

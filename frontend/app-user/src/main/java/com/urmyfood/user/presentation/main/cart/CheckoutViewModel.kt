@@ -11,7 +11,7 @@ import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.usecase.CheckoutUseCase
 import com.urmyfood.user.domain.usecase.DirectCheckoutUseCase
 import com.urmyfood.user.domain.usecase.GetAddressesUseCase
-import com.urmyfood.user.domain.usecase.GetVouchersUseCase
+import com.urmyfood.user.domain.usecase.GetSavedVouchersUseCase
 import com.urmyfood.user.domain.usecase.CreatePayOsPaymentUseCase
 import kotlinx.coroutines.launch
 
@@ -29,7 +29,7 @@ class CheckoutViewModel(
     private val checkoutUseCase: CheckoutUseCase,
     private val directCheckoutUseCase: DirectCheckoutUseCase,
     private val getAddressesUseCase: GetAddressesUseCase,
-    private val getVouchersUseCase: GetVouchersUseCase,
+    private val getSavedVouchersUseCase: GetSavedVouchersUseCase,
     private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
 ) : ViewModel() {
 
@@ -60,8 +60,8 @@ class CheckoutViewModel(
                 is Result.Error -> { /* silently ignore address load error */ }
             }
 
-            // Load vouchers
-            when (val result = getVouchersUseCase()) {
+            // Load saved vouchers
+            when (val result = getSavedVouchersUseCase()) {
                 is Result.Success -> {
                     _vouchers.value = result.data
                 }
@@ -158,7 +158,7 @@ class CheckoutViewModel(
         private val checkoutUseCase: CheckoutUseCase,
         private val directCheckoutUseCase: DirectCheckoutUseCase,
         private val getAddressesUseCase: GetAddressesUseCase,
-        private val getVouchersUseCase: GetVouchersUseCase,
+        private val getSavedVouchersUseCase: GetSavedVouchersUseCase,
         private val createPayOsPaymentUseCase: CreatePayOsPaymentUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
@@ -168,7 +168,7 @@ class CheckoutViewModel(
                     checkoutUseCase,
                     directCheckoutUseCase,
                     getAddressesUseCase,
-                    getVouchersUseCase,
+                    getSavedVouchersUseCase,
                     createPayOsPaymentUseCase
                 ) as T
             }

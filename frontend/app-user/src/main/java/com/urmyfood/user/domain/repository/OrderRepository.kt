@@ -1,6 +1,8 @@
 package com.urmyfood.user.domain.repository
 
 import com.urmyfood.user.data.model.OrderResponse
+import com.urmyfood.user.data.model.OrderReviewResponse
+import com.urmyfood.user.data.model.ReorderResponse
 import com.urmyfood.user.domain.model.Result
 
 interface OrderRepository {
@@ -27,6 +29,8 @@ interface OrderRepository {
     suspend fun getOrders(token: String): Result<List<OrderResponse>>
     suspend fun getOrderDetail(token: String, orderId: String): Result<OrderResponse>
     suspend fun cancelOrder(token: String, orderId: String, cancelReason: String): Result<OrderResponse>
+    suspend fun createReview(token: String, orderId: String, rating: Int, comment: String?): Result<OrderReviewResponse>
+    suspend fun reorder(token: String, orderId: String): Result<ReorderResponse>
     suspend fun createPayOsPayment(token: String, orderId: String): Result<com.urmyfood.user.data.model.PayOsPaymentResponse>
     suspend fun checkPayOsStatus(token: String, orderId: String): Result<OrderResponse>
 }

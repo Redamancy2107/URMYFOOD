@@ -84,6 +84,13 @@
             app:destination="@id/mainContainerFragment"
             app:popUpTo="@id/nav_graph_auth"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_loginFragment_to_otpFragment"
+            app:destination="@id/otpFragment"
+            app:enterAnim="@anim/nav_default_enter_anim"
+            app:exitAnim="@anim/nav_default_exit_anim"
+            app:popEnterAnim="@anim/nav_default_pop_enter_anim"
+            app:popExitAnim="@anim/nav_default_pop_exit_anim" />
     </fragment>
 
     <fragment
@@ -149,6 +156,11 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/chooseRoleFragment"
             app:popUpToInclusive="false" />
+        <action
+            android:id="@+id/action_otpFragment_to_mainContainerFragment"
+            app:destination="@id/mainContainerFragment"
+            app:popUpTo="@id/nav_graph_auth"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment

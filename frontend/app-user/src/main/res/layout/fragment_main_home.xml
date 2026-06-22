@@ -44,6 +44,7 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="@string/cd_notification"
                     android:src="@drawable/ic_notification"
+                    android:visibility="gone"
                     android:scaleType="centerInside"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
