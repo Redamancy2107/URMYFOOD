@@ -478,6 +478,31 @@ public class PostPersistenceAdapter implements PostRepository {
                 .addValue("authorId", authorId));
     }
 
+    @Override
+    public List<Post> findAll(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("createdAt").descending());
+        return jpaPostRepository.findAll(pageable).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public long countAll() {
+        return jpaPostRepository.count();
+    }
+
+    @Override
+    public void adminUpdatePostStatus(UUID postId, PostStatus status) {
+        String sql = "UPDATE posts SET status = :status WHERE post_id = :postId";
+        jdbc.update(sql, new MapSqlParameterSource()
+                .addValue("status", status.name())
+                .addValue("postId", postId));
+    }
+
+    @Override
+    public void adminDeletePost(UUID postId) {
+        String sql = "DELETE FROM posts WHERE post_id = :postId";
+        jdbc.update(sql, new MapSqlParameterSource().addValue("postId", postId));
+    }
+
     Post toDomain(PostEntity entity) {
         return Post.builder()
                 .postId(entity.getPostId())

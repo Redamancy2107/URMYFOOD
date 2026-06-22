@@ -131,6 +131,7 @@
 
                     <!-- Assuming 6 boxes as in design -->
                     <EditText
+                        android:id="@+id/et_otp_1"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
@@ -142,6 +143,7 @@
                         android:textSize="24sp" />
 
                     <EditText
+                        android:id="@+id/et_otp_2"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
@@ -153,6 +155,7 @@
                         android:textSize="24sp" />
 
                     <EditText
+                        android:id="@+id/et_otp_3"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
@@ -164,6 +167,7 @@
                         android:textSize="24sp" />
 
                     <EditText
+                        android:id="@+id/et_otp_4"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
@@ -175,6 +179,7 @@
                         android:textSize="24sp" />
 
                     <EditText
+                        android:id="@+id/et_otp_5"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:layout_marginEnd="8dp"
@@ -186,6 +191,7 @@
                         android:textSize="24sp" />
 
                     <EditText
+                        android:id="@+id/et_otp_6"
                         android:layout_width="48dp"
                         android:layout_height="56dp"
                         android:background="@drawable/bg_otp_input"
@@ -196,11 +202,24 @@
                         android:textSize="24sp" />
                 </LinearLayout>
 
+                <!-- Error Message -->
+                <TextView
+                    android:id="@+id/tv_error_otp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:textColor="@color/error_red"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:text="Mã OTP không chính xác hoặc đã hết hạn" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_confirm"
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:layout_marginTop="48dp"
+                    android:layout_marginTop="24dp"
                     android:text="Xác nhận \u2192"
                     android:textColor="@color/white"
                     android:textSize="16sp"

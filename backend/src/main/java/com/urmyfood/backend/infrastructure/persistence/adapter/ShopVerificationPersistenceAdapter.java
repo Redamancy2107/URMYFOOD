@@ -51,10 +51,28 @@ public class ShopVerificationPersistenceAdapter implements ShopVerificationRepos
                 .build();
     }
 
+    @Override
+    public List<ShopVerification> findPending() {
+        return jpaShopVerificationRepository.findByStatus(com.urmyfood.backend.domain.model.ShopVerificationStatus.PENDING)
+                .stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public Optional<ShopVerification> findById(Long id) {
+        return jpaShopVerificationRepository.findById(id).map(this::toDomain);
+    }
+
     private ShopVerification toDomain(ShopVerificationEntity entity) {
         return ShopVerification.builder()
                 .id(entity.getId())
-                .shop(Account.builder().id(entity.getShop().getId()).build())
+                .shop(Account.builder()
+                        .id(entity.getShop().getId())
+                        .fullName(entity.getShop().getFullName())
+                        .email(entity.getShop().getEmail())
+                        .phone(entity.getShop().getPhone())
+                        .avatarUrl(entity.getShop().getAvatarUrl())
+                        .isActive(entity.getShop().isActive())
+                        .build())
                 .shopName(entity.getShopName())
                 .category(entity.getCategory())
                 .address(entity.getAddress())

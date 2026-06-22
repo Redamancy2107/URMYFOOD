@@ -37,12 +37,30 @@ class DashboardFragment : Fragment() {
             switchFragment(OverviewFragment())
             updateMenuSelection(binding.menuTongQuan)
         }
-        binding.menuDuyetDoiTac.setOnClickListener(showDevToast)
-        binding.menuKiemDuyet.setOnClickListener(showDevToast)
-        binding.menuQuanLyUser.setOnClickListener(showDevToast)
-        binding.menuQuanLyCuaHang.setOnClickListener(showDevToast)
-        binding.menuMaGiamGia.setOnClickListener(showDevToast)
-        binding.menuBaoCao.setOnClickListener(showDevToast)
+        binding.menuDuyetDoiTac.setOnClickListener {
+            switchFragment(PartnerApprovalFragment())
+            updateMenuSelection(binding.menuDuyetDoiTac)
+        }
+        binding.menuKiemDuyet.setOnClickListener {
+            switchFragment(ModerationFragment())
+            updateMenuSelection(binding.menuKiemDuyet)
+        }
+        binding.menuQuanLyUser.setOnClickListener {
+            switchFragment(UserManagementFragment.newInstance("CUSTOMER"))
+            updateMenuSelection(binding.menuQuanLyUser)
+        }
+        binding.menuQuanLyCuaHang.setOnClickListener {
+            switchFragment(UserManagementFragment.newInstance("SHOP"))
+            updateMenuSelection(binding.menuQuanLyCuaHang)
+        }
+        binding.menuMaGiamGia.setOnClickListener {
+            switchFragment(VoucherManagementFragment())
+            updateMenuSelection(binding.menuMaGiamGia)
+        }
+        binding.menuBaoCao.setOnClickListener {
+            switchFragment(ReportsFragment())
+            updateMenuSelection(binding.menuBaoCao)
+        }
         binding.menuCaiDat.setOnClickListener {
             switchFragment(SettingsFragment())
             updateMenuSelection(binding.menuCaiDat)

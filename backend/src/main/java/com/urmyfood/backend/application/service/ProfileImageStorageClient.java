@@ -7,4 +7,8 @@ public interface ProfileImageStorageClient {
     String uploadShopProfileImage(Long shopId, ShopProfileImageType type, MultipartFile file);
 
     void deleteShopProfileImage(Long shopId, String imageUrl);
+
+    String uploadAdminAvatar(Long accountId, MultipartFile file);
+
+    void deleteAdminAvatar(Long accountId, String imageUrl);
 }

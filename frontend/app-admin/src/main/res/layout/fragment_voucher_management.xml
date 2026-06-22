@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="24dp">
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Mã Giảm Giá" android:textColor="@color/text_primary" android:textSize="22sp" android:textStyle="bold"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_voucher"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ Thêm mã mới"
+            android:textColor="@color/white"
+            app:backgroundTint="@color/dark_green"
+            app:cornerRadius="8dp" />
+    </LinearLayout>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="24dp"
+        app:cardCornerRadius="12dp"
+        app:cardBackgroundColor="@color/white"
+        app:strokeColor="@color/border_color"
+        app:strokeWidth="1dp">
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:padding="16dp" android:background="@color/bg_main">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Mã code" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1.5" android:text="Tên" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Giảm giá" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Đơn tối thiểu" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Hết hạn" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+                <TextView android:layout_width="50dp" android:layout_height="wrap_content" android:text="Xóa" android:textColor="@color/text_secondary" android:textStyle="bold" android:textSize="13sp"/>
+            </LinearLayout>
+            <View android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/border_color"/>
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_vouchers" android:layout_width="match_parent" android:layout_height="match_parent"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</LinearLayout>

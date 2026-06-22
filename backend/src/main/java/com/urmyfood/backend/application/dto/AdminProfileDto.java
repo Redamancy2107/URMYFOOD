@@ -32,4 +32,7 @@ public class AdminProfileDto {
 
     @JsonProperty("is_2fa_enabled")
     private boolean is2FaEnabled;
+
+    @JsonProperty("avatar_url")
+    private String avatarUrl;
 }

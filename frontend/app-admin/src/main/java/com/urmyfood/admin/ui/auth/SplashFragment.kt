@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.urmyfood.admin.R
+import com.urmyfood.admin.data.local.SessionManager
 import com.urmyfood.admin.databinding.FragmentSplashBinding
 
 class SplashFragment : Fragment() {
@@ -26,10 +27,14 @@ class SplashFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Auto navigate to Login after 2 seconds
         Handler(Looper.getMainLooper()).postDelayed({
             if (isAdded) {
-                findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+                if (SessionManager.isLoggedIn()) {
+                    // Skip login and go directly to dashboard
+                    findNavController().navigate(R.id.action_splashFragment_to_dashboardFragment)
+                } else {
+                    findNavController().navigate(R.id.action_splashFragment_to_loginFragment)
+                }
             }
         }, 2000)
     }

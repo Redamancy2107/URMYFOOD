@@ -10,8 +10,13 @@ import android.annotation.SuppressLint
 import android.text.InputType
 import android.view.MotionEvent
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.urmyfood.admin.R
+import com.urmyfood.admin.data.model.OtpRequest
+import com.urmyfood.admin.data.network.RetrofitClient
 import com.urmyfood.admin.databinding.FragmentLoginBinding
+import com.google.gson.JsonParser
+import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
     private var _binding: FragmentLoginBinding? = null
@@ -29,11 +34,81 @@ class LoginFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         binding.btnContinue.setOnClickListener {
-            // Validate and navigate to OTP
-            findNavController().navigate(R.id.action_loginFragment_to_otpFragment)
+            handleLogin()
         }
         
         setupPasswordToggle()
+    }
+
+    private fun handleLogin() {
+        val email = binding.etEmail.text.toString().trim()
+        val password = binding.etPassword.text.toString().trim()
+
+        if (email.isEmpty()) {
+            showError("Vui lòng nhập email")
+            return
+        }
+        if (password.isEmpty()) {
+            showError("Vui lòng nhập mật khẩu")
+            return
+        }
+
+        hideError()
+        setLoadingState(true)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // For admin OTP flow, we trigger the OTP sending using email
+                val response = RetrofitClient.api.sendAdminOtp(OtpRequest(email = email))
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+                    if (apiResponse != null && apiResponse.success) {
+                        // Navigate to OTP entry screen, passing email to verify
+                        val bundle = Bundle().apply {
+                            putString("email", email)
+                        }
+                        findNavController().navigate(R.id.action_loginFragment_to_otpFragment, bundle)
+                    } else {
+                        showError(apiResponse?.message ?: "Đã xảy ra lỗi không xác định")
+                    }
+                } else {
+                    val errorMsg = parseErrorMessage(response.errorBody()?.string())
+                    showError(errorMsg)
+                }
+            } catch (e: Exception) {
+                showError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng.")
+            } finally {
+                setLoadingState(false)
+            }
+        }
+    }
+
+    private fun showError(message: String) {
+        binding.tvError.text = message
+        binding.tvError.visibility = View.VISIBLE
+    }
+
+    private fun hideError() {
+        binding.tvError.visibility = View.GONE
+    }
+
+    private fun setLoadingState(isLoading: Boolean) {
+        if (isLoading) {
+            binding.btnContinue.isEnabled = false
+            binding.btnContinue.text = "Đang xử lý..."
+        } else {
+            binding.btnContinue.isEnabled = true
+            binding.btnContinue.text = "Đăng nhập"
+        }
+    }
+
+    private fun parseErrorMessage(errorBody: String?): String {
+        return try {
+            val json = JsonParser.parseString(errorBody).asJsonObject
+            json.get("message")?.asString ?: "Đăng nhập thất bại"
+        } catch (e: Exception) {
+            "Lỗi kết nối máy chủ"
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")

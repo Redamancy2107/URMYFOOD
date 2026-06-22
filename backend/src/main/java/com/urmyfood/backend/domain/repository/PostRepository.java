@@ -41,4 +41,10 @@ public interface PostRepository {
     void updatePost(UUID postId, Long authorId, UpdatePostRequest req);
     void deletePost(UUID postId, Long authorId);
     void updatePostStatus(UUID postId, Long authorId, PostStatus status);
+
+    // Admin methods
+    List<Post> findAll(int page, int size);
+    long countAll();
+    void adminUpdatePostStatus(UUID postId, PostStatus status);
+    void adminDeletePost(UUID postId);
 }
