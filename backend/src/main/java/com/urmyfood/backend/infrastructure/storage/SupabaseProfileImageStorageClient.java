@@ -31,6 +31,9 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
     @Value("${supabase.anon-key:}")
     private String anonKey;
 
+    @Value("${supabase.service-role-key:}")
+    private String serviceRoleKey;
+
     @Value("${supabase.storage.bucket:}")
     private String bucket;
 
@@ -51,8 +54,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .post()
                     .uri(uploadUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .body(file.getBytes())
                     .retrieve()
@@ -86,8 +89,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .delete()
                     .uri(deleteUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientResponseException e) {
@@ -119,8 +122,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .post()
                     .uri(uploadUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .body(file.getBytes())
                     .retrieve()
@@ -162,8 +165,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .delete()
                     .uri(deleteUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientResponseException e) {
@@ -195,8 +198,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .post()
                     .uri(uploadUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .contentType(MediaType.parseMediaType(file.getContentType()))
                     .body(file.getBytes())
                     .retrieve()
@@ -238,8 +241,8 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
             restClientBuilder.build()
                     .delete()
                     .uri(deleteUrl)
-                    .header("apikey", anonKey)
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .header("apikey", storageAccessKey())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + storageAccessKey())
                     .retrieve()
                     .toBodilessEntity();
         } catch (RestClientResponseException e) {
@@ -255,9 +258,13 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
     }
 
     private void validateConfig() {
-        if (isBlank(supabaseUrl) || isBlank(anonKey) || isBlank(bucket)) {
+        if (isBlank(supabaseUrl) || isBlank(bucket) || (isBlank(serviceRoleKey) && isBlank(anonKey))) {
             throw new IllegalStateException("Thiếu cấu hình Supabase Storage");
         }
+    }
+
+    private String storageAccessKey() {
+        return isBlank(serviceRoleKey) ? anonKey : serviceRoleKey;
     }
 
     private void validateFile(MultipartFile file) {
