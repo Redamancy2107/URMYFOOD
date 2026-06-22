@@ -52,12 +52,13 @@ public class PostService {
     @Value("${recommendation.weight.recency:100.0}")
     private double wRecency;
 
-    public PageResponse<PostResponse> getNewsfeed(int page, int size, OffsetDateTime anchor) {
+    public PageResponse<PostResponse> getNewsfeed(int page, int size, OffsetDateTime anchor, String category) {
         int clampedSize = Math.min(size, 50);
         Long viewerAccountId = resolveViewerAccountId();
         OffsetDateTime effectiveAnchor = anchor != null ? anchor : OffsetDateTime.now();
-        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize, effectiveAnchor);
-        long total = postRepository.countActive(effectiveAnchor);
+        String filterCategory = (category != null && !category.isBlank()) ? category : null;
+        List<PostRanked> ranked = postRepository.findRanked(viewerAccountId, wLikes, wComments, wRecency, page, clampedSize, effectiveAnchor, filterCategory);
+        long total = postRepository.countActive(effectiveAnchor, filterCategory);
         List<PostResponse> content = ranked.stream().map(this::toResponse).toList();
         return PageResponse.ofAnchored(content, page, clampedSize, total, effectiveAnchor.toString());
     }

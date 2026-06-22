@@ -20,8 +20,8 @@ public interface PostRepository {
     List<Post> findAllOrderedByCreatedAt();
 
     // Anchored offset for newsfeed
-    List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor);
-    long countActive(OffsetDateTime anchor);
+    List<PostRanked> findRanked(Long viewerAccountId, double w1, double w2, double w3, int page, int size, OffsetDateTime anchor, String category);
+    long countActive(OffsetDateTime anchor, String category);
 
     // Anchored offset for search
     List<PostRanked> searchByKeyword(String keyword, Long viewerAccountId, int page, int size, OffsetDateTime anchor);

@@ -42,10 +42,11 @@ public class PostController {
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getNewsfeed(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String anchor
+            @RequestParam(required = false) String anchor,
+            @RequestParam(required = false) String category
     ) {
         OffsetDateTime anchorDt = anchor != null ? OffsetDateTime.parse(anchor) : null;
-        PageResponse<PostResponse> result = postService.getNewsfeed(page, size, anchorDt);
+        PageResponse<PostResponse> result = postService.getNewsfeed(page, size, anchorDt, category);
         return ResponseEntity.ok(ApiResponse.success("Tải bài viết thành công", result));
     }
 

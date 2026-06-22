@@ -4,5 +4,6 @@ public enum PostStatus {
     ACTIVE,
     SOLD_OUT,
     EXPIRED,
-    INACTIVE
+    INACTIVE,
+    DELETED
 }
