@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -143,8 +144,12 @@ public class VoucherPersistenceAdapter implements VoucherRepository {
                 .minOrderValue(rs.getBigDecimal("min_order_value"))
                 .expiryDate(rs.getObject("expiry_date", LocalDate.class))
                 .isActive(rs.getBoolean("is_active"))
-                .createdAt(rs.getObject("created_at", java.time.LocalDateTime.class))
-                .updatedAt(rs.getObject("updated_at", java.time.LocalDateTime.class))
+                .createdAt(toLocalDateTime(rs.getObject("created_at", OffsetDateTime.class)))
+                .updatedAt(toLocalDateTime(rs.getObject("updated_at", OffsetDateTime.class)))
                 .build();
+    }
+
+    private java.time.LocalDateTime toLocalDateTime(OffsetDateTime value) {
+        return value != null ? value.toLocalDateTime() : null;
     }
 }
