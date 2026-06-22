@@ -15,11 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import vn.payos.type.CheckoutResponseData;
-import vn.payos.type.ItemData;
-import vn.payos.type.PaymentData;
-import vn.payos.type.Webhook;
-import vn.payos.type.WebhookData;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentRequests.PaymentLinkItem;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.webhooks.Webhook;
+import vn.payos.model.webhooks.WebhookData;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -40,7 +40,7 @@ public class PaymentController {
 
     @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/payos/create/{orderId}")
-    public ResponseEntity<ApiResponse<CheckoutResponseData>> createPayOsPayment(
+    public ResponseEntity<ApiResponse<CreatePaymentLinkResponse>> createPayOsPayment(
             @PathVariable UUID orderId,
             Authentication authentication) {
         
@@ -60,16 +60,16 @@ public class PaymentController {
         int amount = order.getFinalAmount().intValue();
         String description = "Don hang " + orderId.toString().substring(0, 8);
         if (hasCachedPayOsPayload(order)) {
-            CheckoutResponseData cachedData = CheckoutResponseData.builder()
+            CreatePaymentLinkResponse cachedData = CreatePaymentLinkResponse.builder()
                     .bin("")
                     .accountNumber("")
                     .accountName("")
-                    .amount(amount)
+                    .amount(Long.valueOf(amount))
                     .description(description)
                     .orderCode(order.getPayosOrderCode())
                     .currency("VND")
                     .paymentLinkId("")
-                    .status("PENDING")
+                    .status(vn.payos.model.v2.paymentRequests.PaymentLinkStatus.PENDING)
                     .checkoutUrl(order.getPayosCheckoutUrl())
                     .qrCode(order.getPayosQrCode())
                     .build();
@@ -77,25 +77,25 @@ public class PaymentController {
         }
 
         long orderCode = generateUniqueOrderCode();
-        String returnUrl = "urmyfood://payment-result?orderId=" + orderId.toString();
-        String cancelUrl = "urmyfood://payment-result?orderId=" + orderId.toString();
+        String returnUrl = "https://urmyfood.com/payment-result";
+        String cancelUrl = "https://urmyfood.com/payment-result";
 
-        ItemData item = ItemData.builder()
-                .name("Đơn hàng từ " + order.getShop().getFullName())
-                .price(amount)
+        PaymentLinkItem item = PaymentLinkItem.builder()
+                .name("Order " + orderId.toString().substring(0, 8))
+                .price(Long.valueOf(amount))
                 .quantity(1)
                 .build();
 
-        PaymentData paymentData = PaymentData.builder()
+        CreatePaymentLinkRequest paymentData = CreatePaymentLinkRequest.builder()
                 .orderCode(orderCode)
-                .amount(amount)
+                .amount(Long.valueOf(amount))
                 .description(description)
                 .returnUrl(returnUrl)
                 .cancelUrl(cancelUrl)
-                .item(item)
+                .items(java.util.List.of(item))
                 .build();
 
-        CheckoutResponseData data = payOsService.createPaymentLink(paymentData);
+        CreatePaymentLinkResponse data = payOsService.createPaymentLink(paymentData);
         Long responseOrderCode = data.getOrderCode() == null ? orderCode : data.getOrderCode();
         orderService.savePayosPaymentData(orderId, responseOrderCode, data.getCheckoutUrl(), data.getQrCode());
         
@@ -150,15 +150,30 @@ public class PaymentController {
     }
 
     @PostMapping("/payos/webhook")
-    public ResponseEntity<ApiResponse<String>> handlePayOsWebhook(@RequestBody Webhook webhookBody) {
+    public ResponseEntity<ApiResponse<String>> handlePayOsWebhook(@RequestBody String rawBody) {
         try {
-            log.info("Nhận webhook từ PayOS: {}", webhookBody);
-            WebhookData data = payOsService.verifyPaymentWebhookData(webhookBody);
+            log.info("Nhận raw webhook từ PayOS: {}", rawBody);
+            
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            mapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            Webhook webhook = mapper.readValue(rawBody, Webhook.class);
+            
+            WebhookData data = payOsService.verifyPaymentWebhookData(webhook);
             
             if ("00".equals(data.getCode())) {
                 long orderCode = data.getOrderCode();
+                if (orderCode == 123) {
+                    log.info("Nhận webhook test từ PayOS (orderCode = 123). Bỏ qua xử lý đơn hàng.");
+                    return ResponseEntity.ok(ApiResponse.success("Test webhook thành công", "OK"));
+                }
+                
                 log.info("Thanh toán thành công cho orderCode: {}", orderCode);
-                orderService.markOrderAsPaidByOrderCode(orderCode);
+                try {
+                    orderService.markOrderAsPaidByOrderCode(orderCode);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Webhook hợp lệ nhưng không thể cập nhật đơn hàng: {}", e.getMessage());
+                    return ResponseEntity.ok(ApiResponse.success("Webhook hợp lệ nhưng không tìm thấy đơn", "OK"));
+                }
             }
             return ResponseEntity.ok(ApiResponse.success("Xử lý webhook thành công", "OK"));
         } catch (Exception e) {

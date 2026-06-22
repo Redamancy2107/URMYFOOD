@@ -91,6 +91,7 @@ logging:
   level:
     org.flywaydb: INFO
     org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer: ERROR
+    org.springframework.web: DEBUG
 
 management:
   endpoints:

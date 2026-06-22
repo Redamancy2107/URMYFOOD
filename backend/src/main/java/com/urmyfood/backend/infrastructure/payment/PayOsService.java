@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import vn.payos.PayOS;
-import vn.payos.type.CheckoutResponseData;
-import vn.payos.type.PaymentData;
-import vn.payos.type.PaymentLinkData;
-import vn.payos.type.WebhookData;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
+import vn.payos.model.v2.paymentRequests.PaymentLink;
+import vn.payos.model.webhooks.WebhookData;
 
 import jakarta.annotation.PostConstruct;
 
@@ -33,14 +33,14 @@ public class PayOsService {
                     + "Ứng dụng vẫn chạy bình thường, nhưng chức năng thanh toán VietQR sẽ không khả dụng.");
             return;
         }
-        this.payOS = new PayOS(clientId, apiKey, checksumKey);
+        this.payOS = new PayOS(clientId.trim(), apiKey.trim(), checksumKey.trim());
         log.info("PayOS đã được khởi tạo thành công.");
     }
 
-    public CheckoutResponseData createPaymentLink(PaymentData paymentData) {
+    public CreatePaymentLinkResponse createPaymentLink(CreatePaymentLinkRequest paymentData) {
         ensureConfigured();
         try {
-            return payOS.createPaymentLink(paymentData);
+            return payOS.paymentRequests().create(paymentData);
         } catch (Exception e) {
             throw new RuntimeException("Lỗi tạo mã thanh toán VietQR: " + e.getMessage());
         }
@@ -49,17 +49,17 @@ public class PayOsService {
     public String getPaymentStatus(Long orderCode) {
         ensureConfigured();
         try {
-            PaymentLinkData data = payOS.getPaymentLinkInformation(orderCode);
-            return data.getStatus();
+            PaymentLink data = payOS.paymentRequests().get(String.valueOf(orderCode));
+            return data.getStatus().name();
         } catch (Exception e) {
             throw new RuntimeException("Lỗi kiểm tra trạng thái thanh toán PayOS: " + e.getMessage());
         }
     }
 
-    public WebhookData verifyPaymentWebhookData(vn.payos.type.Webhook webhookBody) {
+    public WebhookData verifyPaymentWebhookData(vn.payos.model.webhooks.Webhook webhookBody) {
         ensureConfigured();
         try {
-            return payOS.verifyPaymentWebhookData(webhookBody);
+            return payOS.webhooks().verify(webhookBody);
         } catch (Exception e) {
             throw new RuntimeException("Lỗi xác thực webhook PayOS: " + e.getMessage());
         }

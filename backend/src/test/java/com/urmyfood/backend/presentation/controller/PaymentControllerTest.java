@@ -16,8 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import vn.payos.type.CheckoutResponseData;
-import vn.payos.type.PaymentData;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkResponse;
+import vn.payos.model.v2.paymentRequests.CreatePaymentLinkRequest;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -56,9 +56,9 @@ class PaymentControllerTest {
         when(authentication.getPrincipal()).thenReturn(new CustomAccountDetails(customer));
         when(orderService.findOrderByIdAndCustomer(orderId, customer.getId())).thenReturn(order);
         when(orderService.existsPayosOrderCode(anyLong())).thenReturn(false);
-        when(payOsService.createPaymentLink(any(PaymentData.class))).thenAnswer(invocation -> {
-            PaymentData paymentData = invocation.getArgument(0);
-            return CheckoutResponseData.builder()
+        when(payOsService.createPaymentLink(any(CreatePaymentLinkRequest.class))).thenAnswer(invocation -> {
+            CreatePaymentLinkRequest paymentData = invocation.getArgument(0);
+            return CreatePaymentLinkResponse.builder()
                     .bin("970422")
                     .accountNumber("123456789")
                     .accountName("URMYFOOD")
@@ -67,16 +67,16 @@ class PaymentControllerTest {
                     .orderCode(paymentData.getOrderCode())
                     .currency("VND")
                     .paymentLinkId("payment-link-id")
-                    .status("PENDING")
+                    .status(vn.payos.model.v2.paymentRequests.PaymentLinkStatus.PENDING)
                     .checkoutUrl("https://pay.payos.vn/web/order")
                     .qrCode("vietqr-payload")
                     .build();
         });
 
-        ResponseEntity<ApiResponse<CheckoutResponseData>> response =
+        ResponseEntity<ApiResponse<CreatePaymentLinkResponse>> response =
                 paymentController.createPayOsPayment(orderId, authentication);
 
-        CheckoutResponseData data = response.getBody().getData();
+        CreatePaymentLinkResponse data = response.getBody().getData();
         assertThat(data.getCheckoutUrl()).isEqualTo("https://pay.payos.vn/web/order");
         assertThat(data.getQrCode()).isEqualTo("vietqr-payload");
         assertThat(data.getOrderCode()).isNotNull();
@@ -101,10 +101,10 @@ class PaymentControllerTest {
         when(authentication.getPrincipal()).thenReturn(new CustomAccountDetails(customer));
         when(orderService.findOrderByIdAndCustomer(orderId, customer.getId())).thenReturn(order);
 
-        ResponseEntity<ApiResponse<CheckoutResponseData>> response =
+        ResponseEntity<ApiResponse<CreatePaymentLinkResponse>> response =
                 paymentController.createPayOsPayment(orderId, authentication);
 
-        CheckoutResponseData data = response.getBody().getData();
+        CreatePaymentLinkResponse data = response.getBody().getData();
         assertThat(data.getOrderCode()).isEqualTo(123456789L);
         assertThat(data.getCheckoutUrl()).isEqualTo("https://pay.payos.vn/web/cached");
         assertThat(data.getQrCode()).isEqualTo("cached-vietqr-payload");
