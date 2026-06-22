@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_marginBottom="16dp">
+    <ImageView android:id="@+id/iv_activity_icon" android:layout_width="40dp" android:layout_height="40dp" android:src="@android:drawable/sym_def_app_icon"/>
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="12dp">
+        <TextView android:id="@+id/tv_activity_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Title" android:textColor="@color/text_primary" android:textStyle="bold"/>
+        <TextView android:id="@+id/tv_activity_desc" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Description" android:textColor="@color/text_secondary" android:textSize="12sp"/>
+        <TextView android:id="@+id/tv_activity_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STATUS" android:textColor="@color/mint_green" android:textSize="10sp" android:background="@drawable/bg_badge_green" android:paddingHorizontal="4dp" android:layout_marginTop="4dp" android:visibility="gone"/>
+    </LinearLayout>
+</LinearLayout>

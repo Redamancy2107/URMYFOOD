@@ -21,6 +21,7 @@ class DashboardFragment : Fragment() {
     private var mediaPlayer: MediaPlayer? = null
     private var isMusicPlaying = true
     private val repository = com.urmyfood.admin.data.repository.AdminRepository()
+    private var currentSelectedTab: View? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,50 +42,53 @@ class DashboardFragment : Fragment() {
 
         // Setup Sidebar clicks
         binding.menuTongQuan.setOnClickListener {
+            if (currentSelectedTab == binding.menuTongQuan) return@setOnClickListener
             switchFragment(OverviewFragment())
             updateMenuSelection(binding.menuTongQuan)
         }
         binding.menuDuyetDoiTac.setOnClickListener {
+            if (currentSelectedTab == binding.menuDuyetDoiTac) return@setOnClickListener
             switchFragment(PartnerApprovalFragment())
             updateMenuSelection(binding.menuDuyetDoiTac)
         }
         binding.menuKiemDuyet.setOnClickListener {
+            if (currentSelectedTab == binding.menuKiemDuyet) return@setOnClickListener
             switchFragment(ModerationFragment())
             updateMenuSelection(binding.menuKiemDuyet)
         }
         binding.menuQuanLyUser.setOnClickListener {
+            if (currentSelectedTab == binding.menuQuanLyUser) return@setOnClickListener
             switchFragment(UserManagementFragment.newInstance("CUSTOMER"))
             updateMenuSelection(binding.menuQuanLyUser)
         }
         binding.menuQuanLyCuaHang.setOnClickListener {
+            if (currentSelectedTab == binding.menuQuanLyCuaHang) return@setOnClickListener
             switchFragment(UserManagementFragment.newInstance("SHOP"))
             updateMenuSelection(binding.menuQuanLyCuaHang)
         }
         binding.menuMaGiamGia.setOnClickListener {
+            if (currentSelectedTab == binding.menuMaGiamGia) return@setOnClickListener
             switchFragment(VoucherManagementFragment())
             updateMenuSelection(binding.menuMaGiamGia)
         }
         binding.menuBaoCao.setOnClickListener {
+            if (currentSelectedTab == binding.menuBaoCao) return@setOnClickListener
             switchFragment(ReportsFragment())
             updateMenuSelection(binding.menuBaoCao)
         }
         binding.menuCaiDat.setOnClickListener {
+            if (currentSelectedTab == binding.menuCaiDat) return@setOnClickListener
             switchFragment(SettingsFragment())
             updateMenuSelection(binding.menuCaiDat)
         }
-        binding.btnXuatBaoCao.setOnClickListener(showDevToast)
-        binding.llHoTro.setOnClickListener(showDevToast)
+
         binding.llDangXuat.setOnClickListener {
             com.urmyfood.admin.data.local.SessionManager.clearSession()
             findNavController().navigate(R.id.action_dashboardFragment_to_loginFragment)
         }
 
         // Topbar clicks
-        binding.tvTabHomNay.setOnClickListener(showDevToast)
-        binding.tvTabTuanNay.setOnClickListener(showDevToast)
-        binding.tvTabThangNay.setOnClickListener(showDevToast)
         binding.ivNoti.setOnClickListener(showDevToast)
-        binding.ivMessage.setOnClickListener(showDevToast)
         
         // Setup background music
         setupBackgroundMusic()
@@ -120,6 +124,7 @@ class DashboardFragment : Fragment() {
                 imageView?.imageTintList = android.content.res.ColorStateList.valueOf(activeColor)
                 textView?.setTextColor(activeColor)
                 textView?.setTypeface(null, android.graphics.Typeface.BOLD)
+                currentSelectedTab = selectedView
             } else {
                 menu.setBackgroundResource(android.R.color.transparent)
                 imageView?.imageTintList = android.content.res.ColorStateList.valueOf(inactiveColor)
