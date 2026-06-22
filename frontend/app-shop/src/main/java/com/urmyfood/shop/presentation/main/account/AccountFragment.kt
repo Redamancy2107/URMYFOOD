@@ -119,11 +119,13 @@ class AccountFragment : Fragment() {
 
         binding.tvAddress.text = profile.address.ifBlank { getString(R.string.shop_profile_no_address) }
         binding.tvOpeningHours.text = profile.openingHours.ifBlank { getString(R.string.shop_profile_default_hours) }
-        binding.tvOpenState.text = if (profile.isOpen) {
+        val isActuallyOpen = com.urmyfood.shared.util.TimeUtils.isShopCurrentlyOpen(profile.isOpen, profile.openingHours)
+        binding.tvOpenState.text = if (isActuallyOpen) {
             getString(R.string.shop_profile_open)
         } else {
             getString(R.string.shop_profile_closed)
         }
+        binding.tvOpenState.setTextColor(if (isActuallyOpen) android.graphics.Color.parseColor("#10B981") else android.graphics.Color.parseColor("#EF4444"))
         binding.ivShopCover.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
         if (profile.coverUrl.isNullOrBlank()) {
             binding.ivShopCover.setImageResource(R.drawable.bg_food_banner)

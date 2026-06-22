@@ -196,7 +196,7 @@ class ShopProfileViewModel(
                     _address.value = profile.address.orEmpty()
                     _operatingHours.value = profile.openingHours.orEmpty()
                     _shopCategory.value = profile.category.orEmpty()
-                    _isOpen.value = profile.isOpen
+                    _isOpen.value = com.urmyfood.shared.util.TimeUtils.isShopCurrentlyOpen(profile.isOpen, profile.openingHours)
                     _followers.value = formatFollowerCount(profile.followerCount)
                     _isFollowing.value = profile.isFollowing
                     applyFollowStateToPosts(profile.shopId, profile.isFollowing)

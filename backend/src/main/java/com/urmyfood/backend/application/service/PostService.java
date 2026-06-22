@@ -83,6 +83,10 @@ public class PostService {
     public PostResponse createPost(CreatePostRequest request) {
         Account author = requireCurrentAccount();
 
+        if (request.getOriginalPrice() == null) {
+            request.setOriginalPrice(request.getPrice());
+        }
+
         Post post = Post.builder()
                 .dishName(request.getDishName())
                 .price(request.getPrice())
@@ -150,6 +154,9 @@ public class PostService {
     @Transactional
     public PostResponse updatePost(UUID postId, UpdatePostRequest request) {
         Account account = requireCurrentAccount();
+        if (request.getOriginalPrice() == null) {
+            request.setOriginalPrice(request.getPrice());
+        }
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Bài viết không tồn tại"));
         if (!post.getAuthor().getId().equals(account.getId())) {
