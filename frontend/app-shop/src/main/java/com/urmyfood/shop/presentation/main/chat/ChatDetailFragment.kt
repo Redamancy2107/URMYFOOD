@@ -128,12 +128,6 @@ class ChatDetailFragment : Fragment() {
                 binding.etMessage.text?.clear()
             }
         }
-        binding.btnMenu.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
-        }
-        binding.btnCall.setOnClickListener {
-            Toast.makeText(requireContext(), "Chức năng đang phát triển", Toast.LENGTH_SHORT).show()
-        }
         listOf(binding.chipReply1, binding.chipReply2, binding.chipReply3).forEach { chip ->
             chip.setOnClickListener {
                 binding.etMessage.setText(chip.text)
