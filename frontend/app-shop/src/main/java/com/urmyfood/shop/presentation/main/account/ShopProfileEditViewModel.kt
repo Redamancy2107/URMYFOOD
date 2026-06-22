@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.urmyfood.shared.domain.model.Result
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.ShopProfile
 import com.urmyfood.shop.domain.model.ShopProfileImageType
 import com.urmyfood.shop.domain.usecase.GetShopProfileUseCase
@@ -140,7 +141,7 @@ class ShopProfileEditViewModel(
             } catch (e: TimeoutCancellationException) {
                 _updateState.value = ProfileEditUiState.Error("Lưu hồ sơ quá lâu. Vui lòng thử lại")
             } catch (e: Exception) {
-                _updateState.value = ProfileEditUiState.Error(e.message ?: "Không thể lưu hồ sơ quán")
+                _updateState.value = ProfileEditUiState.Error(e.toUserMessage())
             }
         }
     }

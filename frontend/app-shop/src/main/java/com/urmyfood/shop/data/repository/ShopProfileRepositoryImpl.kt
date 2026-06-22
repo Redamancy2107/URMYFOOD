@@ -6,6 +6,7 @@ import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.data.model.toDomain
 import com.urmyfood.shop.data.model.toRequest
 import com.urmyfood.shop.data.remote.ShopProfileApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.ShopProfile
 import com.urmyfood.shop.domain.model.ShopProfileImageType
 import com.urmyfood.shop.domain.repository.ShopProfileRepository
@@ -32,7 +33,7 @@ class ShopProfileRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -51,7 +52,7 @@ class ShopProfileRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -74,7 +75,7 @@ class ShopProfileRepositoryImpl(
                 Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối")
+            Result.Error(e.toUserMessage())
         }
     }
 

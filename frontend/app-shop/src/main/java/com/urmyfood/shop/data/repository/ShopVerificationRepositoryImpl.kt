@@ -5,6 +5,7 @@ import com.urmyfood.shared.data.model.ApiResponse
 import com.urmyfood.shared.domain.model.Result
 import com.urmyfood.shop.data.model.ShopVerificationRequest
 import com.urmyfood.shop.data.remote.ShopVerificationApiService
+import com.urmyfood.shop.data.util.toUserMessage
 import com.urmyfood.shop.domain.model.ShopRegistrationData
 import com.urmyfood.shop.domain.repository.ShopVerificationRepository
 
@@ -32,7 +33,7 @@ class ShopVerificationRepositoryImpl(
                 Result.Error(message ?: "Gửi hồ sơ xác minh thất bại", response.code())
             }
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(e.toUserMessage())
         }
     }
 
