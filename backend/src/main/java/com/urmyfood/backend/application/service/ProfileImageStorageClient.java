@@ -11,4 +11,8 @@ public interface ProfileImageStorageClient {
     String uploadAdminAvatar(Long accountId, MultipartFile file);
 
     void deleteAdminAvatar(Long accountId, String imageUrl);
+
+    String uploadUserAvatar(Long accountId, MultipartFile file);
+
+    void deleteUserAvatar(Long accountId, String imageUrl);
 }

@@ -6,9 +6,11 @@ import com.urmyfood.backend.application.service.AccountService;
 import com.urmyfood.backend.domain.model.Account;
 import com.urmyfood.backend.infrastructure.security.CustomAccountDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/accounts")
@@ -60,6 +62,16 @@ public class AccountController {
                 .avatarUrl(updatedAccount.getAvatarUrl())
                 .build();
         return ResponseEntity.ok(ApiResponse.success("Cập nhật thông tin tài khoản thành công", dto));
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<AccountProfileDto>> uploadAvatar(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file
+    ) {
+        CustomAccountDetails details = (CustomAccountDetails) authentication.getPrincipal();
+        AccountProfileDto dto = accountService.updateUserAvatar(details.getAccount().getId(), file);
+        return ResponseEntity.ok(ApiResponse.success("Cập nhật avatar thành công", dto));
     }
 
     @PutMapping("/me/change-password")

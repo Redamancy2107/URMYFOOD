@@ -178,6 +178,82 @@ public class SupabaseProfileImageStorageClient implements ProfileImageStorageCli
         }
     }
 
+    @Override
+    public String uploadUserAvatar(Long accountId, MultipartFile file) {
+        validateConfig();
+        validateFile(file);
+
+        String extension = switch (file.getContentType().toLowerCase(Locale.ROOT)) {
+            case "image/png" -> "png";
+            case "image/webp" -> "webp";
+            default -> "jpg";
+        };
+        String objectPath = "user-avatars/%d/%s.%s".formatted(accountId, UUID.randomUUID(), extension);
+        String uploadUrl = normalizeUrl(supabaseUrl) + "/storage/v1/object/" + bucket + "/" + objectPath;
+
+        try {
+            restClientBuilder.build()
+                    .post()
+                    .uri(uploadUrl)
+                    .header("apikey", anonKey)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .contentType(MediaType.parseMediaType(file.getContentType()))
+                    .body(file.getBytes())
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Không thể đọc file ảnh");
+        } catch (RestClientResponseException e) {
+            log.warn(
+                    "Supabase Storage user avatar upload failed. status={}, body={}",
+                    e.getStatusCode().value(),
+                    sanitizeResponseBody(e.getResponseBodyAsString())
+            );
+            throw new IllegalStateException(toUserMessage(e));
+        } catch (Exception e) {
+            log.warn("Supabase Storage user avatar upload failed unexpectedly", e);
+            throw new IllegalStateException("Không thể tải ảnh lên Supabase Storage");
+        }
+
+        return normalizeUrl(supabaseUrl) + "/storage/v1/object/public/" + bucket + "/" + objectPath;
+    }
+
+    @Override
+    public void deleteUserAvatar(Long accountId, String imageUrl) {
+        if (accountId == null || isBlank(imageUrl) || isBlank(supabaseUrl) || isBlank(bucket)) {
+            return;
+        }
+        String publicPrefix = normalizeUrl(supabaseUrl) + "/storage/v1/object/public/" + bucket + "/";
+        if (!imageUrl.startsWith(publicPrefix)) {
+            return;
+        }
+        String objectPath = imageUrl.substring(publicPrefix.length());
+        String userPrefix = "user-avatars/" + accountId + "/";
+        if (!objectPath.startsWith(userPrefix)) {
+            return;
+        }
+
+        try {
+            String deleteUrl = normalizeUrl(supabaseUrl) + "/storage/v1/object/" + bucket + "/" + objectPath;
+            restClientBuilder.build()
+                    .delete()
+                    .uri(deleteUrl)
+                    .header("apikey", anonKey)
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + anonKey)
+                    .retrieve()
+                    .toBodilessEntity();
+        } catch (RestClientResponseException e) {
+            log.warn(
+                    "Supabase Storage user avatar delete failed. accountId={}, status={}, body={}",
+                    accountId,
+                    e.getStatusCode().value(),
+                    sanitizeResponseBody(e.getResponseBodyAsString())
+            );
+        } catch (Exception e) {
+            log.warn("Supabase Storage user avatar delete failed unexpectedly. accountId={}", accountId, e);
+        }
+    }
+
     private void validateConfig() {
         if (isBlank(supabaseUrl) || isBlank(anonKey) || isBlank(bucket)) {
             throw new IllegalStateException("Thiếu cấu hình Supabase Storage");
