@@ -22,10 +22,3 @@ data class Message(
     val isSent: Boolean,
     val isOrderCard: Boolean = false
 )
-
-data class Friend(
-    val id: Int,
-    val name: String,
-    val avatarUrl: String?,
-    var isSent: Boolean = false
-)

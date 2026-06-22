@@ -16,7 +16,6 @@ import com.urmyfood.user.databinding.FragmentMainSearchBinding
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
-import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
 import androidx.navigation.fragment.findNavController
 
 class SearchFragment : Fragment() {
@@ -74,10 +73,6 @@ class SearchFragment : Fragment() {
         searchAdapter.onCommentClick = { postId ->
             QuickCommentFragment.newInstance(postId)
                 .show(childFragmentManager, QuickCommentFragment.TAG)
-        }
-        searchAdapter.onShareClick = {
-            val sheet = ShareBottomSheetFragment()
-            sheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
         searchAdapter.onOrderClick = { post ->
             val sheet = OrderBottomSheetFragment(post)
@@ -239,14 +234,6 @@ class SearchFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.tvClearAll.setOnClickListener { viewModel.clearRecentSearches() }
-    }
-
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun onDestroyView() {

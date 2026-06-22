@@ -14,7 +14,6 @@ import com.urmyfood.user.databinding.FragmentMainFavoritesBinding
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
-import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
 
 class FavoritesFragment : Fragment() {
 
@@ -61,9 +60,6 @@ class FavoritesFragment : Fragment() {
         }
         adapter.onCommentClick = { postId ->
             QuickCommentFragment.newInstance(postId).show(childFragmentManager, QuickCommentFragment.TAG)
-        }
-        adapter.onShareClick = {
-            ShareBottomSheetFragment().show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
         adapter.onShopClick = { post ->
             val bundle = Bundle().apply {

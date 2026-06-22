@@ -26,7 +26,6 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
     private val currencyFormat = NumberFormat.getNumberInstance(Locale("vi", "VN"))
 
     var onCommentClick: ((String) -> Unit)? = null
-    var onShareClick: (() -> Unit)? = null
     var onOrderClick: ((FoodPost) -> Unit)? = null
     var onSaveClick: ((FoodPost) -> Unit)? = null
     var onLikeClick: ((FoodPost) -> Unit)? = null
@@ -152,9 +151,6 @@ class FoodPostAdapter : ListAdapter<FoodPost, FoodPostAdapter.ViewHolder>(DiffCa
 
                 btnComment.setOnClickListener {
                     onCommentClick?.invoke(post.postId)
-                }
-                btnShare.setOnClickListener {
-                    onShareClick?.invoke()
                 }
                 btnOrder.setOnClickListener {
                     onOrderClick?.invoke(post)

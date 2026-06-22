@@ -24,7 +24,6 @@ import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.presentation.main.home.FoodPostAdapter
 import com.urmyfood.user.presentation.main.home.OrderBottomSheetFragment
 import com.urmyfood.user.presentation.main.home.QuickCommentFragment
-import com.urmyfood.user.presentation.main.home.ShareBottomSheetFragment
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -95,17 +94,6 @@ class ShopProfileFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        binding.btnSearch.setOnClickListener {
-            showFeatureInDevelopment()
-        }
-
-        binding.btnShare.setOnClickListener {
-            val shareSheet = ShareBottomSheetFragment()
-            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
-        }
-
-
-
         binding.btnFollow.setOnClickListener {
             viewModel.toggleFollow(shopId)
         }
@@ -118,10 +106,6 @@ class ShopProfileFragment : Fragment() {
         shopPostsAdapter.onCommentClick = { postId ->
             val commentSheet = QuickCommentFragment.newInstance(postId)
             commentSheet.show(childFragmentManager, QuickCommentFragment.TAG)
-        }
-        shopPostsAdapter.onShareClick = {
-            val shareSheet = ShareBottomSheetFragment()
-            shareSheet.show(childFragmentManager, ShareBottomSheetFragment.TAG)
         }
         shopPostsAdapter.onOrderClick = { foodPost ->
             val orderSheet = OrderBottomSheetFragment(foodPost)
@@ -264,14 +248,6 @@ class ShopProfileFragment : Fragment() {
             }
             shopPostsAdapter.submitList(postsList)
         }
-    }
-
-    private fun showFeatureInDevelopment() {
-        Toast.makeText(
-            requireContext(),
-            getString(R.string.toast_feature_in_development),
-            Toast.LENGTH_SHORT
-        ).show()
     }
 
     override fun onDestroyView() {
