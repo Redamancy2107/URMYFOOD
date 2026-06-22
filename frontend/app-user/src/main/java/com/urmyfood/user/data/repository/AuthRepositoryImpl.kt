@@ -8,6 +8,7 @@ import com.urmyfood.user.data.model.ResetPasswordRequest
 import com.urmyfood.user.data.model.VerifyOtpRequest
 import com.urmyfood.user.data.model.toDomain
 import com.urmyfood.user.data.remote.AuthApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.AuthToken
 import com.urmyfood.user.domain.model.Result
 import com.urmyfood.user.domain.model.User
@@ -50,7 +51,7 @@ class AuthRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -89,7 +90,7 @@ class AuthRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -115,7 +116,7 @@ class AuthRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -141,7 +142,7 @@ class AuthRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -167,7 +168,7 @@ class AuthRepositoryImpl(
                 )
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối. Vui lòng thử lại.")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -185,7 +186,7 @@ class AuthRepositoryImpl(
                 Result.Error(message = "Lỗi xác thực Google")
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -205,7 +206,7 @@ class AuthRepositoryImpl(
                 Result.Error(message = errorMsg ?: "Gửi OTP thất bại")
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối")
+            Result.Error(message = e.toUserMessage())
         }
     }
 
@@ -223,7 +224,7 @@ class AuthRepositoryImpl(
                 Result.Error(message = "Lỗi xác thực OTP")
             }
         } catch (e: Exception) {
-            Result.Error(message = e.message ?: "Lỗi kết nối")
+            Result.Error(message = e.toUserMessage())
         }
     }
 }

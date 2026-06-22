@@ -46,6 +46,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/cd_notification"
             android:src="@drawable/ic_notification"
+            android:visibility="gone"
             android:scaleType="centerInside"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -131,6 +132,7 @@
                         android:layout_marginTop="12dp"
                         android:background="@drawable/bg_badge_verified"
                         android:orientation="horizontal"
+                        android:visibility="gone"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="6dp"
                         android:gravity="center">
@@ -513,6 +515,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="72dp"
                         android:gravity="center_vertical"
+                        android:visibility="gone"
                         android:paddingHorizontal="20dp"
                         android:background="?attr/selectableItemBackground">
                         

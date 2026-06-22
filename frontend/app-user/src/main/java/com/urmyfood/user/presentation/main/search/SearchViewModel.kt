@@ -12,9 +12,11 @@ import com.urmyfood.user.domain.usecase.ClearSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.FollowShopUseCase
 import com.urmyfood.user.domain.usecase.GetSearchHistoryUseCase
 import com.urmyfood.user.domain.usecase.RemoveSearchHistoryUseCase
+import com.urmyfood.user.domain.usecase.SavePostUseCase
 import com.urmyfood.user.domain.usecase.SearchPostsUseCase
 import com.urmyfood.user.domain.usecase.ToggleLikeUseCase
 import com.urmyfood.user.domain.usecase.UnfollowShopUseCase
+import com.urmyfood.user.domain.usecase.UnsavePostUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -24,6 +26,8 @@ class SearchViewModel(
     private val toggleLikeUseCase: ToggleLikeUseCase,
     private val followShopUseCase: FollowShopUseCase,
     private val unfollowShopUseCase: UnfollowShopUseCase,
+    private val savePostUseCase: SavePostUseCase,
+    private val unsavePostUseCase: UnsavePostUseCase,
     private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
     private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
     private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
@@ -48,6 +52,9 @@ class SearchViewModel(
 
     private val _followError = MutableLiveData<String?>()
     val followError: LiveData<String?> = _followError
+
+    private val _saveError = MutableLiveData<String?>()
+    val saveError: LiveData<String?> = _saveError
 
     private val _query = MutableLiveData("")
     val query: LiveData<String> = _query
@@ -198,6 +205,10 @@ class SearchViewModel(
         _followError.value = null
     }
 
+    fun clearSaveError() {
+        _saveError.value = null
+    }
+
     private fun updatePostLike(postId: String, isLiked: Boolean, likeCount: Int) {
         val index = loadedPosts.indexOfFirst { it.postId == postId }
         if (index >= 0) {
@@ -248,6 +259,39 @@ class SearchViewModel(
         }
     }
 
+    fun toggleSave(postId: String, isCurrentlySaved: Boolean) {
+        updateSavedState(postId, !isCurrentlySaved)
+        com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, !isCurrentlySaved))
+
+        viewModelScope.launch {
+            val result = if (isCurrentlySaved) {
+                unsavePostUseCase(postId)
+            } else {
+                savePostUseCase(postId)
+            }
+            when (result) {
+                is Result.Success -> {
+                    updateSavedState(result.data.postId, result.data.isSaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(result.data.postId, result.data.isSaved))
+                }
+                is Result.Error -> {
+                    updateSavedState(postId, isCurrentlySaved)
+                    com.urmyfood.user.di.ServiceLocator.postSavedEvent.postValue(Pair(postId, isCurrentlySaved))
+                    _saveError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun updateSavedState(postId: String, isSaved: Boolean) {
+        val index = loadedPosts.indexOfFirst { it.postId == postId }
+        if (index >= 0 && loadedPosts[index].isSaved != isSaved) {
+            loadedPosts[index] = loadedPosts[index].copy(isSaved = isSaved)
+            val page = (_uiState.value as? UiState.Success)?.page ?: 0
+            _uiState.value = UiState.Success(loadedPosts.toList(), hasNextPage, page)
+        }
+    }
+
     private fun resetSearch() {
         searchJob?.cancel()
         loadedPosts.clear()
@@ -263,6 +307,8 @@ class SearchViewModel(
         private val toggleLikeUseCase: ToggleLikeUseCase,
         private val followShopUseCase: FollowShopUseCase,
         private val unfollowShopUseCase: UnfollowShopUseCase,
+        private val savePostUseCase: SavePostUseCase,
+        private val unsavePostUseCase: UnsavePostUseCase,
         private val getSearchHistoryUseCase: GetSearchHistoryUseCase,
         private val addSearchHistoryUseCase: AddSearchHistoryUseCase,
         private val removeSearchHistoryUseCase: RemoveSearchHistoryUseCase,
@@ -276,6 +322,8 @@ class SearchViewModel(
                     toggleLikeUseCase,
                     followShopUseCase,
                     unfollowShopUseCase,
+                    savePostUseCase,
+                    unsavePostUseCase,
                     getSearchHistoryUseCase,
                     addSearchHistoryUseCase,
                     removeSearchHistoryUseCase,

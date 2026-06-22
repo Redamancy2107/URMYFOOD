@@ -26,9 +26,6 @@ class ProfileViewModel(
     private val _isGuest = MutableLiveData<Boolean>()
     val isGuest: LiveData<Boolean> = _isGuest
 
-    private val _isStudentVerified = MutableLiveData<Boolean>()
-    val isStudentVerified: LiveData<Boolean> = _isStudentVerified
-
     init {
         loadUserInfo()
     }
@@ -38,9 +35,6 @@ class ProfileViewModel(
         _isGuest.value = guest
         if (!guest) {
             _userName.value = tokenManager.getFullName()
-            _isStudentVerified.value = false
-        } else {
-            _isStudentVerified.value = false
         }
     }
 

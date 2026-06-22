@@ -76,6 +76,33 @@ class LoginViewModel(
         }
     }
 
+    fun sendLoginOtp(email: String) {
+        _loginState.value = LoginUiState.Loading
+        viewModelScope.launch {
+            when (val result = sendLoginOtpUseCase(email, null)) {
+                is Result.Success -> _loginState.value = LoginUiState.OtpSent(email)
+                is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
+            }
+        }
+    }
+
+    fun loginWithOtp(email: String, otpCode: String) {
+        _loginState.value = LoginUiState.Loading
+        viewModelScope.launch {
+            when (val result = loginWithOtpUseCase(email, otpCode)) {
+                is Result.Success -> {
+                    if (result.data.role != "CUSTOMER") {
+                        _loginState.value = LoginUiState.WrongRole
+                    } else {
+                        saveToken(result.data)
+                        _loginState.value = LoginUiState.Success(result.data)
+                    }
+                }
+                is Result.Error -> _loginState.value = LoginUiState.Error(result.message)
+            }
+        }
+    }
+
     fun resetState() { _loginState.value = LoginUiState.Idle }
 
     class Factory(
@@ -108,6 +135,7 @@ sealed class LoginUiState {
     data object Idle : LoginUiState()
     data object Loading : LoginUiState()
     data class Success(val authToken: AuthToken) : LoginUiState()
+    data class OtpSent(val email: String) : LoginUiState()
     data object GuestSuccess : LoginUiState()
     data object WrongRole : LoginUiState()
     data class Error(val message: String) : LoginUiState()

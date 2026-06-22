@@ -73,6 +73,9 @@ public class PostResponse {
     @JsonProperty("is_following_shop")
     private boolean isFollowingShop;
 
+    @JsonProperty("is_saved")
+    private boolean isSaved;
+
     @JsonProperty("category")
     private String category;
 }

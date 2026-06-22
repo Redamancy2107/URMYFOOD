@@ -20,6 +20,7 @@ fun PostResponse.toDomain() = FoodPost(
     likeCount = likeCount,
     isLiked = isLiked,
     isFollowingShop = isFollowingShop,
+    isSaved = isSaved,
     commentCount = commentCount,
     shopAddress = shopAddress,
     createdAt = createdAt

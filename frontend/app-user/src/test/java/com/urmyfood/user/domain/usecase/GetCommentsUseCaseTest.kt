@@ -16,7 +16,7 @@ class GetCommentsUseCaseTest {
 
     private fun makeRepo(): PostRepository =
         object : PostRepository {
-            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
+            override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun searchPosts(token: String?, query: String, page: Int, size: Int, anchor: String?) = Result.Success(PageResult<FoodPost>(emptyList(), 0, false))
             override suspend fun toggleLike(postId: String, isCurrentlyLiked: Boolean, token: String): Result<LikeToggleResult> = Result.Success(LikeToggleResult(0, false))
             override suspend fun getComments(postId: String, token: String, cursor: String?, size: Int) = Result.Success(PageResult(listOf(Comment("c1", "User", null, "Hi", "now")), 0, false))

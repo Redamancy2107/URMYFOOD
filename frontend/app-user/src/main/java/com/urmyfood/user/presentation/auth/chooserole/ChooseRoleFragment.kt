@@ -126,7 +126,7 @@ class ChooseRoleFragment : Fragment() {
                 }
             } catch (e: GetCredentialException) {
                 android.util.Log.e("URMYFOOD_AUTH", ">>> [ChooseRoleFragment] Google Login Exception: ${e.message}", e)
-                Toast.makeText(requireContext(), "Lỗi đăng nhập Google: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Đăng nhập Google thất bại. Vui lòng thử lại.", Toast.LENGTH_SHORT).show()
             }
         }
     }

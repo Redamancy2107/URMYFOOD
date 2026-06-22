@@ -19,5 +19,14 @@ data class VoucherResponse(
     @SerializedName("minOrderValue")
     val minOrderValue: Double,
     @SerializedName("expiryDate")
-    val expiryDate: String
+    val expiryDate: String,
+    @SerializedName("is_saved")
+    val isSaved: Boolean = false
+)
+
+data class SavedVoucherResponse(
+    @SerializedName("voucher_id")
+    val voucherId: Long,
+    @SerializedName("is_saved")
+    val isSaved: Boolean
 )

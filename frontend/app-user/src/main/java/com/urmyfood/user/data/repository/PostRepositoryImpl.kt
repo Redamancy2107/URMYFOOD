@@ -2,6 +2,7 @@ package com.urmyfood.user.data.repository
 
 import com.urmyfood.user.data.model.*
 import com.urmyfood.user.data.remote.PostApiService
+import com.urmyfood.user.data.util.toUserMessage
 import com.urmyfood.user.domain.model.Comment
 import com.urmyfood.user.domain.model.FoodPost
 import com.urmyfood.user.domain.model.LikeToggleResult
@@ -14,9 +15,9 @@ class PostRepositoryImpl(
     private val postApiService: PostApiService
 ) : PostRepository {
 
-    override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?): Result<PageResult<FoodPost>> {
+    override suspend fun getPosts(token: String?, page: Int, size: Int, anchor: String?, category: String?): Result<PageResult<FoodPost>> {
         return try {
-            val response = postApiService.getPosts(token, page, size, anchor)
+            val response = postApiService.getPosts(token, page, size, anchor, category)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && body.success && body.data != null) {
@@ -37,7 +38,34 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
+        }
+    }
+
+    override suspend fun getShopPosts(token: String?, shopId: Long, page: Int, size: Int): Result<PageResult<FoodPost>> {
+        return try {
+            val response = postApiService.getShopPosts(token, shopId, page, size)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && body.success && body.data != null) {
+                    val pageData = body.data
+                    Result.Success(PageResult(
+                        items = pageData.content.map { it.toDomain() },
+                        page = pageData.page,
+                        hasNext = pageData.hasNext,
+                        nextCursor = pageData.nextCursor,
+                        anchor = pageData.anchor
+                    ))
+                } else {
+                    Result.Error(body?.message ?: "Không thể tải bài đăng của quán")
+                }
+            } else {
+                Result.Error("Lỗi server: ${response.code()}")
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -64,7 +92,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -92,7 +120,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -119,7 +147,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -139,7 +167,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 
@@ -159,7 +187,7 @@ class PostRepositoryImpl(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Result.Error(e.message ?: "Không thể kết nối đến server")
+            Result.Error(e.toUserMessage())
         }
     }
 }
