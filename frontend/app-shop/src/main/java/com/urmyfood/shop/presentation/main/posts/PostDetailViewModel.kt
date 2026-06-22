@@ -10,6 +10,7 @@ import com.urmyfood.shop.domain.model.Post
 import com.urmyfood.shop.domain.usecase.DeletePostUseCase
 import com.urmyfood.shop.domain.usecase.GetPostByIdUseCase
 import com.urmyfood.shop.domain.usecase.TogglePostStatusUseCase
+import com.urmyfood.shop.domain.usecase.UpdateRemainingQuantityUseCase
 import kotlinx.coroutines.launch
 
 sealed class PostDetailUiState {
@@ -22,8 +23,12 @@ class PostDetailViewModel(
     private val postId: String,
     private val getPostByIdUseCase: GetPostByIdUseCase,
     private val togglePostStatusUseCase: TogglePostStatusUseCase,
-    private val deletePostUseCase: DeletePostUseCase
+    private val deletePostUseCase: DeletePostUseCase,
+    private val updateRemainingQuantityUseCase: UpdateRemainingQuantityUseCase
 ) : ViewModel() {
+
+    private val _quantityError = MutableLiveData<String?>()
+    val quantityError: LiveData<String?> = _quantityError
 
     private val _uiState = MutableLiveData<PostDetailUiState>(PostDetailUiState.Loading)
     val uiState: LiveData<PostDetailUiState> = _uiState
@@ -55,6 +60,21 @@ class PostDetailViewModel(
         }
     }
 
+    fun updateRemainingQuantity(newQuantity: Int) {
+        val current = (_uiState.value as? PostDetailUiState.Success)?.post ?: return
+        val clamped = newQuantity.coerceIn(0, current.maxQuantity)
+        viewModelScope.launch {
+            when (val result = updateRemainingQuantityUseCase(postId, clamped)) {
+                is Result.Success -> _uiState.value = PostDetailUiState.Success(result.data)
+                is Result.Error -> _quantityError.value = result.message
+            }
+        }
+    }
+
+    fun clearQuantityError() {
+        _quantityError.value = null
+    }
+
     fun deletePost() {
         viewModelScope.launch {
             _deleteResult.value = deletePostUseCase(postId)
@@ -69,13 +89,15 @@ class PostDetailViewModel(
         private val postId: String,
         private val getPostByIdUseCase: GetPostByIdUseCase,
         private val togglePostStatusUseCase: TogglePostStatusUseCase,
-        private val deletePostUseCase: DeletePostUseCase
+        private val deletePostUseCase: DeletePostUseCase,
+        private val updateRemainingQuantityUseCase: UpdateRemainingQuantityUseCase
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(PostDetailViewModel::class.java)) {
                 return PostDetailViewModel(
-                    postId, getPostByIdUseCase, togglePostStatusUseCase, deletePostUseCase
+                    postId, getPostByIdUseCase, togglePostStatusUseCase, deletePostUseCase,
+                    updateRemainingQuantityUseCase
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

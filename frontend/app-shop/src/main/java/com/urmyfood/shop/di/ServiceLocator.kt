@@ -66,6 +66,7 @@ import com.urmyfood.shop.presentation.main.account.AccountViewModel
 import com.urmyfood.shop.presentation.main.account.ChangePasswordViewModel
 import com.urmyfood.shop.presentation.main.account.ShopProfileEditViewModel
 import com.urmyfood.shop.presentation.main.account.stats.StatisticsViewModel
+import com.urmyfood.shop.presentation.main.home.HomeViewModel
 import com.urmyfood.shop.presentation.main.orders.OrdersViewModel
 import com.urmyfood.shop.presentation.main.orders.detail.OrderDetailViewModel
 import com.urmyfood.shop.presentation.main.chat.ChatDetailViewModel
@@ -198,6 +199,11 @@ object ServiceLocator {
         GetShopStatisticsUseCase(shopStatisticsRepository, tokenManager)
     )
 
+    fun provideHomeViewModelFactory() = HomeViewModel.Factory(
+        GetShopOrdersUseCase(orderRepository, tokenManager),
+        UpdateOrderStatusUseCase(orderRepository, tokenManager)
+    )
+
     fun provideOrdersViewModelFactory() = OrdersViewModel.Factory(
         GetShopOrdersUseCase(orderRepository, tokenManager),
         UpdateOrderStatusUseCase(orderRepository, tokenManager)
@@ -225,7 +231,8 @@ object ServiceLocator {
         postId,
         GetPostByIdUseCase(postRepository, tokenManager),
         TogglePostStatusUseCase(postRepository, tokenManager),
-        DeletePostUseCase(postRepository, tokenManager)
+        DeletePostUseCase(postRepository, tokenManager),
+        com.urmyfood.shop.domain.usecase.UpdateRemainingQuantityUseCase(postRepository, tokenManager)
     )
 
     fun provideCommentViewModelFactory() = CommentViewModel.Factory(

@@ -209,6 +209,7 @@ class CreatePostFragment : Fragment() {
                     val msg = if (viewModel.isEditMode) "Cập nhật bài đăng thành công!" else "Tạo bài đăng thành công!"
                     Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show()
                     viewModel.clearSaveResult()
+                    findNavController().previousBackStackEntry?.savedStateHandle?.set("post_updated", true)
                     findNavController().navigateUp()
                 }
                 is Result.Error -> {

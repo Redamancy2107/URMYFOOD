@@ -10,6 +10,7 @@ import com.urmyfood.shop.data.model.PostImageUploadResponse
 import com.urmyfood.shop.data.model.PostPageDto
 import com.urmyfood.shop.data.model.UpdatePostRequest
 import com.urmyfood.shop.data.model.UpdatePostStatusRequest
+import com.urmyfood.shop.data.model.UpdateRemainingQuantityRequest
 import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -63,6 +64,13 @@ interface PostApiService {
         @Header("Authorization") token: String,
         @Path("postId") postId: String,
         @Body request: UpdatePostStatusRequest
+    ): Response<ApiResponse<PostDto>>
+
+    @PATCH("api/v1/posts/{postId}/remaining-quantity")
+    suspend fun updateRemainingQuantity(
+        @Header("Authorization") token: String,
+        @Path("postId") postId: String,
+        @Body request: UpdateRemainingQuantityRequest
     ): Response<ApiResponse<PostDto>>
 
     @Multipart

@@ -96,6 +96,28 @@ class PostRepositoryImpl(
         }
     }
 
+    override suspend fun updateRemainingQuantity(token: String, postId: String, remainingQuantity: Int): Result<Post> {
+        return try {
+            val response = apiService.updateRemainingQuantity(
+                token, postId,
+                com.urmyfood.shop.data.model.UpdateRemainingQuantityRequest(remainingQuantity)
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                val data = body?.data
+                if (body?.success == true && data != null) {
+                    Result.Success(data.toDomain())
+                } else {
+                    Result.Error(body?.message ?: "Không thể cập nhật số suất còn lại")
+                }
+            } else {
+                Result.Error(parseErrorMessage(response.errorBody()?.string()) ?: "Lỗi máy chủ: ${response.code()}", response.code())
+            }
+        } catch (e: Exception) {
+            Result.Error(e.message ?: "Lỗi kết nối")
+        }
+    }
+
     override suspend fun deletePost(token: String, postId: String): Result<Unit> {
         return try {
             val response = apiService.deletePost(token, postId)
