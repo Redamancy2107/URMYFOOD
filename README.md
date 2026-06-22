@@ -155,33 +155,36 @@ Backend của dự án giao tiếp với cơ sở dữ liệu Supabase PostgreSQ
 
 1. **Cấu hình môi trường Backend**:
    - Tạo file `.env` tại thư mục gốc của dự án `URMYFOOD/` (dựa trên file mẫu `.env.example`).
-   - Nội dung file `.env` mẫu để chạy dự án (bạn có thể copy trực tiếp đoạn này để chạy ngay với database của nhóm):
+   - Nội dung file `.env` mẫu để chạy dự án:
      ```env
      # Database Configuration
-     DB_URL=jdbc:postgresql://aws-1-ap-northeast-1.pooler.supabase.com:5432/postgres
-     DB_USERNAME=postgres.yfdhsoilpawzhxbftlbe
-     DB_PASSWORD=urmyfood.uit.vnuhcm
+        DB_URL=jdbc:postgresql://<your_supabase_db_host>:5432/postgres
+        DB_USERNAME=<your_database_username>
+        DB_PASSWORD=<your_database_password>
 
-     # Security Configuration
-     JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-     JWT_EXPIRATION=86400000
-     JWT_REFRESH_EXPIRATION=604800000
+        # Security Configuration
+        JWT_SECRET=<your_jwt_secret_64_character_hex_string>
+        JWT_EXPIRATION=86400000
+        JWT_REFRESH_EXPIRATION=604800000
 
-     # Social Login & Gmail API Configuration
-     GOOGLE_CLIENT_ID=your_google_client_id_here
-     GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-     GOOGLE_REFRESH_TOKEN=your_google_refresh_token_here
+        # Social Login & Gmail API Configuration (Google Console)
+        GOOGLE_CLIENT_ID=<your_google_web_client_id>.apps.googleusercontent.com
+        GOOGLE_CLIENT_SECRET=<your_google_client_secret>
+        GOOGLE_REFRESH_TOKEN=<your_google_refresh_token_for_gmail_api>
 
-     SUPABASE_URL=https://yfdhsoilpawzhxbftlbe.supabase.co
-     SUPABASE_ANON_KEY=sb_publishable_JmmDh_osEt0VgNJSjU2EJA_cR5GMS8I
-     SUPABASE_STORAGE_BUCKET=urmyfood-bucket
-     SUPABASE_PROFILE_IMAGE_MAX_SIZE=1048576
-     SUPABASE_PROFILE_IMAGE_ALLOWED_TYPES=image/jpeg,image/png,image/gif
-     SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmZGhzb2lscGF3emh4YmZ0bGJlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzcwOTYyOSwiZXhwIjoyMDkzMjg1NjI5fQ.MireNkDJnja6KmKh3Eh2597U8258HcI0p5wpdve5JaM
+        # Supabase Storage Configuration
+        SUPABASE_URL=https://<your_supabase_project_ref>.supabase.co
+        SUPABASE_ANON_KEY=<your_supabase_anonymous_key>
+        SUPABASE_STORAGE_BUCKET=urmyfood-bucket
+        SUPABASE_PROFILE_IMAGE_MAX_SIZE=1048576
+        SUPABASE_PROFILE_IMAGE_ALLOWED_TYPES=image/jpeg,image/png,image/gif
+        SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
 
-     PAYOS_CLIENT_ID=8c50ef7d-bd86-4a7f-827b-2f32cc865133
-     PAYOS_API_KEY=8f8108e8-9b77-4b96-9085-8dc73b11b2ca
-     PAYOS_CHECKSUM_KEY=2fe6e17887634e26da5cbe83842e5d22b6244e5a70c8b9c7abc3efe9584de359
+        # PayOS Configuration (Payment Gateway)
+        PAYOS_CLIENT_ID=<your_payos_client_id>
+        PAYOS_API_KEY=<your_payos_api_key>
+        PAYOS_CHECKSUM_KEY=<your_payos_checksum_key>
+
      ```
 
 2. **Chạy Backend**:
