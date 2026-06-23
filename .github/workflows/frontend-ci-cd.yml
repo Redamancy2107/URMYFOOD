@@ -16,6 +16,8 @@ jobs:
   build-and-sign:
     name: Build and Sign Android APKs
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
@@ -102,3 +104,18 @@ jobs:
         with:
           name: app-admin-release
           path: frontend/app-admin-release.apk
+
+      - name: Create Release and Upload APKs
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: Release v1.0.0 (Build #${{ github.run_number }})
+          draft: false
+          prerelease: false
+          files: |
+            frontend/app-user-release.apk
+            frontend/app-shop-release.apk
+            frontend/app-admin-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
