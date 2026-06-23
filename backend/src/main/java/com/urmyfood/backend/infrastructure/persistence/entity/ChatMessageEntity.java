@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "chat_messages")
@@ -48,5 +48,5 @@ public class ChatMessageEntity {
 
     @CreationTimestamp
     @Column(name = "sent_at")
-    private LocalDateTime sentAt;
+    private OffsetDateTime sentAt;
 }
