@@ -27,15 +27,8 @@ class ChatListAdapter(
         with(holder.binding) {
             tvChatName.text = session.shopName
             tvLastMessage.text = session.lastMessage ?: ""
-            val timeStr = session.lastMessageAt?.let { at ->
-                if (at.length >= 16 && at.contains("T")) {
-                    val tIndex = at.indexOf("T")
-                    at.substring(tIndex + 1, tIndex + 6)
-                } else {
-                    at.take(5)
-                }
-            } ?: ""
-            tvChatTime.text = timeStr
+            tvChatTime.text =
+                com.urmyfood.shared.util.ChatTimeFormatter.formatTime(session.lastMessageAt)
             Glide.with(ivChatAvatar)
                 .load(session.shopAvatarUrl)
                 .placeholder(R.drawable.ic_person_placeholder)
