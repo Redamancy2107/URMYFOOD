@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -22,5 +22,5 @@ public class ChatMessage {
     private String content;
     private String imageUrl;
     private boolean isRead;
-    private LocalDateTime sentAt;
+    private OffsetDateTime sentAt;
 }

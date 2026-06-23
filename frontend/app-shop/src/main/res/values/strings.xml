@@ -87,7 +87,7 @@
 
     <!-- Home Screen -->
     <string name="home_title">Quán của tôi</string>
-    <string name="home_sales_today">Doanh thu hôm nay</string>
+    <string name="home_sales_today">Doanh thu</string>
     <string name="home_order_count_format">%d đơn hàng</string>
     <string name="home_active_orders_header">Đơn hàng đang xử lý</string>
     <string name="home_view_all">Xem tất cả</string>

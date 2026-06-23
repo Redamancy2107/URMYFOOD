@@ -125,16 +125,5 @@ class MessageAdapter(
 
 }
 
-private fun formatTime(sentAt: String): String {
-    if (sentAt.isEmpty()) return ""
-    return if (sentAt.contains("T")) {
-        val tIndex = sentAt.indexOf("T")
-        if (sentAt.length >= tIndex + 6) {
-            sentAt.substring(tIndex + 1, tIndex + 6)
-        } else {
-            sentAt
-        }
-    } else {
-        if (sentAt.length >= 16) sentAt.substring(11, 16) else sentAt
-    }
-}
+private fun formatTime(sentAt: String): String =
+    com.urmyfood.shared.util.ChatTimeFormatter.formatTime(sentAt)

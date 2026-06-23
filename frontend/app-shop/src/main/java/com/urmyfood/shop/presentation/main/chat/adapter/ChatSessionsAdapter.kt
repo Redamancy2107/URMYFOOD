@@ -33,15 +33,8 @@ class ChatSessionsAdapter(
         fun bind(session: ChatSession) {
             binding.tvCustomerName.text = session.customerName
             binding.tvLastMessage.text = session.lastMessage ?: ""
-            val timeStr = session.lastMessageAt?.let { at ->
-                if (at.length >= 16 && at.contains("T")) {
-                    val tIndex = at.indexOf("T")
-                    at.substring(tIndex + 1, tIndex + 6)
-                } else {
-                    at.take(5)
-                }
-            } ?: ""
-            binding.tvTimestamp.text = timeStr
+            binding.tvTimestamp.text =
+                com.urmyfood.shared.util.ChatTimeFormatter.formatTime(session.lastMessageAt)
 
             // Bold unread messages
             if (session.unreadCount > 0) {
